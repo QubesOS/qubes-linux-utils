@@ -21,3 +21,5 @@ install:
 	$(MAKE) -C udev install
 	$(MAKE) -C qrexec-lib install
 
+clean:
+	$(MAKE) -C qrexec-lib clean
