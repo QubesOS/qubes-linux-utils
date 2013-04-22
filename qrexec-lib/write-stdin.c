@@ -24,6 +24,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <stdlib.h>
+#include <libvchan.h>
 #include "qrexec.h"
 #include "libqrexec-utils.h"
 
@@ -32,7 +33,7 @@ There is buffered data in "buffer" for client id "client_id", and select()
 reports that "fd" is writable. Write as much as possible to fd, if all sent,
 notify the peer that this client's pipe is no longer full.
 */
-int flush_client_data(int fd, int client_id, struct buffer *buffer)
+int flush_client_data(libvchan_t *vchan, int fd, int client_id, struct buffer *buffer)
 {
 	int ret;
 	int len;
@@ -57,7 +58,8 @@ int flush_client_data(int fd, int client_id, struct buffer *buffer)
 			s_hdr.type = MSG_XON;
 			s_hdr.client_id = client_id;
 			s_hdr.len = 0;
-			write_all_vchan_ext(&s_hdr, sizeof s_hdr);
+			if (libvchan_send(vchan, (char*)&s_hdr, sizeof s_hdr) < 0)
+				return WRITE_STDIN_ERROR;
 			return WRITE_STDIN_OK;
 		}
 	}
@@ -69,7 +71,7 @@ Write "len" bytes from "data" to "fd". If not all written, buffer the rest
 to "buffer", and notify the peer that the client "client_id" pipe is full via 
 MSG_XOFF message.
 */
-int write_stdin(int fd, int client_id, const char *data, int len,
+int write_stdin(libvchan_t *vchan, int fd, int client_id, const char *data, int len,
 		struct buffer *buffer)
 {
 	int ret;
@@ -97,7 +99,8 @@ int write_stdin(int fd, int client_id, const char *data, int len,
 			s_hdr.type = MSG_XOFF;
 			s_hdr.client_id = client_id;
 			s_hdr.len = 0;
-			write_all_vchan_ext(&s_hdr, sizeof s_hdr);
+			if (libvchan_send(vchan, (char*)&s_hdr, sizeof s_hdr) < 0)
+				return WRITE_STDIN_ERROR;
 
 			return WRITE_STDIN_BUFFERED;
 		}

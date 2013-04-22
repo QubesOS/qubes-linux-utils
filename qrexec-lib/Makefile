@@ -1,6 +1,5 @@
 CC=gcc
-CFLAGS+=-I. -g -Wall -Wextra -Werror -pie -fPIC
-XENLIBS=-lxenctrl -lxenstore -lvchan
+CFLAGS+=-I. -g -Wall -Wextra -Werror -pie -fPIC `pkg-config --cflags vchan-$(BACKEND_VMM)`
 COMMONIOALL=ioall.o
 SO_VER=1
 LDFLAGS=-shared
