@@ -60,6 +60,8 @@ int wait_for_vchan_or_argfd_once(libvchan_t *ctrl, int max, fd_set * rdset, fd_s
 		// the following will never block; we need to do this to
 		// clear libvchan_fd pending state 
 		libvchan_wait(ctrl);
+	if (libvchan_data_ready(ctrl))
+		return 1;
 	return ret;
 }
 
