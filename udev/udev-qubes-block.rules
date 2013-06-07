@@ -1,4 +1,4 @@
-# Expose all (except xen-frontend) block devices via xenstore
+# Expose all (except xen-frontend) block devices via Qubes DB
 
 # Only block devices are interesting
 SUBSYSTEM!="block", GOTO="qubes_block_end"

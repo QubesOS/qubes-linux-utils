@@ -5,11 +5,12 @@ NAME=${DEVNAME#/dev/}
 DESC="`echo "${ID_MODEL} (${ID_FS_LABEL})" | iconv -f utf8 -t ascii//TRANSLIT`"
 SIZE=$[ $(cat /sys/$DEVPATH/size) * 512 ]
 MODE=w
-XS_KEY="qubes-block-devices/$NAME"
+QDB_KEY="/qubes-block-devices/$NAME"
 
 xs_remove() {
     if [ "$QUBES_EXPOSED" == "1" ]; then
-        xenstore-rm "$XS_KEY"
+        qubesdb-rm "$QDB_KEY"
+        qubesdb-write /qubes-block-devices ''
     fi
     echo QUBES_EXPOSED=0
 }
@@ -59,17 +60,12 @@ if [ -n "$DM_NAME" ]; then
     DESC="$DM_NAME"
 fi
 
-# Get lock only in dom0 - there are so many block devices so it causes xenstore
-# deadlocks sometimes.
-if [ -f /etc/qubes-release ]; then
-    # Skip xenstore-write if cannot obtain lock. This can mean very early system startup
-    # stage without /run mounted (or populated). Devices will be rediscovered later
-    # by qubes-core startup script.
-    exec 9>>/var/run/qubes/block-xenstore.lock || exit 0
-    flock 9
-fi
-
-xenstore-write "$XS_KEY/desc" "$DESC" "$XS_KEY/size" "$SIZE" "$XS_KEY/mode" "$MODE"
+# The last one is meant to trigger watches
+qubesdb-write \
+    "$QDB_KEY/desc" "$DESC" \
+    "$XS_KEY/size" "$SIZE" \
+    "$XS_KEY/mode" "$MODE" \
+    /qubes-block-devices ''
 echo QUBES_EXPOSED=1
 
 # Make sure that block backend is loaded

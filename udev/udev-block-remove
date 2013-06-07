@@ -1,8 +1,9 @@
 #!/bin/sh
 
 NAME=${DEVNAME#/dev/}
-XS_KEY="qubes-block-devices/$NAME"
-xenstore-rm "$XS_KEY"
+QDB_KEY="/qubes-block-devices/$NAME"
+qubesdb-rm "$XS_KEY"
+qubesdb-write /qubes-block-devices ''
 
 # If device was connected to some VM - detach it
 # Notice: this can be run also in VM, so we cannot use xl...

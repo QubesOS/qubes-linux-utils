@@ -12,7 +12,7 @@
 [ "`echo $TYPE | cut -f1 -d/`" = "9" ] && exit 0
 [ "$DEVTYPE" != "usb_device" ] && exit 0
 
-# xenstore doesn't allow dot in key name
+# qubesdb doesn't allow dot in key name
 XSNAME=`basename ${DEVPATH} | tr . _`
 
 # FIXME: For some devices (my Cherry keyboard) ID_SERIAL does not
@@ -31,10 +31,11 @@ else
 	exit 0
 fi
 
-XS_KEY="qubes-usb-devices/$XSNAME"
+QDB_KEY="/qubes-usb-devices/$XSNAME"
 
-xenstore-write "$XS_KEY/desc" "$DESC"
-xenstore-write "$XS_KEY/usb-ver" "$VERSION"
+qubesdb-write "$QDB_KEY/desc" "$DESC"
+qubesdb-write "$QDB_KEY/usb-ver" "$VERSION"
+qubesdb-write /qubes-usb-devices ''
 
 # Make sure PVUSB backend driver is loaded.
 /sbin/modprobe xen-usbback 2> /dev/null || /sbin/modprobe usbbk

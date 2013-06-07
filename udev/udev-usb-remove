@@ -4,6 +4,7 @@
 [ "`echo $TYPE | cut -f1 -d/`" = "9" ] && exit 0
 
 NAME=`basename ${DEVPATH} | tr . _`
-XS_KEY="qubes-usb-devices/$NAME"
+QDB_KEY="/qubes-usb-devices/$NAME"
 
-xenstore-rm "$XS_KEY"
+qubesdb-rm "$QDB_KEY"
+qubesdb-write /qubes-usb-devices ''

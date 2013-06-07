@@ -1,4 +1,4 @@
-# Expose all USB devices (except block) via xenstore
+# Expose all USB devices (except block) via Qubes DB
 
 # Handle only USB devices
 SUBSYSTEM!="usb", GOTO="qubes_usb_end"
