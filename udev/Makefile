@@ -4,6 +4,7 @@ install:
 	mkdir -p $(DESTDIR)/etc/udev/rules.d
 	cp udev-qubes-block.rules $(DESTDIR)/etc/udev/rules.d/99-qubes-block.rules
 	cp udev-qubes-usb.rules $(DESTDIR)/etc/udev/rules.d/99-qubes-usb.rules
+	cp udev-qubes-misc.rules $(DESTDIR)/etc/udev/rules.d/99-qubes-misc.rules
 
 	mkdir -p $(DESTDIR)/usr/libexec/qubes
 	cp udev-block-add-change $(DESTDIR)/usr/libexec/qubes/

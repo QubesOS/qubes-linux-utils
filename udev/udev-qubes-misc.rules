@@ -1,0 +1,5 @@
+# Setup permissions to allow libvchan connections as normal user
+KERNEL=="xen/evtchn", MODE="0660", GROUP="qubes"
+KERNEL=="xen/gntdev", MODE="0660", GROUP="qubes"
+KERNEL=="xen/gntalloc", MODE="0660", GROUP="qubes"
+KERNEL=="xen/privcmd", MODE="0660", GROUP="qubes"
