@@ -29,6 +29,8 @@
 
 #define LEGAL_EOF 31415926
 
+#include <stdint.h>
+
 struct file_header {
 	unsigned int namelen;
 	unsigned int mode;
@@ -40,9 +42,10 @@ struct file_header {
 };
 
 struct result_header {
-	unsigned int error_code;
-	unsigned long crc32;
-};
+	uint32_t error_code;
+	uint32_t _pad;
+	uint64_t crc32;
+} __attribute__((packed));
 
 enum {
 	COPY_FILE_OK,
