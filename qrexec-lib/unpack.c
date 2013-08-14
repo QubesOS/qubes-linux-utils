@@ -5,6 +5,7 @@
 #include <sys/time.h>
 #include <sys/stat.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 #include <stdio.h>
 #include "libqubes-rpc-filecopy.h"
@@ -31,8 +32,9 @@ int read_all_with_crc(int fd, void *buf, int size) {
 	return ret;
 }
 
-void send_status_and_crc(int code) {
+void send_status_and_crc(int code, char *last_filename) {
 	struct result_header hdr;
+	struct result_header_ext hdr_ext;
 	int saved_errno;
 
 	saved_errno = errno;
@@ -40,13 +42,20 @@ void send_status_and_crc(int code) {
 	hdr.crc32 = crc32_sum;
 	if (!write_all(1, &hdr, sizeof(hdr)))
 		perror("write status");
+	if (last_filename) {
+		hdr_ext.last_namelen = strlen(last_filename);
+		if (!write_all(1, &hdr_ext, sizeof(hdr_ext)))
+			perror("write status ext");
+		if (!write_all(1, last_filename, hdr_ext.last_namelen))
+			perror("write last_filename");
+	}
 	errno = saved_errno;
 }
 
-void do_exit(int code)
+void do_exit(int code, char *last_filename)
 {
 	close(0);
-	send_status_and_crc(code);
+	send_status_and_crc(code, last_filename);
 	exit(code);
 }
 
@@ -59,9 +68,9 @@ void fix_times_and_perms(struct file_header *untrusted_hdr,
 	     untrusted_hdr->mtime_nsec / 1000}
 	};
 	if (chmod(untrusted_name, untrusted_hdr->mode & 07777))	/* safe because of chroot */
-		do_exit(errno);
+		do_exit(errno, untrusted_name);
 	if (utimes(untrusted_name, times))	/* as above */
-		do_exit(errno);
+		do_exit(errno, untrusted_name);
 }
 
 
@@ -72,17 +81,17 @@ void process_one_file_reg(struct file_header *untrusted_hdr,
 	int ret;
 	int fdout = open(untrusted_name, O_WRONLY | O_CREAT | O_EXCL | O_NOFOLLOW, 0700);	/* safe because of chroot */
 	if (fdout < 0)
-		do_exit(errno);
+		do_exit(errno, untrusted_name);
 	total_bytes += untrusted_hdr->filelen;
 	if (bytes_limit && total_bytes > bytes_limit)
-		do_exit(EDQUOT);
+		do_exit(EDQUOT, untrusted_name);
 	ret = copy_file(fdout, 0, untrusted_hdr->filelen, &crc32_sum);
 	if (ret != COPY_FILE_OK) {
 		if (ret == COPY_FILE_READ_EOF
 		    || ret == COPY_FILE_READ_ERROR)
-			do_exit(LEGAL_EOF);	// hopefully remote will produce error message
+			do_exit(LEGAL_EOF, untrusted_name);	// hopefully remote will produce error message
 		else
-			do_exit(errno);
+			do_exit(errno, untrusted_name);
 	}
 	close(fdout);
 	fix_times_and_perms(untrusted_hdr, untrusted_name);
@@ -97,7 +106,7 @@ void process_one_file_dir(struct file_header *untrusted_hdr,
 	if (!mkdir(untrusted_name, 0700))	/* safe because of chroot */
 		return;
 	if (errno != EEXIST)
-		do_exit(errno);
+		do_exit(errno, untrusted_name);
 	fix_times_and_perms(untrusted_hdr, untrusted_name);
 }
 
@@ -107,13 +116,13 @@ void process_one_file_link(struct file_header *untrusted_hdr,
 	char untrusted_content[MAX_PATH_LENGTH];
 	unsigned int filelen;
 	if (untrusted_hdr->filelen > MAX_PATH_LENGTH - 1)
-		do_exit(ENAMETOOLONG);
+		do_exit(ENAMETOOLONG, untrusted_name);
 	filelen = untrusted_hdr->filelen;	/* sanitized above */
 	if (!read_all_with_crc(0, untrusted_content, filelen))
-		do_exit(LEGAL_EOF);	// hopefully remote has produced error message
+		do_exit(LEGAL_EOF, untrusted_name);	// hopefully remote has produced error message
 	untrusted_content[filelen] = 0;
 	if (symlink(untrusted_content, untrusted_name))	/* safe because of chroot */
-		do_exit(errno);
+		do_exit(errno, untrusted_name);
 
 }
 
@@ -121,10 +130,10 @@ void process_one_file(struct file_header *untrusted_hdr)
 {
 	unsigned int namelen;
 	if (untrusted_hdr->namelen > MAX_PATH_LENGTH - 1)
-		do_exit(ENAMETOOLONG);
+		do_exit(ENAMETOOLONG, NULL); /* filename too long so not received at all */
 	namelen = untrusted_hdr->namelen;	/* sanitized above */
 	if (!read_all_with_crc(0, untrusted_namebuf, namelen))
-		do_exit(LEGAL_EOF);	// hopefully remote has produced error message
+		do_exit(LEGAL_EOF, NULL);	// hopefully remote has produced error message
 	untrusted_namebuf[namelen] = 0;
 	if (S_ISREG(untrusted_hdr->mode))
 		process_one_file_reg(untrusted_hdr, untrusted_namebuf);
@@ -133,7 +142,7 @@ void process_one_file(struct file_header *untrusted_hdr)
 	else if (S_ISDIR(untrusted_hdr->mode))
 		process_one_file_dir(untrusted_hdr, untrusted_namebuf);
 	else
-		do_exit(EINVAL);
+		do_exit(EINVAL, untrusted_namebuf);
 }
 
 int do_unpack()
@@ -150,8 +159,8 @@ int do_unpack()
 		process_one_file(&untrusted_hdr);
 		total_files++;
 		if (files_limit && total_files > files_limit)
-			do_exit(EDQUOT);
+			do_exit(EDQUOT, untrusted_namebuf);
 	}
-	send_status_and_crc(errno);
+	send_status_and_crc(errno, untrusted_namebuf);
 	return errno;
 }

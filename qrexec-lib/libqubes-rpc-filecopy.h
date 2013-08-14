@@ -47,6 +47,12 @@ struct result_header {
 	uint64_t crc32;
 } __attribute__((packed));
 
+/* optional info about last processed file */
+struct result_header_ext {
+	uint32_t last_namelen;
+	char last_name[0];
+} __attribute__((packed));
+
 enum {
 	COPY_FILE_OK,
 	COPY_FILE_READ_EOF,
