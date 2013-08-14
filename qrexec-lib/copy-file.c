@@ -1,6 +1,6 @@
 #include <unistd.h>
 #include <ioall.h>
-#include "filecopy.h"
+#include "libqubes-rpc-filecopy.h"
 #include "crc32.h"
 
 extern void notify_progress(int, int);

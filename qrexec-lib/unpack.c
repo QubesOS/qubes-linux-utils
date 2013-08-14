@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdio.h>
-#include "filecopy.h"
+#include "libqubes-rpc-filecopy.h"
 #include "crc32.h"
 
 char untrusted_namebuf[MAX_PATH_LENGTH];
