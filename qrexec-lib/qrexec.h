@@ -21,6 +21,8 @@
 
 /* See also http://wiki.qubes-os.org/trac/wiki/Qrexec */
 
+#include <stdint.h>
+
 #define QREXEC_DAEMON_SOCKET_DIR "/var/run/qubes"
 #define MAX_FDS 256
 #define MAX_DATA_CHUNK 4096
@@ -34,73 +36,66 @@
 
 #define QUBES_RPC_MAGIC_CMD "QUBESRPC"
 
+/* messages sent over control vchan between daemon(dom0) and agent(vm). The
+ * same are used between client(dom0) and daemon(dom0) */
 enum {
-	/* messages from qrexec_client to qrexec_daemon (both in dom0) */
+	/* daemon->agent messages */
 	/* start process in VM and pass its stdin/out/err to dom0 */
-	MSG_CLIENT_TO_SERVER_EXEC_CMDLINE = 0x100,
+	MSG_EXEC_CMDLINE = 0x200,
 	/* start process in VM discarding its stdin/out/err (connect to /dev/null) */
-	MSG_CLIENT_TO_SERVER_JUST_EXEC,
+	MSG_JUST_EXEC,
 	/* connect to existing process in VM to receive its stdin/out/err 
-	 * struct connect_existing_params passed as data */
-	MSG_CLIENT_TO_SERVER_CONNECT_EXISTING,
+	 * struct service_params passed as data */
+	MSG_SERVICE_CONNECT,
+	/* refuse to start a service (denied by policy, invalid parameteres etc)
+	 * struct service_params passed as data to identify which service call was
+	 * refused */
+	MSG_SERVICE_REFUSED,
 
-	/* messages qrexec_daemon(dom0)->qrexec_agent(VM) */
-	/* same as MSG_CLIENT_TO_SERVER_CONNECT_EXISTING */
-	MSG_SERVER_TO_AGENT_CONNECT_EXISTING,
-	/* same as MSG_CLIENT_TO_SERVER_EXEC_CMDLINE */
-	MSG_SERVER_TO_AGENT_EXEC_CMDLINE,
-	/* same as MSG_CLIENT_TO_SERVER_JUST_EXEC */
-	MSG_SERVER_TO_AGENT_JUST_EXEC,
-	/* pass data to process stdin */
-	MSG_SERVER_TO_AGENT_INPUT,
-	/* detach from process; qrexec_agent should close pipes to process
-	 * stdin/out/err; it's up to the VM child process if it cause its termination */
-	MSG_SERVER_TO_AGENT_CLIENT_END,
-
-	/* flow control, qrexec_daemon->qrexec_agent */
-	/* suspend reading of named fd from child process */
-	MSG_XOFF,
-	/* resume reading of named fd from child process */
-	MSG_XON,
-
-	/* messages qrexec_agent(VM)->qrexec_daemon(dom0) */
-	/* pass data from process stdout */
-	MSG_AGENT_TO_SERVER_STDOUT,
-	/* pass data from process stderr */
-	MSG_AGENT_TO_SERVER_STDERR,
-	/* inform that process terminated and pass its exit code; this should be
-	 * send after all data from stdout/err are send */
-	MSG_AGENT_TO_SERVER_EXIT_CODE,
+	/* agent->daemon messages */
 	/* call Qubes RPC service
-	 * struct trigger_connect_params passed as data */
-	MSG_AGENT_TO_SERVER_TRIGGER_CONNECT_EXISTING,
-
-	/* messages qrexec_daemon->qrexec_client (both in dom0) */
-	/* same as MSG_AGENT_TO_SERVER_STDOUT */
-	MSG_SERVER_TO_CLIENT_STDOUT,
-	/* same as MSG_AGENT_TO_SERVER_STDERR */
-	MSG_SERVER_TO_CLIENT_STDERR,
-	/* same as MSG_AGENT_TO_SERVER_EXIT_CODE */
-	MSG_SERVER_TO_CLIENT_EXIT_CODE
+	 * struct trigger_service_params passed as data */
+	MSG_TRIGGER_SERVICE = 0x210,
 };
 
+/* daemon<->agent and daemon->client */
 struct server_header {
-	unsigned int type;
-	unsigned int client_id;
-	unsigned int len;
+	uint32_t type;
+	uint32_t connect_domain;
+	uint32_t connect_port;
+	uint32_t len;
 };
 
+/* client->daemon */
 struct client_header {
-	unsigned int type;
-	unsigned int len;
+	uint32_t type;
+	uint32_t len;
 };
 
-struct connect_existing_params {
+struct service_params {
 	char ident[32];
 };
 
-struct trigger_connect_params {
-	char exec_index[64];
-	char target_vmname[32];
-	struct connect_existing_params process_fds;
+struct trigger_service_params {
+	char service_name[64];
+	char target_domain[32];
+	struct service_params process_fds;
 };
+
+/* data vchan client<->agent, separate for each VM process */
+enum {
+	/* stdin dom0->VM */
+	MSG_DATA_STDIN = 0x190,
+	/* stdout VM->dom0 */
+	MSG_DATA_STDOUT,
+	/* stderr VM->dom0 */
+	MSG_DATA_STDERR,
+	/* VM process exit code VM->dom0 */
+	MSG_DATA_EXIT_CODE,
+};
+
+struct data_header {
+	uint32_t type;
+	uint32_t len;
+};
+
