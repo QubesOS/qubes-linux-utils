@@ -29,6 +29,11 @@ if [ "$MAJOR" -eq 7 -a ! -d /sys/$DEVPATH/loop ]; then
     exit 0
 fi
 
+# Check if device is read-only
+if [ "`cat /sys/$DEVPATH/ro`" -eq 1 ]; then
+    MODE=r
+fi
+
 # Special case for CD
 if [ "$ID_TYPE" = "cd" ]; then
     if [ "$ID_CDROM_MEDIA" != "1" ]; then
