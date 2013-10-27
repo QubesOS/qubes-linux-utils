@@ -199,9 +199,10 @@ char *peer_client_init(int dom, int port)
 			free(vec);
 		len = 0;
 		dummy = xs_read(xs, 0, devbuf, &len);
+		if (dummy)
+			free(dummy);
 	}
 	while (!dummy || !len);	// wait for the server to create xenstore entries
-	free(dummy);
 	xs_daemon_close(xs);
 
 	// now client init should succeed; "while" is redundant
