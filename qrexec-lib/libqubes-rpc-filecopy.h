@@ -63,6 +63,7 @@ enum {
 int copy_file(int outfd, int infd, long long size, unsigned long *crc32);
 char *copy_file_status_to_str(int status);
 void set_size_limit(long long new_bytes_limit, long long new_files_limit);
+void set_verbose(int value);
 int write_all(int fd, void *buf, int size);
 int read_all(int fd, void *buf, int size);
 int copy_fd_all(int fdout, int fdin);

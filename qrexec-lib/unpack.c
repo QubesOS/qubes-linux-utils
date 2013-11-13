@@ -16,11 +16,17 @@ long long bytes_limit = 0;
 long long files_limit = 0;
 long long total_bytes = 0;
 long long total_files = 0;
+int verbose = 0;
 
 void set_size_limit(long long new_bytes_limit, long long new_files_limit)
 {
 	bytes_limit = new_bytes_limit;
 	files_limit = new_files_limit;
+}
+
+void set_verbose(int value)
+{
+	verbose = value;
 }
 
 unsigned long crc32_sum = 0;
@@ -143,6 +149,8 @@ void process_one_file(struct file_header *untrusted_hdr)
 		process_one_file_dir(untrusted_hdr, untrusted_namebuf);
 	else
 		do_exit(EINVAL, untrusted_namebuf);
+	if (verbose && !S_ISDIR(untrusted_hdr->mode))
+		fprintf(stderr, "%s\n", untrusted_namebuf);
 }
 
 int do_unpack()
