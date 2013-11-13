@@ -156,10 +156,10 @@ int do_unpack()
 			errno = 0;
 			break;
 		}
-		process_one_file(&untrusted_hdr);
 		total_files++;
 		if (files_limit && total_files > files_limit)
 			do_exit(EDQUOT, untrusted_namebuf);
+		process_one_file(&untrusted_hdr);
 	}
 	send_status_and_crc(errno, untrusted_namebuf);
 	return errno;
