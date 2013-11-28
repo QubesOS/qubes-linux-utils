@@ -6,7 +6,7 @@
 # Maintainer: Olivier Medoc <o_medoc@yahoo.fr>
 pkgname=qubes-vm-utils
 pkgver=`cat version`
-pkgrel=4
+pkgrel=8
 epoch=
 pkgdesc="Common Linux files for Qubes VM."
 arch=("x86_64")
@@ -21,8 +21,8 @@ provides=()
 conflicts=()
 replaces=()
 backup=()
-options=()
-install=
+options=('staticlibs')
+install=PKGBUILD-qubes-vm-utils.install
 changelog=
 
 source=()
