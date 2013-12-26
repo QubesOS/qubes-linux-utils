@@ -77,13 +77,13 @@ const char *parse(const char *buf)
 	return NULL;
 }
 
-void usage()
+void usage(void)
 {
 	fprintf(stderr,
 		"usage: meminfo_writer threshold_in_kb delay_in_us [pidfile]\n");
 	fprintf(stderr, "  When pidfile set, meminfo-writer will:\n");
     fprintf(stderr, "   - fork into background\n");
-	fprintf(stderr, "   - wait for SIGURS1 (in background) before starting main work\n");
+	fprintf(stderr, "   - wait for SIGUSR1 (in background) before starting main work\n");
 	exit(1);
 }
 
