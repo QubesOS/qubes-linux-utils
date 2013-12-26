@@ -111,7 +111,7 @@ int main(int argc, char **argv)
 		usage();
 	used_mem_change_threshold = atoi(argv[1]);
 	delay = atoi(argv[2]);
-	if (!used_mem_change_threshold || !delay)
+	if (used_mem_change_threshold <= 0 || delay <= 0)
 		usage();
 
 	if (argc == 4) {
