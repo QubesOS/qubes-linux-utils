@@ -137,11 +137,13 @@ int main(int argc, char **argv)
 				fd = open(argv[3], O_CREAT | O_TRUNC | O_WRONLY, 0666);
 				if (fd < 0) {
 					perror("open pidfile");
+					kill(pid,9);
 					exit(1);
 				}
 				n = sprintf(buf, "%d\n", pid);
 				if (write(fd, buf, n) != n) {
 					perror("write pid");
+					kill(pid,9);
 					exit(1);
 				}
 				close(fd);
