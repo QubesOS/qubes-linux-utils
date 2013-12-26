@@ -163,17 +163,31 @@ int main(int argc, char **argv)
 	}
 	if (argc == 3) {
 		/* if not waiting for signal, fork after first info written to xenstore */
-		n = pread(fd, buf, sizeof(buf), 0);
+		n = pread(fd, buf, sizeof(buf)-1, 0);
+		if (n < 0) {
+			perror("pread");
+			exit(1);
+		}
 		buf[n] = 0;
 		meminfo_data = parse(buf);
 		if (meminfo_data)
 			send_to_qmemman(xs, meminfo_data);
-		if (fork() > 0)
+		n = fork();
+		if (n < 0) {
+			perror("fork");
+			exit(1);
+		}
+		if (n > 0)
 			exit(0);
+		usleep(delay);
 	}
 
 	for (;;) {
-		n = pread(fd, buf, sizeof(buf), 0);
+		n = pread(fd, buf, sizeof(buf)-1, 0);
+		if (n < 0) {
+			perror("pread");
+			exit(1);
+		}
 		buf[n] = 0;
 		meminfo_data = parse(buf);
 		if (meminfo_data)
