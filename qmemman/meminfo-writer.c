@@ -65,7 +65,7 @@ const char *parse(const char *buf)
 		used_mem_diff = -used_mem_diff;
 	if (used_mem_diff > used_mem_change_threshold
 		|| prev_used_mem == 0
-	    || (used_mem > prev_used_mem && used_mem * 13 / 10 > MemTotal
+	    || (used_mem > prev_used_mem && used_mem / 10 > (MemTotal+12) / 13
 		&& used_mem_diff > used_mem_change_threshold/2)) {
 		prev_used_mem = used_mem;
 		sprintf(outbuf,
