@@ -12,9 +12,9 @@ int used_mem_change_threshold;
 int delay;
 int usr1_received;
 
-char *parse(char *buf)
+const char *parse(const char *buf)
 {
-	char *ptr = buf;
+	const char *ptr = buf;
 	char name[256];
 	static char outbuf[4096];
 	int val;
@@ -82,7 +82,7 @@ void usage()
 	exit(1);
 }
 
-void send_to_qmemman(struct xs_handle *xs, char *data)
+void send_to_qmemman(struct xs_handle *xs, const char *data)
 {
 	if (!xs_write(xs, XBT_NULL, "memory/meminfo", data, strlen(data))) {
 		syslog(LOG_DAEMON | LOG_ERR, "error writing xenstore ?");
@@ -98,7 +98,7 @@ int main(int argc, char **argv)
 {
 	char buf[4096];
 	int n;
-	char *meminfo_data;
+	const char *meminfo_data;
 	int fd;
 	struct xs_handle *xs;
 
