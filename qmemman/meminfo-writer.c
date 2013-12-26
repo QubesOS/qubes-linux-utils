@@ -15,37 +15,41 @@ int usr1_received;
 const char *parse(const char *buf)
 {
 	const char *ptr = buf;
-	char name[256];
 	static char outbuf[4096];
 	int val;
 	int len;
+	int ret;
 	int MemTotal = 0, MemFree = 0, Buffers = 0, Cached = 0, SwapTotal =
 	    0, SwapFree = 0;
 	unsigned long long key;
 	long used_mem, used_mem_diff;
 	int nitems = 0;
 
-	while (nitems != 6) {
-		sscanf(ptr, "%s %d kB\n%n", name, &val, &len);
+	while (nitems != (1<<6)-1 || !*ptr) {
+		ret = sscanf(ptr, "%*s %d kB\n%n", &val, &len);
+		if (ret < 1 || len < sizeof (unsigned long long)) {
+			ptr += len;
+			continue;
+		}
 		key = *(unsigned long long *) ptr;
 		if (key == *(unsigned long long *) "MemTotal:") {
 			MemTotal = val;
-			nitems++;
+			nitems |= 1;
 		} else if (key == *(unsigned long long *) "MemFree:") {
 			MemFree = val;
-			nitems++;
+			nitems |= 2;
 		} else if (key == *(unsigned long long *) "Buffers:") {
 			Buffers = val;
-			nitems++;
+			nitems |= 4;
 		} else if (key == *(unsigned long long *) "Cached:  ") {
 			Cached = val;
-			nitems++;
+			nitems |= 8;
 		} else if (key == *(unsigned long long *) "SwapTotal:") {
 			SwapTotal = val;
-			nitems++;
+			nitems |= 16;
 		} else if (key == *(unsigned long long *) "SwapFree:") {
 			SwapFree = val;
-			nitems++;
+			nitems |= 32;
 		}
 
 		ptr += len;
