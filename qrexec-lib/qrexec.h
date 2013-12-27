@@ -23,18 +23,13 @@
 
 #include <stdint.h>
 
-#define QREXEC_DAEMON_SOCKET_DIR "/var/run/qubes"
+#define QREXEC_PROTOCOL_VERSION 2
 #define MAX_FDS 256
 #define MAX_DATA_CHUNK 4096
 
-#define REXEC_PORT 512
-
-#define QREXEC_AGENT_TRIGGER_PATH "/var/run/qubes/qrexec-agent"
-#define QREXEC_AGENT_FDPASS_PATH "/var/run/qubes/qrexec-agent-fdpass"
-#define MEMINFO_WRITER_PIDFILE "/var/run/meminfo-writer.pid"
-#define QUBES_RPC_MULTIPLEXER_PATH "/usr/lib/qubes/qubes-rpc-multiplexer"
-
-#define QUBES_RPC_MAGIC_CMD "QUBESRPC"
+#define RPC_REQUEST_COMMAND "QUBESRPC"
+#define VCHAN_BASE_PORT 512
+#define MAX_DATA_CHUNK 4096
 
 /* Messages sent over control vchan between daemon(dom0) and agent(vm).
  * The same are used between client(dom0) and daemon(dom0).
@@ -63,20 +58,29 @@ enum {
     /* call Qubes RPC service
      * struct trigger_service_params passed as data */
     MSG_TRIGGER_SERVICE = 0x210,
+
+
+    /* connection was terminated, struct exec_params passed as data (with empty
+     * cmdline field) informs about released vchan port */
+    MSG_CONNECTION_TERMINATED,
+
+    /* common messages */
+    /* initialize connection, struct peer_info passed as data
+     * should be sent as the first message (server first, then client) */
+    MSG_HELLO = 0x300,
 };
 
-/* daemon<->agent and daemon->client */
-struct server_header {
-	uint32_t type;
-	uint32_t connect_domain;
-	uint32_t connect_port;
-	uint32_t len;
+/* uniform for all peers, data type depends on message type */
+struct msg_header {
+    uint32_t type;           /* message type */
+    uint32_t len;            /* data length */
 };
 
-/* client->daemon */
-struct client_header {
-	uint32_t type;
-	uint32_t len;
+/* variable size */
+struct exec_params {
+    uint32_t connect_domain; /* target domain name */
+    uint32_t connect_port;   /* target vchan port for i/o exchange */
+    char cmdline[0];         /* command line to execute, size = msg_header.len - sizeof(struct exec_params) */
 };
 
 struct service_params {
@@ -86,7 +90,11 @@ struct service_params {
 struct trigger_service_params {
     char service_name[64];
     char target_domain[32];
-	struct service_params process_fds;
+    struct service_params request_id; /* service request id */
+};
+
+struct peer_info {
+    uint32_t version; /* qrexec protocol version */
 };
 
 /* data vchan client<->agent, separate for each VM process */
@@ -101,8 +109,11 @@ enum {
     MSG_DATA_EXIT_CODE,
 };
 
-struct data_header {
-	uint32_t type;
-	uint32_t len;
-};
+// linux-specific stuff below
+
+#define QREXEC_AGENT_TRIGGER_PATH "/var/run/qubes/qrexec-agent"
+#define QREXEC_AGENT_FDPASS_PATH "/var/run/qubes/qrexec-agent-fdpass"
+#define MEMINFO_WRITER_PIDFILE "/var/run/meminfo-writer.pid"
+#define QUBES_RPC_MULTIPLEXER_PATH "/usr/lib/qubes/qubes-rpc-multiplexer"
+#define QREXEC_DAEMON_SOCKET_DIR "/var/run/qubes"
 
