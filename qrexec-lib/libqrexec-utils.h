@@ -51,14 +51,4 @@ void set_block(int fd);
 int get_server_socket(const char *);
 int do_accept(int s);
 
-enum {
-	WRITE_STDIN_OK = 0x200,
-	WRITE_STDIN_BUFFERED,
-	WRITE_STDIN_ERROR
-};
-
-int flush_client_data(libvchan_t *vchan, int fd, int client_id, struct buffer *buffer);
-int write_stdin(libvchan_t *vchan, int fd, int client_id, const char *data, int len,
-		struct buffer *buffer);
 void set_nonblock(int fd);
-int fork_and_flush_stdin(int fd, struct buffer *buffer);
