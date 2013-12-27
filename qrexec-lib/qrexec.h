@@ -36,26 +36,33 @@
 
 #define QUBES_RPC_MAGIC_CMD "QUBESRPC"
 
-/* messages sent over control vchan between daemon(dom0) and agent(vm). The
- * same are used between client(dom0) and daemon(dom0) */
+/* Messages sent over control vchan between daemon(dom0) and agent(vm).
+ * The same are used between client(dom0) and daemon(dom0).
+ */
 enum {
-	/* daemon->agent messages */
-	/* start process in VM and pass its stdin/out/err to dom0 */
-	MSG_EXEC_CMDLINE = 0x200,
-	/* start process in VM discarding its stdin/out/err (connect to /dev/null) */
-	MSG_JUST_EXEC,
-	/* connect to existing process in VM to receive its stdin/out/err 
-	 * struct service_params passed as data */
-	MSG_SERVICE_CONNECT,
-	/* refuse to start a service (denied by policy, invalid parameteres etc)
-	 * struct service_params passed as data to identify which service call was
-	 * refused */
-	MSG_SERVICE_REFUSED,
+    /* daemon->agent messages */
 
-	/* agent->daemon messages */
-	/* call Qubes RPC service
-	 * struct trigger_service_params passed as data */
-	MSG_TRIGGER_SERVICE = 0x210,
+    /* start process in VM and pass its stdin/out/err to dom0
+     * struct exec_params passed as data */
+    MSG_EXEC_CMDLINE = 0x200,
+
+    /* start process in VM discarding its stdin/out/err (connect to /dev/null)
+    * struct exec_params passed as data */
+    MSG_JUST_EXEC,
+
+    /* connect to existing process in VM to receive its stdin/out/err
+     * struct service_params passed as cmdline field in exec_params */
+    MSG_SERVICE_CONNECT,
+
+    /* refuse to start a service (denied by policy, invalid parameters etc)
+     * struct service_params passed as data to identify which service call was
+     * refused */
+    MSG_SERVICE_REFUSED,
+
+    /* agent->daemon messages */
+    /* call Qubes RPC service
+     * struct trigger_service_params passed as data */
+    MSG_TRIGGER_SERVICE = 0x210,
 };
 
 /* daemon<->agent and daemon->client */
@@ -73,25 +80,25 @@ struct client_header {
 };
 
 struct service_params {
-	char ident[32];
+    char ident[32];
 };
 
 struct trigger_service_params {
-	char service_name[64];
-	char target_domain[32];
+    char service_name[64];
+    char target_domain[32];
 	struct service_params process_fds;
 };
 
 /* data vchan client<->agent, separate for each VM process */
 enum {
-	/* stdin dom0->VM */
-	MSG_DATA_STDIN = 0x190,
-	/* stdout VM->dom0 */
-	MSG_DATA_STDOUT,
-	/* stderr VM->dom0 */
-	MSG_DATA_STDERR,
-	/* VM process exit code VM->dom0 */
-	MSG_DATA_EXIT_CODE,
+    /* stdin dom0->VM */
+    MSG_DATA_STDIN = 0x190,
+    /* stdout VM->dom0 */
+    MSG_DATA_STDOUT,
+    /* stderr VM->dom0 */
+    MSG_DATA_STDERR,
+    /* VM process exit code VM->dom0 (int) */
+    MSG_DATA_EXIT_CODE,
 };
 
 struct data_header {
