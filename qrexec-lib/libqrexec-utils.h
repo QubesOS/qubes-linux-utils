@@ -42,6 +42,8 @@ void *buffer_data(struct buffer *b);
 void do_fork_exec(const char *cmdline, int *pid, int *stdin_fd, int *stdout_fd,
 		  int *stderr_fd);
 void wait_for_vchan_or_argfd(libvchan_t *vchan, int max, fd_set * rdset, fd_set * wrset);
+int read_vchan_all(libvchan_t *vchan, void *data, size_t size);
+int write_vchan_all(libvchan_t *vchan, void *data, size_t size);
 int read_all(int fd, void *buf, int size);
 int write_all(int fd, const void *buf, int size);
 void fix_fds(int fdin, int fdout, int fderr);

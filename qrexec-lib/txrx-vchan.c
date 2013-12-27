@@ -74,3 +74,29 @@ void wait_for_vchan_or_argfd(libvchan_t *ctrl, int max, fd_set * rdset, fd_set *
 	}
 	while (wait_for_vchan_or_argfd_once(ctrl, max, rdset, wrset) == 0);
 }
+
+int write_vchan_all(libvchan_t *vchan, void *data, size_t size) {
+    int pos, ret;
+
+    pos = 0;
+    while (pos < size) {
+        ret = libvchan_write(vchan, data+pos, size-pos);
+        if (ret < 0)
+            return 0;
+        pos += ret;
+    }
+    return 1;
+}
+
+int read_vchan_all(libvchan_t *vchan, void *data, size_t size) {
+    int pos, ret;
+
+    pos = 0;
+    while (pos < size) {
+        ret = libvchan_read(vchan, data+pos, size-pos);
+        if (ret < 0)
+            return 0;
+        pos += ret;
+    }
+    return 1;
+}
