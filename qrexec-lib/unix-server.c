@@ -32,9 +32,16 @@ int get_server_socket(char *socket_address)
 	struct sockaddr_un sockname;
 	int s;
 
-	unlink(socket_address);
+	if (unlink(socket_address) < 0) {
+		printf("unlink(%s) failed\n", socket_address);
+		exit(1);
+	}
 
 	s = socket(AF_UNIX, SOCK_STREAM, 0);
+	if (s < 0) {
+		printf("socket() failed\n");
+		exit(1);
+	}
 	memset(&sockname, 0, sizeof(sockname));
 	sockname.sun_family = AF_UNIX;
 	memcpy(sockname.sun_path, socket_address, strlen(socket_address));
