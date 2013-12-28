@@ -109,10 +109,15 @@ void process_one_file_dir(struct file_header *untrusted_hdr,
 {
 // fix perms only when the directory is sent for the second time
 // it allows to transfer r.x directory contents, as we create it rwx initially
+	struct stat buf;
 	if (!mkdir(untrusted_name, 0700))	/* safe because of chroot */
 		return;
 	if (errno != EEXIST)
 		do_exit(errno, untrusted_name);
+	if (stat(untrusted_name,&buf) < 0)
+		do_exit(errno, untrusted_name);
+	total_bytes += buf.st_size;
+	/* size accumulated after the fact, so don't check limit here */
 	fix_times_and_perms(untrusted_hdr, untrusted_name);
 }
 
@@ -124,6 +129,9 @@ void process_one_file_link(struct file_header *untrusted_hdr,
 	if (untrusted_hdr->filelen > MAX_PATH_LENGTH - 1)
 		do_exit(ENAMETOOLONG, untrusted_name);
 	filelen = untrusted_hdr->filelen;	/* sanitized above */
+	total_bytes += filelen;
+	if (bytes_limit && total_bytes > bytes_limit)
+		do_exit(EDQUOT, untrusted_name);
 	if (!read_all_with_crc(0, untrusted_content, filelen))
 		do_exit(LEGAL_EOF, untrusted_name);	// hopefully remote has produced error message
 	untrusted_content[filelen] = 0;
@@ -156,6 +164,7 @@ void process_one_file(struct file_header *untrusted_hdr)
 int do_unpack()
 {
 	struct file_header untrusted_hdr;
+	total_bytes = total_files = 0;
 	/* initialize checksum */
 	crc32_sum = 0;
 	while (read_all_with_crc(0, &untrusted_hdr, sizeof untrusted_hdr)) {
