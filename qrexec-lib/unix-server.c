@@ -27,7 +27,7 @@
 #include <stdlib.h>
 //#include "qrexec.h"
 
-int get_server_socket(char *socket_address)
+int get_server_socket(const char *socket_address)
 {
 	struct sockaddr_un sockname;
 	int s;

@@ -67,7 +67,7 @@ Yet the profiling output show they are not significant CPU hogs, so
 we keep them so simple to make them obviously correct.
 */
 
-void buffer_append(struct buffer *b, char *data, int len)
+void buffer_append(struct buffer *b, const char *data, int len)
 {
 	int newsize;
 	char *qdata;

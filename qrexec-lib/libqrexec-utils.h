@@ -29,28 +29,28 @@ struct buffer {
 
 void buffer_init(struct buffer *b);
 void buffer_free(struct buffer *b);
-void buffer_append(struct buffer *b, char *data, int len);
+void buffer_append(struct buffer *b, const char *data, int len);
 void buffer_remove(struct buffer *b, int len);
 int buffer_len(struct buffer *b);
 void *buffer_data(struct buffer *b);
 
 
-void do_fork_exec(char *cmdline, int *pid, int *stdin_fd, int *stdout_fd,
+void do_fork_exec(const char *cmdline, int *pid, int *stdin_fd, int *stdout_fd,
 		  int *stderr_fd);
 int peer_server_init(int port);
 char *peer_client_init(int dom, int port);
 void wait_for_vchan_or_argfd(int max, fd_set * rdset, fd_set * wrset);
-int read_ready_vchan_ext();
+int read_ready_vchan_ext(void);
 int read_all(int fd, void *buf, int size);
 int read_all_vchan_ext(void *buf, int size);
-int write_all(int fd, void *buf, int size);
+int write_all(int fd, const void *buf, int size);
 int write_all_vchan_ext(void *buf, int size);
-int buffer_space_vchan_ext();
+int buffer_space_vchan_ext(void);
 void fix_fds(int fdin, int fdout, int fderr);
 void set_nonblock(int fd);
 void set_block(int fd);
 
-int get_server_socket(char *);
+int get_server_socket(const char *);
 int do_accept(int s);
 
 enum {
@@ -60,7 +60,7 @@ enum {
 };
 
 int flush_client_data(int fd, int client_id, struct buffer *buffer);
-int write_stdin(int fd, int client_id, char *data, int len,
+int write_stdin(int fd, int client_id, const char *data, int len,
 		struct buffer *buffer);
 void set_nonblock(int fd);
 int fork_and_flush_stdin(int fd, struct buffer *buffer);

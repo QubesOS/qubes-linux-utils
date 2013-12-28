@@ -38,7 +38,7 @@ int read_all_with_crc(int fd, void *buf, int size) {
 	return ret;
 }
 
-void send_status_and_crc(int code, char *last_filename) {
+void send_status_and_crc(int code, const char *last_filename) {
 	struct result_header hdr;
 	struct result_header_ext hdr_ext;
 	int saved_errno;
@@ -58,7 +58,7 @@ void send_status_and_crc(int code, char *last_filename) {
 	errno = saved_errno;
 }
 
-void do_exit(int code, char *last_filename)
+void do_exit(int code, const char *last_filename)
 {
 	close(0);
 	send_status_and_crc(code, last_filename);
@@ -66,7 +66,7 @@ void do_exit(int code, char *last_filename)
 }
 
 void fix_times_and_perms(struct file_header *untrusted_hdr,
-			 char *untrusted_name)
+			 const char *untrusted_name)
 {
 	struct timeval times[2] =
 	    { {untrusted_hdr->atime, untrusted_hdr->atime_nsec / 1000},
@@ -82,7 +82,7 @@ void fix_times_and_perms(struct file_header *untrusted_hdr,
 
 
 void process_one_file_reg(struct file_header *untrusted_hdr,
-			  char *untrusted_name)
+			  const char *untrusted_name)
 {
 	int ret;
 	int fdout = open(untrusted_name, O_WRONLY | O_CREAT | O_EXCL | O_NOFOLLOW, 0700);	/* safe because of chroot */
@@ -105,7 +105,7 @@ void process_one_file_reg(struct file_header *untrusted_hdr,
 
 
 void process_one_file_dir(struct file_header *untrusted_hdr,
-			  char *untrusted_name)
+			  const char *untrusted_name)
 {
 // fix perms only when the directory is sent for the second time
 // it allows to transfer r.x directory contents, as we create it rwx initially
@@ -122,7 +122,7 @@ void process_one_file_dir(struct file_header *untrusted_hdr,
 }
 
 void process_one_file_link(struct file_header *untrusted_hdr,
-			   char *untrusted_name)
+			   const char *untrusted_name)
 {
 	char untrusted_content[MAX_PATH_LENGTH];
 	unsigned int filelen;
@@ -161,7 +161,7 @@ void process_one_file(struct file_header *untrusted_hdr)
 		fprintf(stderr, "%s\n", untrusted_namebuf);
 }
 
-int do_unpack()
+int do_unpack(void)
 {
 	struct file_header untrusted_hdr;
 	total_bytes = total_files = 0;

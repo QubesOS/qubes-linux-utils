@@ -64,7 +64,7 @@ int copy_file(int outfd, int infd, long long size, unsigned long *crc32);
 char *copy_file_status_to_str(int status);
 void set_size_limit(long long new_bytes_limit, long long new_files_limit);
 void set_verbose(int value);
-int write_all(int fd, void *buf, int size);
+int write_all(int fd, const void *buf, int size);
 int read_all(int fd, void *buf, int size);
 int copy_fd_all(int fdout, int fdin);
 void set_nonblock(int fd);
@@ -73,6 +73,6 @@ void set_block(int fd);
 extern unsigned long Crc32_ComputeBuf( unsigned long inCrc32, const void *buf,
         size_t bufLen );
 
-extern int do_unpack();
+extern int do_unpack(void);
 
 #endif /* _LIBQUBES_RPC_FILECOPY_H */

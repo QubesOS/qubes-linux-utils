@@ -23,7 +23,7 @@
 #include <unistd.h>
 #include <stdio.h>
 
-extern void do_exec(char *);
+extern void do_exec(const char *);
 
 void fix_fds(int fdin, int fdout, int fderr)
 {
@@ -40,7 +40,7 @@ void fix_fds(int fdin, int fdout, int fderr)
 		close(fderr);
 }
 
-void do_fork_exec(char *cmdline, int *pid, int *stdin_fd, int *stdout_fd,
+void do_fork_exec(const char *cmdline, int *pid, int *stdin_fd, int *stdout_fd,
 		  int *stderr_fd)
 {
 	int inpipe[2], outpipe[2], errpipe[2];

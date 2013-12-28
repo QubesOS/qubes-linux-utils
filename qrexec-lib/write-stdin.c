@@ -69,7 +69,7 @@ Write "len" bytes from "data" to "fd". If not all written, buffer the rest
 to "buffer", and notify the peer that the client "client_id" pipe is full via 
 MSG_XOFF message.
 */
-int write_stdin(int fd, int client_id, char *data, int len,
+int write_stdin(int fd, int client_id, const char *data, int len,
 		struct buffer *buffer)
 {
 	int ret;
