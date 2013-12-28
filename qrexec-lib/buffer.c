@@ -69,8 +69,16 @@ we keep them so simple to make them obviously correct.
 
 void buffer_append(struct buffer *b, char *data, int len)
 {
-	int newsize = len + b->buflen;
-	char *qdata = limited_malloc(len + b->buflen);
+	int newsize;
+	char *qdata;
+	if (len < 0 || len > BUFFER_LIMIT) {
+		fprintf(stderr, "buffer_append %d\n", len);
+		exit(1);
+	}
+	if (len == 0)
+		return;
+	newsize = len + b->buflen;
+	qdata = limited_malloc(len + b->buflen);
 	memcpy(qdata, b->data, b->buflen);
 	memcpy(qdata + b->buflen, data, len);
 	buffer_free(b);
@@ -80,9 +88,17 @@ void buffer_append(struct buffer *b, char *data, int len)
 
 void buffer_remove(struct buffer *b, int len)
 {
-	int newsize = b->buflen - len;
-	char *qdata = limited_malloc(newsize);
-	memcpy(qdata, b->data + len, newsize);
+	int newsize;
+	char *qdata = NULL;
+	if (len < 0 || len > b->buflen) {
+		fprintf(stderr, "buffer_remove %d/%d\n", len, b->buflen);
+		exit(1);
+	}
+	newsize = b->buflen - len;
+	if (newsize > 0) {
+		qdata = limited_malloc(newsize);
+		memcpy(qdata, b->data + len, newsize);
+	}
 	buffer_free(b);
 	b->buflen = newsize;
 	b->data = qdata;
