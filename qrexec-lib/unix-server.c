@@ -44,7 +44,8 @@ int get_server_socket(char *socket_address)
 	}
 	memset(&sockname, 0, sizeof(sockname));
 	sockname.sun_family = AF_UNIX;
-	memcpy(sockname.sun_path, socket_address, strlen(socket_address));
+	strncpy(sockname.sun_path, socket_address, sizeof sockname.sun_path);
+	sockname.sun_path[sizeof sockname.sun_path - 1] = 0;
 
 	if (bind(s, (struct sockaddr *) &sockname, sizeof(sockname)) == -1) {
 		printf("bind() failed\n");
