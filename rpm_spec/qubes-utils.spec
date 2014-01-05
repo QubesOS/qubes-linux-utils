@@ -34,6 +34,21 @@ make all
 %install
 make install DESTDIR=%{buildroot}
 
+%post
+if [ -r /etc/qubes-release ]; then
+    # dom0
+    /bin/systemctl enable qubes-meminfo-writer-dom0.service > /dev/null 2>&1
+else
+    # VM
+    /bin/systemctl enable qubes-meminfo-writer.service > /dev/null 2>&1
+fi
+
+%postun
+if [ $1 -eq 0 ]; then
+    /bin/systemctl disable qubes-meminfo-writer.service > /dev/null 2>&1
+    /bin/systemctl disable qubes-meminfo-writer.service > /dev/null 2>&1
+fi
+
 %clean
 rm -rf $RPM_BUILD_ROOT
 
@@ -41,6 +56,9 @@ rm -rf $RPM_BUILD_ROOT
 %defattr(-,root,root,-)
 /etc/udev/rules.d/99-qubes-*.rules
 /usr/libexec/qubes/udev-*
+%{_sbindir}/meminfo-writer
+%{_unitdir}/qubes-meminfo-writer.service
+%{_unitdir}/qubes-meminfo-writer-dom0.service
 
 
 %files devel
