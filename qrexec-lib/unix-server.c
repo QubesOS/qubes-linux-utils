@@ -32,10 +32,7 @@ int get_server_socket(const char *socket_address)
 	struct sockaddr_un sockname;
 	int s;
 
-	if (unlink(socket_address) < 0) {
-		printf("unlink(%s) failed\n", socket_address);
-		exit(1);
-	}
+	unlink(socket_address);
 
 	s = socket(AF_UNIX, SOCK_STREAM, 0);
 	if (s < 0) {
