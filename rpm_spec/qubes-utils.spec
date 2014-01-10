@@ -3,6 +3,8 @@
 %define _builddir %(pwd)
 %endif
 
+%{!?python_sitearch: %define python_sitearch %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib(1)")}
+
 Name:		qubes-utils
 Version:	%{version}
 Release:	1%{?dist}
@@ -59,7 +61,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_sbindir}/meminfo-writer
 %{_unitdir}/qubes-meminfo-writer.service
 %{_unitdir}/qubes-meminfo-writer-dom0.service
-
+%attr(0755,root,root) %{python_sitearch}/qubes/img.py
+%{python_sitearch}/qubes/img.pyc
+%{python_sitearch}/qubes/img.pyo
 
 %files devel
 %defattr(-,root,root,-)
