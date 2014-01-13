@@ -10,8 +10,8 @@ ENV{MAJOR}=="202", GOTO="qubes_block_end"
 ENV{MAJOR}=="253", GOTO="qubes_block_end"
 
 IMPORT{db}="QUBES_EXPOSED"
-ACTION=="add", IMPORT{program}="/usr/libexec/qubes/udev-block-add-change"
-ACTION=="change", IMPORT{program}="/usr/libexec/qubes/udev-block-add-change"
+ACTION=="add", IMPORT{program}="/usr/bin/flock /var/run/qubes-udev.lock -c /usr/libexec/qubes/udev-block-add-change"
+ACTION=="change", IMPORT{program}="/usr/bin/flock /var/run/qubes-udev.lock -c /usr/libexec/qubes/udev-block-add-change"
 ACTION=="remove", RUN+="/usr/libexec/qubes/udev-block-remove"
 
 LABEL="qubes_block_end"
