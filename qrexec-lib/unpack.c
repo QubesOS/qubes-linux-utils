@@ -8,6 +8,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <stdio.h>
+#include <limits.h>
 #include "libqubes-rpc-filecopy.h"
 #include "crc32.h"
 
@@ -18,8 +19,18 @@ long long total_bytes = 0;
 long long total_files = 0;
 int verbose = 0;
 
+void do_exit(int code, const char *last_filename)
+{
+	close(0);
+	send_status_and_crc(code, last_filename);
+	exit(code);
+}
+
 void set_size_limit(long long new_bytes_limit, long long new_files_limit)
 {
+	if (new_bytes_limit < 0 || new_files_limit < 0) {
+		do_exit(EINVAL, "");
+	}
 	bytes_limit = new_bytes_limit;
 	files_limit = new_files_limit;
 }
@@ -58,13 +69,6 @@ void send_status_and_crc(int code, const char *last_filename) {
 	errno = saved_errno;
 }
 
-void do_exit(int code, const char *last_filename)
-{
-	close(0);
-	send_status_and_crc(code, last_filename);
-	exit(code);
-}
-
 void fix_times_and_perms(struct file_header *untrusted_hdr,
 			 const char *untrusted_name)
 {
@@ -88,9 +92,12 @@ void process_one_file_reg(struct file_header *untrusted_hdr,
 	int fdout = open(untrusted_name, O_WRONLY | O_CREAT | O_EXCL | O_NOFOLLOW, 0700);	/* safe because of chroot */
 	if (fdout < 0)
 		do_exit(errno, untrusted_name);
-	total_bytes += untrusted_hdr->filelen;
-	if (bytes_limit && total_bytes > bytes_limit)
+	/* sizes are signed elsewhere */
+	if (untrusted_hdr->filelen > LLONG_MAX || (bytes_limit && untrusted_hdr->filelen > bytes_limit))
 		do_exit(EDQUOT, untrusted_name);
+	if (bytes_limit && total_bytes > bytes_limit - untrusted_hdr->filelen)
+		do_exit(EDQUOT, untrusted_name);
+	total_bytes += untrusted_hdr->filelen;
 	ret = copy_file(fdout, 0, untrusted_hdr->filelen, &crc32_sum);
 	if (ret != COPY_FILE_OK) {
 		if (ret == COPY_FILE_READ_EOF
