@@ -15,6 +15,7 @@ License:	GPL
 URL:		http://www.qubes-os.org
 
 Requires:	udev
+Requires:	ImageMagick
 BuildRequires:  qubes-libvchan-devel
 
 %description
