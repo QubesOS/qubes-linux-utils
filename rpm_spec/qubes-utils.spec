@@ -62,9 +62,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_sbindir}/meminfo-writer
 %{_unitdir}/qubes-meminfo-writer.service
 %{_unitdir}/qubes-meminfo-writer-dom0.service
-%attr(0755,root,root) %{python_sitearch}/qubes/img.py
-%{python_sitearch}/qubes/img.pyc
-%{python_sitearch}/qubes/img.pyo
+%attr(0755,root,root) %{python_sitearch}/qubes/imgconverter.py
+%{python_sitearch}/qubes/imgconverter.pyc
+%{python_sitearch}/qubes/imgconverter.pyo
 
 %files devel
 %defattr(-,root,root,-)
