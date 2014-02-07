@@ -13,6 +13,7 @@ License:	GPL
 URL:		http://www.qubes-os.org
 
 Requires:	udev
+Requires:	%{name}-libs
 BuildRequires:  qubes-libvchan-devel
 
 %description
@@ -21,9 +22,17 @@ Common Linux files for Qubes Dom0 and VM
 %package devel
 Summary:	Development headers for qubes-utils
 Release:	1%{?dist}
+Requires:	%{name}-libs
 
 %description devel
 Development header and files for qubes-utils
+
+%package libs
+Summary: Qubes utils libraries
+Release:	1%{?dist}
+
+%description libs
+Libraries for qubes-utils
 
 %prep
 
@@ -49,6 +58,9 @@ if [ $1 -eq 0 ]; then
     /bin/systemctl disable qubes-meminfo-writer.service > /dev/null 2>&1
 fi
 
+%post libs -p /sbin/ldconfig
+%postun libs -p /sbin/ldconfig
+
 %clean
 rm -rf $RPM_BUILD_ROOT
 
@@ -60,6 +72,10 @@ rm -rf $RPM_BUILD_ROOT
 %{_unitdir}/qubes-meminfo-writer.service
 %{_unitdir}/qubes-meminfo-writer-dom0.service
 
+%files libs
+%{_libdir}/libqrexec-utils.so.1
+%{_libdir}/libqubes-rpc-filecopy.so.1
+
 
 %files devel
 %defattr(-,root,root,-)
@@ -68,8 +84,6 @@ rm -rf $RPM_BUILD_ROOT
 /usr/include/qrexec.h
 %{_libdir}/libqrexec-utils.so
 %{_libdir}/libqubes-rpc-filecopy.so
-%{_libdir}/libqrexec-utils.so.1
-%{_libdir}/libqubes-rpc-filecopy.so.1
 
 %changelog
 
