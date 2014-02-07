@@ -35,6 +35,11 @@ Release:	1%{?dist}
 Libraries for qubes-utils
 
 %prep
+# we operate on the current directory, so no need to unpack anything
+# symlink is to generate useful debuginfo packages
+rm -f %{name}-%{version}
+ln -sf . %{name}-%{version}
+%setup -T -D
 
 
 %build
