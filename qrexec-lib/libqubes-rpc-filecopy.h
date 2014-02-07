@@ -60,6 +60,8 @@ enum {
 	COPY_FILE_WRITE_ERROR
 };
 
+typedef void (notify_progress_t)(int, int);
+void register_notify_progress(notify_progress_t *func);
 int copy_file(int outfd, int infd, long long size, unsigned long *crc32);
 char *copy_file_status_to_str(int status);
 void set_size_limit(long long new_bytes_limit, long long new_files_limit);

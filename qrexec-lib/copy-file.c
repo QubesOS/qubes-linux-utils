@@ -3,7 +3,11 @@
 #include "libqubes-rpc-filecopy.h"
 #include "crc32.h"
 
-extern void notify_progress(int, int);
+notify_progress_t *notify_progress_func = NULL;
+void register_notify_progress(notify_progress_t *func)
+{
+	notify_progress_func = func;
+}
 
 int copy_file(int outfd, int infd, long long size, unsigned long *crc32)
 {
@@ -26,7 +30,8 @@ int copy_file(int outfd, int infd, long long size, unsigned long *crc32)
 			*crc32 = Crc32_ComputeBuf(*crc32, buf, ret);
 		if (!write_all(outfd, buf, ret))
 			return COPY_FILE_WRITE_ERROR;
-		notify_progress(ret, 0);
+		if (notify_progress_func != NULL)
+			notify_progress_func(ret, 0);
 		written += ret;
 	}
 	return COPY_FILE_OK;

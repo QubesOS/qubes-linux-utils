@@ -22,8 +22,12 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdio.h>
+#include "libqrexec-utils.h"
 
-extern void do_exec(const char *);
+static do_exec_t *exec_func = NULL;
+void register_exec_func(do_exec_t *func) {
+	exec_func = func;
+}
 
 void fix_fds(int fdin, int fdout, int fderr)
 {
@@ -59,7 +63,8 @@ void do_fork_exec(const char *cmdline, int *pid, int *stdin_fd, int *stdout_fd,
 		} else
 			fix_fds(inpipe[0], outpipe[1], 2);
 
-		do_exec(cmdline);
+		if (exec_func != NULL)
+			exec_func(cmdline);
 		exit(-1);
 	default:;
 	}

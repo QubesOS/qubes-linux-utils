@@ -27,6 +27,9 @@ struct buffer {
 	int buflen;
 };
 
+typedef void (do_exec_t)(const char *);
+void register_exec_func(do_exec_t *func);
+
 void buffer_init(struct buffer *b);
 void buffer_free(struct buffer *b);
 void buffer_append(struct buffer *b, const char *data, int len);
