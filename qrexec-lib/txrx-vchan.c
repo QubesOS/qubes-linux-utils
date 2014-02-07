@@ -29,7 +29,7 @@
 
 static struct libvchan *ctrl;
 static int is_server;
-int write_all_vchan_ext(void *buf, int size)
+int write_all_vchan_ext(const void *buf, int size)
 {
 	int written = 0;
 	int ret;

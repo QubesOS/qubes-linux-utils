@@ -12,7 +12,7 @@ int copy_file(int outfd, int infd, long long size, unsigned long *crc32)
 	int ret;
 	int count;
 	while (written < size) {
-		if (size - written > sizeof(buf))
+		if (size - written > (int)sizeof(buf))
 			count = sizeof buf;
 		else
 			count = size - written;
