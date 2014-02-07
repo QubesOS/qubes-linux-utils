@@ -66,8 +66,10 @@ rm -rf $RPM_BUILD_ROOT
 /usr/include/libqrexec-utils.h
 /usr/include/libqubes-rpc-filecopy.h
 /usr/include/qrexec.h
-%{_libdir}/libqrexec-utils.a
-%{_libdir}/libqubes-rpc-filecopy.a
+%{_libdir}/libqrexec-utils.so
+%{_libdir}/libqubes-rpc-filecopy.so
+%{_libdir}/libqrexec-utils.so.1
+%{_libdir}/libqubes-rpc-filecopy.so.1
 
 %changelog
 
