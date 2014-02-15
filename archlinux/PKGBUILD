@@ -33,7 +33,7 @@ md5sums=() #generate with 'makepkg -g'
 
 build() {
 
-for source in qrexec-lib udev qmemman Makefile; do
+for source in qrexec-lib udev qmemman core Makefile; do
   (ln -s $srcdir/../$source $srcdir/$source)
 done
 
