@@ -36,7 +36,7 @@ int write_all_vchan_ext(const void *buf, int size)
 
 	while (written < size) {
 		ret =
-		    libvchan_write(ctrl, (char *) buf + written,
+		    libvchan_write(ctrl, (const char *) buf + written,
 				   size - written);
 		if (ret <= 0) {
 			perror("write");

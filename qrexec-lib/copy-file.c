@@ -37,7 +37,7 @@ int copy_file(int outfd, int infd, long long size, unsigned long *crc32)
 	return COPY_FILE_OK;
 }
 
-char * copy_file_status_to_str(int status)
+const char * copy_file_status_to_str(int status)
 {
 	switch (status) {
 		case COPY_FILE_OK: return "OK";

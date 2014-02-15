@@ -47,7 +47,7 @@ int read_ready_vchan_ext(void);
 int read_all(int fd, void *buf, int size);
 int read_all_vchan_ext(void *buf, int size);
 int write_all(int fd, const void *buf, int size);
-int write_all_vchan_ext(void *buf, int size);
+int write_all_vchan_ext(const void *buf, int size);
 int buffer_space_vchan_ext(void);
 void fix_fds(int fdin, int fdout, int fderr);
 void set_nonblock(int fd);
