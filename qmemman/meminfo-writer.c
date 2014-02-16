@@ -7,7 +7,7 @@
 #include <string.h>
 #include <signal.h>
 
-unsigned long prev_used_mem;
+long prev_used_mem;
 int used_mem_change_threshold;
 int delay;
 int usr1_received;
@@ -27,7 +27,7 @@ const char *parse(const char *buf)
 
 	while (nitems != (1<<6)-1 || !*ptr) {
 		ret = sscanf(ptr, "%*s %d kB\n%n", &val, &len);
-		if (ret < 1 || len < sizeof (unsigned long long)) {
+		if (ret < 1 || len < (int)sizeof (unsigned long long)) {
 			ptr += len;
 			continue;
 		}
@@ -95,7 +95,7 @@ void send_to_qmemman(struct xs_handle *xs, const char *data)
 	}
 }
 
-void usr1_handler(int sig) {
+void usr1_handler(int sig __attribute__((__unused__))) {
 	usr1_received = 1;
 }
 

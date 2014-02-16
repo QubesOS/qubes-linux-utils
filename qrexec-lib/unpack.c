@@ -13,11 +13,13 @@
 #include "crc32.h"
 
 char untrusted_namebuf[MAX_PATH_LENGTH];
-long long bytes_limit = 0;
-long long files_limit = 0;
-long long total_bytes = 0;
-long long total_files = 0;
+unsigned long long bytes_limit = 0;
+unsigned long long files_limit = 0;
+unsigned long long total_bytes = 0;
+unsigned long long total_files = 0;
 int verbose = 0;
+
+void send_status_and_crc(int code, const char *last_filename);
 
 void do_exit(int code, const char *last_filename)
 {
@@ -26,11 +28,8 @@ void do_exit(int code, const char *last_filename)
 	exit(code);
 }
 
-void set_size_limit(long long new_bytes_limit, long long new_files_limit)
+void set_size_limit(unsigned long long new_bytes_limit, unsigned long long new_files_limit)
 {
-	if (new_bytes_limit < 0 || new_files_limit < 0) {
-		do_exit(EINVAL, "");
-	}
 	bytes_limit = new_bytes_limit;
 	files_limit = new_files_limit;
 }
