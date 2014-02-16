@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-Wall -g -O3
+CFLAGS=-Wall -Wextra -Werror -g -O3
 all:	meminfo-writer
 meminfo-writer: meminfo-writer.o
 	$(CC) -g -o meminfo-writer meminfo-writer.o -lxenstore

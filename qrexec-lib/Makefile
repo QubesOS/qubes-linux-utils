@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS+=-I. -g -Wall -pie -fPIC -Wextra
+CFLAGS+=-I. -g -Wall -Wextra -Werror -pie -fPIC
 XENLIBS=-lxenctrl -lxenstore -lvchan
 COMMONIOALL=ioall.o
 SO_VER=1
