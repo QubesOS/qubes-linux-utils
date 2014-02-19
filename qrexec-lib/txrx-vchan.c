@@ -71,7 +71,7 @@ int read_all_vchan_ext(void *buf, int size)
 	return size;
 }
 
-int read_ready_vchan_ext()
+unsigned int read_ready_vchan_ext()
 {
 	int ready = libvchan_data_ready(ctrl);
 	if (ready < 0) {
@@ -81,7 +81,7 @@ int read_ready_vchan_ext()
 	return ready;
 }
 
-int buffer_space_vchan_ext()
+unsigned int buffer_space_vchan_ext()
 {
 	int space = libvchan_buffer_space(ctrl);
 	if (space < 0) {
