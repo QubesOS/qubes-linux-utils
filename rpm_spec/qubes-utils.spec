@@ -52,13 +52,10 @@ make all
 make install DESTDIR=%{buildroot}
 
 %post
-if [ -r /etc/qubes-release ]; then
-    # dom0
-    /bin/systemctl enable qubes-meminfo-writer-dom0.service > /dev/null 2>&1
-else
-    # VM
-    /bin/systemctl enable qubes-meminfo-writer.service > /dev/null 2>&1
-fi
+# dom0
+/bin/systemctl enable qubes-meminfo-writer-dom0.service > /dev/null 2>&1
+# VM
+/bin/systemctl enable qubes-meminfo-writer.service > /dev/null 2>&1
 
 %postun
 if [ $1 -eq 0 ]; then
