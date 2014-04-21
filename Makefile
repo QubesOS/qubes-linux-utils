@@ -27,4 +27,5 @@ install:
 
 clean:
 	$(MAKE) -C qrexec-lib clean
+	$(MAKE) -C qmemman clean
 	$(MAKE) -C core clean
