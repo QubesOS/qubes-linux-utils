@@ -5,6 +5,12 @@ COMMONIOALL=ioall.o
 SO_VER=1
 LDFLAGS=-shared
 
+_XENSTORE_H=$(shell ls /usr/include/xenstore.h)
+ifneq "$(_XENSTORE_H)" ""
+	CFLAGS+= -DUSE_XENSTORE_H
+endif
+
+
 all: libqrexec-utils.so.$(SO_VER) libqubes-rpc-filecopy.so.$(SO_VER)
 libqrexec-utils.so.$(SO_VER): unix-server.o ioall.o buffer.o write-stdin.o exec.o txrx-vchan.o
 	$(CC) $(LDFLAGS) -Wl,-soname,$@ -o $@ $^ $(XENLIBS)

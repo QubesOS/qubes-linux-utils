@@ -2,7 +2,11 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
+#ifdef USE_XENSTORE_H /* Xen >= 4.2 */
+#include <xenstore.h>
+#else
 #include <xs.h>
+#endif
 #include <syslog.h>
 #include <string.h>
 #include <signal.h>

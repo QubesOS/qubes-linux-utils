@@ -24,7 +24,11 @@
 #include <stdlib.h>
 #include <signal.h>
 #include <libvchan.h>
+#ifdef USE_XENSTORE_H
+#include <xenstore.h>
+#else
 #include <xs.h>
+#endif
 #include <xenctrl.h>
 
 static struct libvchan *ctrl;
