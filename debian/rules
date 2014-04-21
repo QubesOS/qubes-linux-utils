@@ -1,0 +1,16 @@
+#!/usr/bin/make -f
+# -*- makefile -*-
+
+export DESTDIR=$(shell pwd)/debian/qubes-linux-utils
+
+# Uncomment this to turn on verbose mode.
+#export DH_VERBOSE=1
+
+%:
+	dh $@ 
+
+override_dh_auto_build:
+	make all LIBDIR=/usr/lib DEBIANBUILD=1
+
+override_dh_auto_install:
+	make install LIBDIR=/usr/lib DEBIANBUILD=1 

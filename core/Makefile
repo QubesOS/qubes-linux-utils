@@ -12,5 +12,9 @@ clean:
 
 install:
 	mkdir -p $(DESTDIR)/$(PYTHON_SITEARCH)/qubes/
+ifeq (1,${DEBIANBUILD})
+	cp *.py $(DESTDIR)/$(PYTHON_SITEARCH)/qubes/
+else
 	cp *.py* $(DESTDIR)/$(PYTHON_SITEARCH)/qubes/
+endif
 .PHONY: install
