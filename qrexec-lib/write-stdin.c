@@ -131,5 +131,5 @@ int fork_and_flush_stdin(int fd, struct buffer *buffer)
 			close(i);
 	set_block(fd);
 	write_all(fd, buffer_data(buffer), buffer_len(buffer));
-	exit(0);
+	_exit(0);
 }
