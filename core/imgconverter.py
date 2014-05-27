@@ -25,7 +25,7 @@ Toolkit for secure transfer and conversion of images between Qubes VMs.'''
 
 import colorsys
 import math
-import os.path
+import os
 import re
 import cStringIO as StringIO
 import subprocess
@@ -185,6 +185,8 @@ expects header+RGBA on stdin. This method is invoked from qvm-imgconverter-clien
             raise Exception('Something went wrong: {0!s}'.format(e))
         finally:
             sys.stdout.close()
+            # sys.stdout.close() is not enough and documentation is silent about this
+            os.close(1)
 
         return cls.get_from_stream(sys.stdin, **kwargs)
 
