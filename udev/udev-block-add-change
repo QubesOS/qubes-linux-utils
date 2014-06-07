@@ -23,6 +23,11 @@ if [ -n "`ls -A /sys/$DEVPATH/holders 2> /dev/null`" ]; then
     xs_remove
     exit 0
 fi
+# ... and used device-mapper devices
+if [ -n "$DM_NAME" ] && /usr/sbin/dmsetup info "$DM_NAME" | grep -q "^Open count:.*[1-9]"; then
+    xs_remove
+    exit 0
+fi
 # ... and "empty" loop devices
 if [ "$MAJOR" -eq 7 -a ! -d /sys/$DEVPATH/loop ]; then
     xs_remove
@@ -47,6 +52,10 @@ fi
 # Special description for loop devices
 if [ -d /sys/$DEVPATH/loop ]; then
     DESC=$(cat /sys/$DEVPATH/loop/backing_file)
+fi
+# and for device-mapper
+if [ -n "$DM_NAME" ]; then
+    DESC="$DM_NAME"
 fi
 
 # Get lock only in dom0 - there are so many block devices so it causes xenstore

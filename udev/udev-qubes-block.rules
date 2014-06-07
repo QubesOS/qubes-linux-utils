@@ -11,7 +11,7 @@ KERNEL=="xvda|xvdb|xvdc*|xvdd", ENV{UDISKS_IGNORE}="1"
 ENV{MAJOR}=="202", GOTO="qubes_block_end"
 
 # Skip device-mapper devices
-ENV{MAJOR}=="253", GOTO="qubes_block_end"
+ENV{MAJOR}=="253", ENV{DM_NAME}=="snapshot-*", GOTO="qubes_block_end"
 
 IMPORT{db}="QUBES_EXPOSED"
 ACTION=="add", IMPORT{program}="/usr/bin/flock /var/run/qubes-udev.lock -c /usr/libexec/qubes/udev-block-add-change"
