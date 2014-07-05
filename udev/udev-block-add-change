@@ -1,7 +1,8 @@
 #!/bin/bash
 
+export LC_CTYPE=en_US.UTF-8
 NAME=${DEVNAME#/dev/}
-DESC="${ID_MODEL} (${ID_FS_LABEL})"
+DESC="`echo "${ID_MODEL} (${ID_FS_LABEL})" | iconv -f utf8 -t ascii//TRANSLIT`"
 SIZE=$[ $(cat /sys/$DEVPATH/size) * 512 ]
 MODE=w
 XS_KEY="qubes-block-devices/$NAME"
