@@ -12,6 +12,7 @@ ENV{MAJOR}=="202", GOTO="qubes_block_end"
 
 # Skip device-mapper devices
 ENV{MAJOR}=="253", ENV{DM_NAME}=="snapshot-*", GOTO="qubes_block_end"
+ENV{MAJOR}=="253", ENV{DM_NAME}=="origin-*", GOTO="qubes_block_end"
 ENV{MAJOR}=="253", ENV{DM_NAME}=="", GOTO="qubes_block_end"
 
 IMPORT{db}="QUBES_EXPOSED"
