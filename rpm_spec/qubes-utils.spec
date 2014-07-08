@@ -17,6 +17,7 @@ URL:		http://www.qubes-os.org
 Requires:	udev
 Requires:	%{name}-libs
 Requires:	ImageMagick
+Requires:	pycairo
 BuildRequires:  qubes-libvchan-devel
 
 %description
