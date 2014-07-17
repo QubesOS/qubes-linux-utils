@@ -14,7 +14,7 @@ help:
 
 rpms:
 	rpmbuild --define "_rpmdir rpm/" --define "_builddir ." -bb rpm_spec/qubes-utils.spec
-all: 
+all:
 	$(MAKE) -C qrexec-lib all
 	$(MAKE) -C qmemman all
 	$(MAKE) -C core all
@@ -24,6 +24,10 @@ install:
 	$(MAKE) -C qrexec-lib install
 	$(MAKE) -C qmemman install
 	$(MAKE) -C core install
+
+install-kernel-support:
+	$(MAKE) -C dracut install
+	$(MAKE) -C kernel-modules install
 
 clean:
 	$(MAKE) -C qrexec-lib clean
