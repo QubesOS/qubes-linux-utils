@@ -1,16 +1,17 @@
-Source: qubes-linux-utils
+Source: qubes-utils
 Section: admin
 Priority: extra
 Maintainer: Davíð Steinn Geirsson <david@dsg.is>
-Build-Depends: qubes-core-vchan-xen, libxen-dev, debhelper (>= 8.0.0), quilt (>= 0.60)
+Build-Depends: libvchan-xen-dev, libxen-dev, debhelper (>= 8.0.0), quilt (>= 0.60)
 Standards-Version: 3.9.3
 Homepage: http://www.qubes-os.org
 Vcs-Git: http://dsg.is/qubes/qubes-linux-utils.git
 #Vcs-Browser: http://git.debian.org/?p=collab-maint/qubes-linux-utils.git;a=summary
 
-Package: qubes-linux-utils
+Package: qubes-utils
 Architecture: any
-Depends: qubes-core-vchan-xen, lsb-base, ${shlibs:Depends}, ${misc:Depends}
+Depends: libvchan-xen, lsb-base, ${shlibs:Depends}, ${misc:Depends}
+Conflicts: qubes-linux-utils
 Recommends: python2.7
 Description: Qubes Linux utilities
  This package includes the basic qubes utilities necessary for domU.

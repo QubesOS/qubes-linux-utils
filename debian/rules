@@ -1,7 +1,7 @@
 #!/usr/bin/make -f
 # -*- makefile -*-
 
-export DESTDIR=$(shell pwd)/debian/qubes-linux-utils
+export DESTDIR=$(shell pwd)/debian/qubes-utils
 
 # Uncomment this to turn on verbose mode.
 #export DH_VERBOSE=1
