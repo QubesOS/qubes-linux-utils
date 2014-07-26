@@ -25,7 +25,7 @@ if [ -n "`ls -A /sys/$DEVPATH/holders 2> /dev/null`" ]; then
     exit 0
 fi
 # ... and used device-mapper devices
-if [ -n "$DM_NAME" ] && /usr/sbin/dmsetup info "$DM_NAME" | grep -q "^Open count:.*[1-9]"; then
+if [ -n "$DM_NAME" ] && /sbin/dmsetup info "$DM_NAME" | grep -q "^Open count:.*[1-9]"; then
     xs_remove
     exit 0
 fi
