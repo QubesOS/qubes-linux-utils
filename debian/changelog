@@ -1,3 +1,38 @@
+qubes-utils (2.0.14) jessie; urgency=medium
+
+  [ Marek Marczykowski-Górecki ]
+  * qrexec-lib: use _exit in child process to not fire atexit hooks
+  * version 2.0.9
+
+  [ Wojciech Zygmunt Porczyk ]
+  * move site-packages/qubes/__init__.py from core-admin
+  * imgconverter.py: really close stdout in get_through_dvm
+
+  [ Marek Marczykowski-Górecki ]
+  * udev: better support device-mapper/LVM
+  * version 2.0.10
+  * udev: fix perms of udev-block-add-change
+  * udev: skip empty device-mapper nodes
+  * version 2.0.11
+  * udev: filter out template's root device
+  * udev: convert device description to ascii only
+  * version 2.0.12
+  * rpm: add missing dependency
+
+  [ Joanna Rutkowska ]
+  * version 2.0.13
+
+  [ Davíð Steinn Geirsson ]
+  * Add qmemman to make clean
+  * Use xenstore.h when xen >= 4.2
+  * Initial native debian packaging
+
+  [ Marek Marczykowski-Górecki ]
+  * debian: rename package to qubes-utils, update deps
+  * gitignore
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Mon, 28 Jul 2014 02:46:39 +0200
+
 qubes-utils (2.0.8) jessie; urgency=low
 
   * Initial Release.
