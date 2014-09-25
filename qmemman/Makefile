@@ -11,7 +11,10 @@ meminfo-writer: meminfo-writer.o
 	$(CC) -g -o meminfo-writer meminfo-writer.o -lxenstore
 install:
 	install -D meminfo-writer $(DESTDIR)/usr/sbin/meminfo-writer
-ifneq (1,${DEBIANBUILD})
+ifeq (1,${DEBIANBUILD})
+	install -d $(DESTDIR)/lib/systemd/system/
+	install -m 0644 qubes-meminfo-writer.service $(DESTDIR)/lib/systemd/system/
+else
 	install -d $(DESTDIR)/usr/lib/systemd/system/
 	install qubes-meminfo-writer*service $(DESTDIR)/usr/lib/systemd/system/
 endif
