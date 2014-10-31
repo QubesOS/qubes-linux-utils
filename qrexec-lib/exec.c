@@ -19,6 +19,8 @@
  *
  */
 
+#include <sys/socket.h>
+#include <sys/types.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdio.h>
@@ -49,8 +51,10 @@ void do_fork_exec(const char *cmdline, int *pid, int *stdin_fd, int *stdout_fd,
 {
 	int inpipe[2], outpipe[2], errpipe[2];
 
-	if (pipe(inpipe) || pipe(outpipe) || (stderr_fd && pipe(errpipe))) {
-		perror("pipe");
+	if (socketpair(AF_UNIX, SOCK_STREAM, 0, inpipe) || 
+			socketpair(AF_UNIX, SOCK_STREAM, 0, outpipe) || 
+			(stderr_fd && socketpair(AF_UNIX, SOCK_STREAM, 0, errpipe))) {
+		perror("socketpair");
 		exit(1);
 	}
 	switch (*pid = fork()) {
