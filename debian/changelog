@@ -1,3 +1,23 @@
+qubes-utils (3.0.0) jessie; urgency=medium
+
+  [ HW42 ]
+  * use systemd in debian
+
+  [ Marek Marczykowski ]
+  * Update for new vchan API, remove code not needed anymore
+  * Use Qubes DB instead of Xenstore
+  * qrexec-lib: prevent deadlock on vchan
+
+  [ Marek Marczykowski-Górecki ]
+  * udev: setup permissions on xen device nodes
+  * New qrexec protocol
+  * qrexec-utils: disable write-stdin (buffered writes) compilation
+  * code style: change tabs to spaces
+  * qrexec: update protocol
+  * qrexec-utils: add read_vchan_all and write_vchan_all
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Sat, 22 Nov 2014 16:24:11 +0100
+
 qubes-utils (2.0.14) jessie; urgency=medium
 
   [ Marek Marczykowski-Górecki ]
