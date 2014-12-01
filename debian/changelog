@@ -1,3 +1,10 @@
+qubes-utils (2.0.15) jessie; urgency=medium
+
+  [ HW42 ]
+  * use systemd in debian
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Mon, 01 Dec 2014 04:32:48 +0100
+
 qubes-utils (2.0.14) jessie; urgency=medium
 
   [ Marek Marczykowski-Górecki ]
