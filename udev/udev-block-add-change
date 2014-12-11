@@ -63,8 +63,8 @@ fi
 # The last one is meant to trigger watches
 qubesdb-write \
     "$QDB_KEY/desc" "$DESC" \
-    "$XS_KEY/size" "$SIZE" \
-    "$XS_KEY/mode" "$MODE" \
+    "$QDB_KEY/size" "$SIZE" \
+    "$QDB_KEY/mode" "$MODE" \
     /qubes-block-devices ''
 echo QUBES_EXPOSED=1
 

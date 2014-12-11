@@ -2,7 +2,9 @@
 
 NAME=${DEVNAME#/dev/}
 QDB_KEY="/qubes-block-devices/$NAME"
-qubesdb-rm "$XS_KEY"
+# Trailing slash is intentional - it will remove whole directory, instead of
+# single base entry
+qubesdb-rm "$QDB_KEY/"
 qubesdb-write /qubes-block-devices ''
 
 # If device was connected to some VM - detach it
