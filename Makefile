@@ -1,7 +1,9 @@
-ifeq ($(shell uname -m),x86_64)
-LIBDIR = /usr/lib64
-else
-LIBDIR = /usr/lib
+ifndef LIBDIR
+  ifeq ($(shell uname -m),x86_64)
+  LIBDIR = /usr/lib64
+  else
+  LIBDIR = /usr/lib
+  endif
 endif
 INCLUDEDIR = /usr/include
 
