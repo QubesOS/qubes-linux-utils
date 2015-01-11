@@ -18,8 +18,18 @@ unsigned long long files_limit = 0;
 unsigned long long total_bytes = 0;
 unsigned long long total_files = 0;
 int verbose = 0;
+int use_tmpfile = 0;
+int procdir_fd = -1;
 
 void send_status_and_crc(int code, const char *last_filename);
+
+/* copy from asm-generic/fcntl.h */
+#ifndef __O_TMPFILE
+#define __O_TMPFILE 020000000
+#endif
+/* a horrid kludge trying to make sure that this will fail on old kernels */
+#define O_TMPFILE (__O_TMPFILE | O_DIRECTORY)
+#define O_TMPFILE_MASK (__O_TMPFILE | O_DIRECTORY | O_CREAT)
 
 void do_exit(int code, const char *last_filename)
 {
@@ -37,6 +47,12 @@ void set_size_limit(unsigned long long new_bytes_limit, unsigned long long new_f
 void set_verbose(int value)
 {
 	verbose = value;
+}
+
+void set_procfs_fd(int value)
+{
+	procdir_fd = value;
+	use_tmpfile = 1;
 }
 
 unsigned long crc32_sum = 0;
@@ -88,7 +104,15 @@ void process_one_file_reg(struct file_header *untrusted_hdr,
 			  const char *untrusted_name)
 {
 	int ret;
-	int fdout = open(untrusted_name, O_WRONLY | O_CREAT | O_EXCL | O_NOFOLLOW, 0700);	/* safe because of chroot */
+	int fdout;
+
+	/* make the file inaccessible until fully written */
+	fdout = open(".", O_WRONLY | O_TMPFILE, 0700);
+	if (fdout < 0 && errno==ENOENT) {
+		/* if it fails, do not attempt further use - most likely kernel too old */
+		use_tmpfile = 0;
+		fdout = open(untrusted_name, O_WRONLY | O_CREAT | O_EXCL | O_NOFOLLOW, 0000);	/* safe because of chroot */
+	}
 	if (fdout < 0)
 		do_exit(errno, untrusted_name);
 	/* sizes are signed elsewhere */
@@ -103,6 +127,13 @@ void process_one_file_reg(struct file_header *untrusted_hdr,
 		    || ret == COPY_FILE_READ_ERROR)
 			do_exit(LEGAL_EOF, untrusted_name);	// hopefully remote will produce error message
 		else
+			do_exit(errno, untrusted_name);
+	}
+	fdatasync(fdout);
+	if (use_tmpfile) {
+		char fd_str[7];
+		snprintf(fd_str, sizeof(fd_str), "%d", fdout);
+		if (linkat(procdir_fd, fd_str, AT_FDCWD, untrusted_name, AT_SYMLINK_FOLLOW) < 0)
 			do_exit(errno, untrusted_name);
 	}
 	close(fdout);
