@@ -1,3 +1,10 @@
+qubes-utils (2.0.16) jessie; urgency=medium
+
+  * filecopy: create new file unaccessible to the user until fully
+    written
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Sun, 18 Jan 2015 18:05:35 +0100
+
 qubes-utils (2.0.15) jessie; urgency=medium
 
   [ HW42 ]
