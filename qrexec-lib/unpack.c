@@ -109,11 +109,13 @@ void process_one_file_reg(struct file_header *untrusted_hdr,
 	/* make the file inaccessible until fully written */
 	if (use_tmpfile) {
 		fdout = open(".", O_WRONLY | O_TMPFILE, 0700);
-		if (fdout < 0 && errno==ENOENT) {
-			/* if it fails, do not attempt further use - most likely kernel too old */
-			use_tmpfile = 0;
-		} else
-			do_exit(errno, untrusted_name);
+		if (fdout < 0) {
+		   if (errno==ENOENT)
+			   /* if it fails, do not attempt further use - most likely kernel too old */
+			   use_tmpfile = 0;
+		   else
+			   do_exit(errno, untrusted_name);
+		}
 	}
 	if (fdout < 0)
 		fdout = open(untrusted_name, O_WRONLY | O_CREAT | O_EXCL | O_NOFOLLOW, 0000);	/* safe because of chroot */
