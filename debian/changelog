@@ -1,3 +1,9 @@
+qubes-utils (2.0.18) jessie; urgency=medium
+
+  * filecopy: fix handling ENOENT error
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Fri, 23 Jan 2015 01:22:10 +0100
+
 qubes-utils (2.0.17) jessie; urgency=medium
 
   * filecopy: really do not use O_TMPFILE when use_tmpfile==0
