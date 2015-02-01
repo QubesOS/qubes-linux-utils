@@ -1,3 +1,9 @@
+qubes-utils (2.0.19) jessie; urgency=medium
+
+  * debian: O_TMPFILE already defined
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Sun, 01 Feb 2015 03:07:29 +0100
+
 qubes-utils (2.0.18) jessie; urgency=medium
 
   * filecopy: fix handling ENOENT error
