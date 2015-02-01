@@ -1,3 +1,10 @@
+qubes-utils (2.0.20) jessie; urgency=medium
+
+  * archlinux: fix new packaging requirements related to run, sbin,
+    lib64...
+
+ -- Olivier MEDOC <o_medoc@yahoo.fr>  Mon, 02 Feb 2015 00:19:22 +0100
+
 qubes-utils (2.0.19) jessie; urgency=medium
 
   * debian: O_TMPFILE already defined
