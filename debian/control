@@ -2,7 +2,8 @@ Source: qubes-utils
 Section: admin
 Priority: extra
 Maintainer: Davíð Steinn Geirsson <david@dsg.is>
-Build-Depends: libvchan-xen-dev, libxen-dev, debhelper (>= 8.0.0), quilt (>= 0.60), dh-systemd
+#Build-Depends: libvchan-xen-dev, libxen-dev, debhelper (>= 8.0.0), quilt (>= 0.60), dh-systemd
+Build-Depends: libvchan-xen-dev, libxen-qubes-vm-dev, debhelper (>= 8.0.0), quilt (>= 0.60), dh-systemd
 Standards-Version: 3.9.3
 Homepage: http://www.qubes-os.org
 Vcs-Git: http://dsg.is/qubes/qubes-linux-utils.git
@@ -10,6 +11,7 @@ Vcs-Git: http://dsg.is/qubes/qubes-linux-utils.git
 
 Package: qubes-utils
 Architecture: any
+#Depends: libvchan-xen, lsb-base, ${shlibs:Depends}, ${misc:Depends}
 Depends: libvchan-xen, lsb-base, ${shlibs:Depends}, ${misc:Depends}
 Conflicts: qubes-linux-utils
 Recommends: python2.7
