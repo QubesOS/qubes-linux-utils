@@ -1,3 +1,77 @@
+qubes-utils (3.0.1) jessie; urgency=medium
+
+  [ Wojciech Zygmunt Porczyk ]
+  * v3.0.1
+  * This has to be versioned because of dependency in core-agent-linux.
+
+  [ Marek Marczykowski-Górecki ]
+  * Update for new vchan API, remove code not needed anymore
+  * filecopy: fix handling ENOENT error
+  * Do not fail when file was successfully created.
+  * I will test before commit. I will test before commit. I will...
+
+  [ Marek Marczykowski-Górecki ]
+  * filecopy: really do not use O_TMPFILE when use_tmpfile==0
+  * When file opened with O_TMPFILE but use_tmpfile==0, the file will not be
+    linked to the directory (the code at the end of process_one_file_reg).
+    Additionally it is waste of time trying using O_TMPFILE when it's
+    already known it shouldn't be.
+    Also use_tmpfile==0 can mean we don't have access to /proc
+    (set_procfs_fd wasn't called), so even if linking the file to its
+    directory would be attempted, it would fail. This is the case for
+    dom0-updates copy.
+
+  [ Marek Marczykowski-Górecki ]
+  * filecopy: create new file unaccessible to the user until fully written
+    Otherwise source domain can modify (append) the file while the user
+    already is accessing it. While incoming files should be treated as
+    untrusted, this problem could allow file modification after the user
+    makes some sanity checks.
+
+  [ Marek Marczykowski-Górecki ]
+  * udev: update hotplug block scripts for QubesDB
+  * Some initial work was done, but apparently not complete and buggy.
+
+  [ Marek Marczykowski-Górecki ]
+  * version 3.0.0
+
+  [ Marek Marczykowski-Górecki ]
+  * Fix compile warnings
+
+  [ Marek Marczykowski-Górecki ]
+  * qrexec-utils: add read_vchan_all and write_vchan_all
+  * Similar to read_all and write_all.
+
+  [ Marek Marczykowski-Górecki ]
+  * qrexec: update protocol
+    - add new messages
+    - uniform packet header
+    - organize #defines
+
+  [ Marek Marczykowski-Górecki ]
+  * code style: change tabs to spaces
+
+  [ Marek Marczykowski-Górecki ]
+  * qrexec-utils: disable write-stdin (buffered writes) compilation
+  * Not compatible with new qrexec protocol yet. To be done.
+
+  [ Marek Marczykowski-Górecki ]
+  * New qrexec protocol
+  * Use separate vchan to pass I/O for each process, which greatly simplify
+    protocol implementation (eg. no flow control needed).
+
+  [ Marek Marczykowski-Górecki ]
+  * udev: setup permissions on xen device nodes
+
+  [ Marek Marczykowski ]
+  * qrexec-lib: prevent deadlock on vchan
+    It can happen that we already cleared libvchan_fd pending state via
+    libvchan_wait, but data arrived later. This is especially true just
+    after connection, when client send unsolicited notification to server,
+    which can confuse it with some requested notification.
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Tue, 10 Feb 2015 00:00:00 +0100
+
 qubes-utils (3.0.0) jessie; urgency=medium
 
   [ HW42 ]
@@ -17,7 +91,6 @@ qubes-utils (3.0.0) jessie; urgency=medium
   * qrexec-utils: add read_vchan_all and write_vchan_all
 
  -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Sat, 22 Nov 2014 16:24:11 +0100
-
 qubes-utils (2.0.14) jessie; urgency=medium
 
   [ Marek Marczykowski-Górecki ]
