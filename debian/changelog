@@ -1,3 +1,23 @@
+qubes-utils (3.0.2) jessie; urgency=medium
+
+  [ Marek Marczykowski-Górecki ]
+  * qrexec: create stdin/out/err as sockets instead of pipes
+  * debian: O_TMPFILE already defined
+
+  [ Jason Mehring ]
+  * Removed -Werror from qrexec Makefile to allow unpack to compile for
+    both Fedora 20 and 21
+  * debian:  Modified control file for new R3 Debian depends
+  * debian: Updated changelog to reflect 3.0.1 version change
+  * debian:  Added qubesdb-vm as a depend
+  * debian: Revert back to using libxen-dev as depend
+
+  [ Marek Marczykowski-Górecki ]
+  * Revert "Removed -Werror from qrexec Makefile to allow unpack to
+    compile for both Fedora 20 and 21"
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Tue, 17 Feb 2015 14:22:38 +0100
+
 qubes-utils (3.0.1) jessie; urgency=medium
 
   [ Wojciech Zygmunt Porczyk ]
