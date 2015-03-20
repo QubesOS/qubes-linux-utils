@@ -29,3 +29,4 @@ else
     		dmsetup create dmroot || { echo "Qubes: FATAL: cannot create dmroot!"; exit 1; }
 	echo Qubes: done.
 fi
+dmsetup mknodes dmroot
