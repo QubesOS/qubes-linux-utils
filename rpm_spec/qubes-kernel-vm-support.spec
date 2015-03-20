@@ -61,6 +61,7 @@ make install-kernel-support DESTDIR=%{buildroot}
 %files
 /usr/lib/dracut/modules.d/90qubes-vm
 /usr/src/u2mfn-%{version}/
+/usr/sbin/qubes-prepare-vm-kernel
 
 %post
 dkms add -m u2mfn -v %{version} --rpm_safe_upgrade
