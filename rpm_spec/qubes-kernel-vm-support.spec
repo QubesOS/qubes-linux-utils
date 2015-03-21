@@ -34,6 +34,7 @@ URL:		http://www.qubes-os.org
 
 Requires:	dracut
 Requires:	dkms
+Requires:	busybox
 
 %define _builddir %(pwd)
 
@@ -60,6 +61,7 @@ make install-kernel-support DESTDIR=%{buildroot}
 
 %files
 /usr/lib/dracut/modules.d/90qubes-vm
+/usr/lib/dracut/modules.d/90qubes-vm-simple
 /usr/src/u2mfn-%{version}/
 /usr/sbin/qubes-prepare-vm-kernel
 

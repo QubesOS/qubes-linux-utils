@@ -11,3 +11,4 @@ if ! [ -d $NEWROOT/lib/modules/`uname -r` ]; then
     mount -n -t ext3 /dev/xvdd $NEWROOT/lib/modules
 fi
 
+killall udevd systemd-udevd

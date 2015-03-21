@@ -28,7 +28,7 @@ basedir=/var/lib/qubes/vm-kernels
 function recompile_u2mfn() {
     kver=$1
     u2mfn_ver=`dkms status u2mfn|tail -n 1|cut -f 2 -d ' '|tr -d ':,'`
-    dkms install u2mfn/$u2mfn_ver -k $kver
+    dkms install u2mfn/$u2mfn_ver -k $kver --no-initrd
 }
 
 function build_modules_img() {
@@ -50,8 +50,8 @@ function build_initramfs() {
     output_file=$2
 
     /sbin/dracut --nomdadmconf --nolvmconf --force \
-        --modules "bash dm kernel-modules rootfs-block base fs-lib shutdown" \
-        --modules "qubes-vm" --conf /dev/null --confdir /var/empty \
+        --modules "kernel-modules qubes-vm-simple" \
+        --conf /dev/null --confdir /var/empty \
         -d "xenblk xen-blkfront cdrom ext4 jbd2 crc16 dm_snapshot" \
         $output_file $kver
 }
