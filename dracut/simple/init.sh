@@ -7,7 +7,7 @@ mount -t sysfs sysfs /sys
 mount -t devtmpfs devtmpfs /dev
 
 if [ -e /dev/mapper/dmroot ] ; then 
-    die "Qubes: FATAL error: /dev/mapper/dmroot already exists?!"
+    echo "Qubes: FATAL error: /dev/mapper/dmroot already exists?!"
 fi
 
 modprobe xenblk || modprobe xen-blkfront || echo "Qubes: Cannot load Xen Block Frontend..."
@@ -32,8 +32,11 @@ else
 fi
 dmsetup mknodes dmroot
 
+modprobe ext4
+
 mkdir -p /sysroot
 mount /dev/mapper/dmroot /sysroot -o ro
+NEWROOT=/sysroot
 
 if ! [ -d $NEWROOT/lib/modules/`uname -r` ]; then
     echo "Waiting for /dev/xvdd device..."
@@ -45,4 +48,4 @@ fi
 
 umount /dev /sys /proc
 
-exec switch_root /sysroot /sbin/init
+exec switch_root $NEWROOT /sbin/init
