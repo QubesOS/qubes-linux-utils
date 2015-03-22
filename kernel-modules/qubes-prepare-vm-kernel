@@ -28,7 +28,9 @@ basedir=/var/lib/qubes/vm-kernels
 function recompile_u2mfn() {
     kver=$1
     u2mfn_ver=`dkms status u2mfn|tail -n 1|cut -f 2 -d ' '|tr -d ':,'`
-    dkms install u2mfn/$u2mfn_ver -k $kver --no-initrd
+    if ! modinfo -k "$kver" -n u2mfn >/dev/null; then
+        dkms install u2mfn/$u2mfn_ver -k $kver --no-initrd
+    fi
 }
 
 function build_modules_img() {
