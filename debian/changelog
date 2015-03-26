@@ -1,3 +1,17 @@
+qubes-utils (3.0.3) wheezy; urgency=medium
+
+  * qrexec-lib: enable compiler optimization
+  * udev: allow normal user to access /dev/xen/xenbus for vchan
+    connections
+  * Add VM kernel related files as qubes-core-vm-kernel-support package
+  * dracut: do not assume full udevd running inside initramfs
+  * Provide a script to generate VM kernel files
+  * dracut: Provide minimalistic initramfs files - no udev, no systemd
+  * dracut: load ext4 module manually in minimalistic dracut module
+  * Compile u2mfn module only when not already present
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Thu, 26 Mar 2015 23:57:42 +0100
+
 qubes-utils (3.0.2) jessie; urgency=medium
 
   [ Marek Marczykowski-Górecki ]
