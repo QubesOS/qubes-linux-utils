@@ -34,6 +34,13 @@ if [ "$MAJOR" -eq 7 -a ! -d /sys/$DEVPATH/loop ]; then
     xs_remove
     exit 0
 fi
+# ... and temporary device-mapper devices used during VM startup
+if [[ "$DM_NAME" = 'loop'* ] && \
+       [[ "`cat /sys/block/${DM_NAME%p*}/loop/backing_file`" = \
+            '/var/lib/qubes/'*'/volatile.img' ]]; then
+    xs_remove
+    exit 0
+fi
 
 # Check if device is read-only
 if [ "`cat /sys/$DEVPATH/ro`" -eq 1 ]; then
