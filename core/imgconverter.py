@@ -146,7 +146,8 @@ get_from_stream(), get_from_vm(), get_xdg_icon_from_vm(), get_through_dvm()'''
     def get_from_vm(cls, vm, src, **kwargs):
         'Get image from VM by QUBESRPC (qubes.GetImageRGBA).'
 
-        p = vm.run('QUBESRPC qubes.GetImageRGBA dom0', passio_popen=True)
+        p = vm.run('QUBESRPC qubes.GetImageRGBA dom0', passio_popen=True,
+                   gui=False)
         p.stdin.write('{0}\n'.format(src))
         p.stdin.close()
 
