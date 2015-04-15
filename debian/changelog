@@ -1,3 +1,9 @@
+qubes-utils (3.0.6) wheezy; urgency=medium
+
+  * imgconverter: do not start gui daemon
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Wed, 15 Apr 2015 18:49:02 +0200
+
 qubes-utils (3.0.5) wheezy; urgency=medium
 
   * udev: fix block devices ignoring rule
