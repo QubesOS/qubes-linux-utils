@@ -191,6 +191,12 @@ expects header+RGBA on stdin. This method is invoked from qvm-imgconverter-clien
 
         return cls.get_from_stream(sys.stdin, **kwargs)
 
+    def __eq__(self, other):
+        return self._size == other._size and self._rgba == other._rgba
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
 def hex_to_float(colour, channels=3, depth=8):
     '''Convert hex colour definition to tuple of floats.'''
 
