@@ -18,7 +18,7 @@ ifeq (1,${DEBIANBUILD})
 	install -m 0644 qubes-meminfo-writer.service $(DESTDIR)/lib/systemd/system/
 else
 	install -d $(DESTDIR)/usr/lib/systemd/system/
-	install qubes-meminfo-writer*service $(DESTDIR)/usr/lib/systemd/system/
+	install -m 0644 qubes-meminfo-writer*service $(DESTDIR)/usr/lib/systemd/system/
 endif
 clean:
 	rm -f meminfo-writer xenstore-watch *.o
