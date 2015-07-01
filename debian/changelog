@@ -1,3 +1,10 @@
+qubes-utils (3.0.8) wheezy; urgency=medium
+
+  * fedora: fix systemd service files permission
+  * udev: do not use a separate lock for udev block scripts
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Wed, 01 Jul 2015 07:11:28 +0200
+
 qubes-utils (3.0.7) wheezy; urgency=medium
 
   * imgconverter: add eq operation for Image class
