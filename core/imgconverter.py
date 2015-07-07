@@ -115,6 +115,8 @@ get_from_stream(), get_from_vm(), get_xdg_icon_from_vm(), get_through_dvm()'''
         maxhdrlen = imghdrlen(max_width, max_height)
 
         untrusted_header = stream.readline(maxhdrlen)
+        if len(untrusted_header) == 0:
+            raise ValueError('No icon received')
         if not re_imghdr.match(untrusted_header):
             raise ValueError('Image format violation')
         header = untrusted_header
