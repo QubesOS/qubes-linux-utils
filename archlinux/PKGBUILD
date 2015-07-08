@@ -6,14 +6,14 @@
 # Maintainer: Olivier Medoc <o_medoc@yahoo.fr>
 pkgname=qubes-vm-utils
 pkgver=`cat version`
-pkgrel=8
+pkgrel=2
 epoch=
 pkgdesc="Common Linux files for Qubes VM."
 arch=("x86_64")
 url="http://qubes-os.org/"
 license=('GPL')
 groups=()
-depends=(qubes-libvchan)
+depends=(qubes-libvchan imagemagick python2-cairo)
 makedepends=(qubes-libvchan)
 checkdepends=()
 optdepends=()
@@ -43,7 +43,7 @@ make all
 
 package() {
 
-make install DESTDIR=$pkgdir
+make install DESTDIR=$pkgdir LIBDIR=/usr/lib
 
 }
 
