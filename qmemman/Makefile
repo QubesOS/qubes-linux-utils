@@ -1,6 +1,7 @@
 CC=gcc
 CFLAGS=-Wall -Wextra -Werror -g -O3
 all:	meminfo-writer
+SBINDIR?=/usr/sbin
 
 _XENSTORE_H=$(shell ls /usr/include/xenstore.h)
 ifneq "$(_XENSTORE_H)" ""
@@ -10,7 +11,7 @@ endif
 meminfo-writer: meminfo-writer.o
 	$(CC) -g -o meminfo-writer meminfo-writer.o -lxenstore
 install:
-	install -D meminfo-writer $(DESTDIR)/usr/sbin/meminfo-writer
+	install -D meminfo-writer $(DESTDIR)/$(SBINDIR)/meminfo-writer
 ifeq (1,${DEBIANBUILD})
 	install -d $(DESTDIR)/lib/systemd/system/
 	install -m 0644 qubes-meminfo-writer.service $(DESTDIR)/lib/systemd/system/

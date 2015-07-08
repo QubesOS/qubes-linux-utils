@@ -43,7 +43,7 @@ make all
 
 package() {
 
-make install DESTDIR=$pkgdir LIBDIR=/usr/lib
+make install DESTDIR=$pkgdir LIBDIR=/usr/lib SBINDIR=/usr/bin
 
 }
 
