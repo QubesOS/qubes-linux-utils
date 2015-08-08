@@ -1,3 +1,16 @@
+qubes-utils (3.0.10) wheezy; urgency=medium
+
+  [ Olivier MEDOC ]
+  * archlinux: update to match new dependancies and archlinux /usr/lib
+    guidelines
+  * archlinux: ensure /usr/sbin is not use to follow archlinux packaging
+    guidelines
+
+  [ Marek Marczykowski-Górecki ]
+  * imgconverter: ensure that connection to the VM is properly closed
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Sat, 08 Aug 2015 04:23:00 +0200
+
 qubes-utils (3.0.9) wheezy; urgency=medium
 
   * imgconverter: use more meaningful error for empty icon image
