@@ -153,9 +153,10 @@ get_from_stream(), get_from_vm(), get_xdg_icon_from_vm(), get_through_dvm()'''
         p.stdin.write('{0}\n'.format(src))
         p.stdin.close()
 
-        img = cls.get_from_stream(p.stdout, **kwargs)
-
-        p.stdout.close()
+        try:
+            img = cls.get_from_stream(p.stdout, **kwargs)
+        finally:
+            p.stdout.close()
         if p.wait():
             raise Exception('Something went wrong with receiver')
 
