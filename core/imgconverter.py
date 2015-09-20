@@ -70,6 +70,18 @@ get_from_stream(), get_from_vm(), get_xdg_icon_from_vm(), get_through_dvm()'''
         if p.wait():
             raise Exception('Conversion failed')
 
+    @property
+    def data(self):
+        return self._rgba
+
+    @property
+    def width(self):
+        return self._size[0]
+
+    @property
+    def height(self):
+        return self._size[1]
+
     def tint(self, colour):
         '''Return new tinted image'''
 
