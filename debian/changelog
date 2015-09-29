@@ -1,3 +1,14 @@
+qubes-utils (2.0.21) wheezy; urgency=medium
+
+  * fedora: fix systemd service files permission
+  * qrexec-lib: enable compiler optimization
+  * udev: ignore temporary devices created during VM startup
+  * udev: fix block devices ignoring rule
+  * imgconverter: use more meaningful error for empty icon image
+  * imgconverter: ensure that connection to the VM is properly closed
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Tue, 29 Sep 2015 12:47:50 +0200
+
 qubes-utils (2.0.20) jessie; urgency=medium
 
   * archlinux: fix new packaging requirements related to run, sbin,
