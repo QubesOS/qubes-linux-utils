@@ -137,7 +137,6 @@ void process_one_file_reg(struct file_header *untrusted_hdr,
 		else
 			do_exit(errno, untrusted_name);
 	}
-	fdatasync(fdout);
 	if (use_tmpfile) {
 		char fd_str[7];
 		snprintf(fd_str, sizeof(fd_str), "%d", fdout);
