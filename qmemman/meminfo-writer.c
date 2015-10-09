@@ -20,17 +20,17 @@ const char *parse(const char *meminfo_buf, const char* dom_current_buf)
 {
 	const char *ptr = meminfo_buf;
 	static char outbuf[4096];
-	int val;
+	long long val;
 	int len;
 	int ret;
-	int MemTotal = 0, MemFree = 0, Buffers = 0, Cached = 0, SwapTotal =
+	long long MemTotal = 0, MemFree = 0, Buffers = 0, Cached = 0, SwapTotal =
 	    0, SwapFree = 0;
 	unsigned long long key;
-	long used_mem, used_mem_diff;
+	long long used_mem, used_mem_diff;
 	int nitems = 0;
 
 	while (nitems != (1<<6)-1 || !*ptr) {
-		ret = sscanf(ptr, "%*s %d kB\n%n", &val, &len);
+		ret = sscanf(ptr, "%*s %lld kB\n%n", &val, &len);
 		if (ret < 1 || len < (int)sizeof (unsigned long long)) {
 			ptr += len;
 			continue;
@@ -60,7 +60,7 @@ const char *parse(const char *meminfo_buf, const char* dom_current_buf)
 	}
 
 	if(dom_current_buf) {
-		int DomTotal = strtol(dom_current_buf, 0, 10);
+		long long DomTotal = strtoll(dom_current_buf, 0, 10);
 		if(DomTotal)
 			MemTotal = DomTotal;
 	}
@@ -79,8 +79,8 @@ const char *parse(const char *meminfo_buf, const char* dom_current_buf)
 		&& used_mem_diff > used_mem_change_threshold/2)) {
 		prev_used_mem = used_mem;
 		sprintf(outbuf,
-			"MemTotal: %d kB\nMemFree: %d kB\nBuffers: %d kB\nCached: %d kB\n"
-			"SwapTotal: %d kB\nSwapFree: %d kB\n", MemTotal,
+			"MemTotal: %lld kB\nMemFree: %lld kB\nBuffers: %lld kB\nCached: %lld kB\n"
+			"SwapTotal: %lld kB\nSwapFree: %lld kB\n", MemTotal,
 			MemFree, Buffers, Cached, SwapTotal, SwapFree);
 		return outbuf;
 	}
