@@ -50,8 +50,7 @@ static inline unsigned long virt_to_phys(volatile void *address)
 extern unsigned long *phys_to_machine_mapping;
 static inline unsigned long VIRT_TO_MFN(void *addr)
 {
-	unsigned int pfn = virt_to_phys(addr) >> PAGE_SHIFT;
-	return phys_to_machine_mapping[pfn] & ~FOREIGN_FRAME_BIT;
+	return phys_to_machine_mapping[virt_to_phys(addr) >> PAGE_SHIFT] & ~FOREIGN_FRAME_BIT;
 }
 #endif
 
@@ -66,7 +65,7 @@ static long u2mfn_ioctl(struct file *f, unsigned int cmd,
 {
 	struct page *user_page;
 	void *kaddr;
-	int ret;
+	long ret;
 
 	if (_IOC_TYPE(cmd) != U2MFN_MAGIC) {
 		printk("Qubes u2mfn: wrong IOCTL magic");
