@@ -16,21 +16,21 @@ int used_mem_change_threshold;
 int delay;
 int usr1_received;
 
-const char *parse(const char *buf)
+const char *parse(const char *meminfo_buf, const char* dom_current_buf)
 {
-	const char *ptr = buf;
+	const char *ptr = meminfo_buf;
 	static char outbuf[4096];
-	int val;
+	long long val;
 	int len;
 	int ret;
-	int MemTotal = 0, MemFree = 0, Buffers = 0, Cached = 0, SwapTotal =
+	long long MemTotal = 0, MemFree = 0, Buffers = 0, Cached = 0, SwapTotal =
 	    0, SwapFree = 0;
 	unsigned long long key;
-	long used_mem, used_mem_diff;
+	long long used_mem, used_mem_diff;
 	int nitems = 0;
 
 	while (nitems != (1<<6)-1 || !*ptr) {
-		ret = sscanf(ptr, "%*s %d kB\n%n", &val, &len);
+		ret = sscanf(ptr, "%*s %lld kB\n%n", &val, &len);
 		if (ret < 1 || len < (int)sizeof (unsigned long long)) {
 			ptr += len;
 			continue;
@@ -59,6 +59,12 @@ const char *parse(const char *buf)
 		ptr += len;
 	}
 
+	if(dom_current_buf) {
+		long long DomTotal = strtoll(dom_current_buf, 0, 10);
+		if(DomTotal)
+			MemTotal = DomTotal;
+	}
+
 	used_mem =
 	    MemTotal - Buffers - Cached - MemFree + SwapTotal - SwapFree;
 	if (used_mem < 0)
@@ -73,8 +79,8 @@ const char *parse(const char *buf)
 		&& used_mem_diff > used_mem_change_threshold/2)) {
 		prev_used_mem = used_mem;
 		sprintf(outbuf,
-			"MemTotal: %d kB\nMemFree: %d kB\nBuffers: %d kB\nCached: %d kB\n"
-			"SwapTotal: %d kB\nSwapFree: %d kB\n", MemTotal,
+			"MemTotal: %lld kB\nMemFree: %lld kB\nBuffers: %lld kB\nCached: %lld kB\n"
+			"SwapTotal: %lld kB\nSwapFree: %lld kB\n", MemTotal,
 			MemFree, Buffers, Cached, SwapTotal, SwapFree);
 		return outbuf;
 	}
@@ -103,13 +109,50 @@ void usr1_handler(int sig __attribute__((__unused__))) {
 	usr1_received = 1;
 }
 
+static inline void pread0_string(int fd, char* buf, size_t buf_size)
+{
+	int n = pread(fd, buf, buf_size - 1, 0);
+	if (n < 0) {
+		perror("pread");
+		exit(1);
+	}
+	buf[n] = 0;
+}
+
+static void update(struct xs_handle *xs, int meminfo_fd, int dom_current_fd)
+{
+	char dom_current_buf[32];
+	char dom_current_buf2[32];
+	char meminfo_buf[4096];
+	const char *meminfo_data;
+
+	pread0_string(dom_current_fd, dom_current_buf, sizeof(dom_current_buf));
+
+	/* check until the dom current reading is stable to avoid races */
+	for(;;) {
+		pread0_string(meminfo_fd, meminfo_buf, sizeof(meminfo_buf));
+		pread0_string(dom_current_fd, dom_current_buf2, sizeof(dom_current_buf2));
+
+		if(!strcmp(dom_current_buf, dom_current_buf2))
+			break;
+
+		pread0_string(meminfo_fd, meminfo_buf, sizeof(meminfo_buf));
+		pread0_string(dom_current_fd, dom_current_buf, sizeof(dom_current_buf));
+
+		if(!strcmp(dom_current_buf, dom_current_buf2))
+			break;
+	}
+
+	meminfo_data = parse(meminfo_buf, dom_current_buf);
+	if (meminfo_data)
+		send_to_qmemman(xs, meminfo_data);
+}
+
 int main(int argc, char **argv)
 {
-	char buf[4096];
-	int n;
-	const char *meminfo_data;
-	int fd;
+	int meminfo_fd, dom_current_fd;
 	struct xs_handle *xs;
+	int n;
 
 	if (argc != 3 && argc != 4)
 		usage();
@@ -121,6 +164,8 @@ int main(int argc, char **argv)
 	if (argc == 4) {
 		pid_t pid;
 		sigset_t mask, oldmask;
+		int fd;
+		char buf[32];
 
 		switch (pid = fork()) {
 			case -1:
@@ -155,9 +200,14 @@ int main(int argc, char **argv)
 		}
 	}
 
-	fd = open("/proc/meminfo", O_RDONLY);
-	if (fd < 0) {
-		perror("open meminfo");
+	meminfo_fd = open("/proc/meminfo", O_RDONLY);
+	if (meminfo_fd < 0) {
+		perror("open /proc/meminfo");
+		exit(1);
+	}
+	dom_current_fd = open("/sys/devices/system/xen_memory/xen_memory0/info/current_kb", O_RDONLY);
+	if (dom_current_fd < 0) {
+		perror("open /sys/devices/system/xen_memory/xen_memory0/info/current_kb");
 		exit(1);
 	}
 	xs = xs_domain_open();
@@ -167,15 +217,8 @@ int main(int argc, char **argv)
 	}
 	if (argc == 3) {
 		/* if not waiting for signal, fork after first info written to xenstore */
-		n = pread(fd, buf, sizeof(buf)-1, 0);
-		if (n < 0) {
-			perror("pread");
-			exit(1);
-		}
-		buf[n] = 0;
-		meminfo_data = parse(buf);
-		if (meminfo_data)
-			send_to_qmemman(xs, meminfo_data);
+		update(xs, meminfo_fd, dom_current_fd);
+
 		n = fork();
 		if (n < 0) {
 			perror("fork");
@@ -187,15 +230,8 @@ int main(int argc, char **argv)
 	}
 
 	for (;;) {
-		n = pread(fd, buf, sizeof(buf)-1, 0);
-		if (n < 0) {
-			perror("pread");
-			exit(1);
-		}
-		buf[n] = 0;
-		meminfo_data = parse(buf);
-		if (meminfo_data)
-			send_to_qmemman(xs, meminfo_data);
+		update(xs, meminfo_fd, dom_current_fd);
 		usleep(delay);
 	}
 }
+
