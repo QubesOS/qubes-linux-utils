@@ -1,3 +1,14 @@
+qubes-utils (3.1.1) wheezy; urgency=medium
+
+  [ Marek Marczykowski-Górecki ]
+  * qfile-unpacker: do not call fdatasync() at each file (#1257)
+
+  [ qubesuser ]
+  * Report Xen balloon current size instead of Linux total memory
+  * use 64-bit integers for memory sizes to support > 2 TB RAM
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Sun, 11 Oct 2015 02:48:12 +0200
+
 qubes-utils (3.1.0) wheezy; urgency=medium
 
   * impconverter: add icon data getters
