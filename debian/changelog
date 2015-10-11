@@ -1,3 +1,13 @@
+qubes-utils (3.0.11) wheezy; urgency=medium
+
+  [ qubesuser ]
+  * Report Xen balloon current size instead of Linux total memory
+
+  [ Marek Marczykowski-Górecki ]
+  * qfile-unpacker: do not call fdatasync() at each file (#1257)
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Sun, 11 Oct 2015 02:51:07 +0200
+
 qubes-utils (3.0.10) wheezy; urgency=medium
 
   [ Olivier MEDOC ]
