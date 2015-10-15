@@ -11,4 +11,7 @@ depends() {
 
 install() {
     inst $moddir/init.sh /init
+    inst_multiple \
+        sfdisk \
+        mkswap
 }

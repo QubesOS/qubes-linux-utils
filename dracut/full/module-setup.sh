@@ -11,5 +11,7 @@ check() {
 install() {
     inst_hook pre-udev 90 $moddir/qubes_cow_setup.sh
     inst_hook pre-pivot 50 $moddir/mount_modules.sh
-
+    inst_multiple \
+        sfdisk \
+        mkswap
 }
