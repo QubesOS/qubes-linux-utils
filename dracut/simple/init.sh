@@ -22,7 +22,7 @@ if [ `cat /sys/block/xvda/ro` = 1 ] ; then
     while ! [ -e /dev/xvdc2 ]; do sleep 0.1; done
 
     echo "0 `cat /sys/block/xvda/size` snapshot /dev/xvda /dev/xvdc2 N 16" | \
-        dmsetup create dmroot || { echo "Qubes: FATAL: cannot create dmroot!"; }
+        dmsetup create dmroot || { echo "Qubes: FATAL: cannot create dmroot!"; exit 1; }
     echo Qubes: done.
 else
     echo "Qubes: Doing R/W setup for TemplateVM..."
