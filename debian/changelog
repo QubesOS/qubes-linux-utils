@@ -1,3 +1,18 @@
+qubes-utils (3.1.2) wheezy; urgency=medium
+
+  [ Marek Marczykowski-Górecki ]
+  * dracut: expand tabs to spaces
+  * dracut: abort on dmroot assemble error
+  * dracut: initialize volatile.img partitions
+  * libqrexec-utils: fix linker options
+  * libqrexec-utils: bring back buffered write helpers
+  * libqrexec-utils: bump SO version because of ABI change
+
+  [ qubesuser ]
+  * Fix u2mfn.ko for > 16TB RAM by not truncating to 32-bit improperly
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Sat, 24 Oct 2015 23:05:02 +0200
+
 qubes-utils (3.1.1) wheezy; urgency=medium
 
   [ Marek Marczykowski-Górecki ]
