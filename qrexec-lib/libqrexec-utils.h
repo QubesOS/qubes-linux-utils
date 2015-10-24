@@ -28,6 +28,11 @@ struct buffer {
 	int buflen;
 };
 
+/* return codes for buffered writes */
+#define WRITE_STDIN_OK        0 /* all written */
+#define WRITE_STDIN_BUFFERED  1 /* something still in the buffer */
+#define WRITE_STDIN_ERROR     2 /* write error, errno set */
+
 typedef void (do_exec_t)(const char *);
 void register_exec_func(do_exec_t *func);
 
@@ -38,6 +43,9 @@ void buffer_remove(struct buffer *b, int len);
 int buffer_len(struct buffer *b);
 void *buffer_data(struct buffer *b);
 
+int flush_client_data(int fd, struct buffer *buffer);
+int write_stdin(int fd, const char *data, int len, struct buffer *buffer);
+int fork_and_flush_stdin(int fd, struct buffer *buffer);
 
 void do_fork_exec(const char *cmdline, int *pid, int *stdin_fd, int *stdout_fd,
 		  int *stderr_fd);
