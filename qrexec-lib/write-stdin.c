@@ -29,16 +29,18 @@
 #include "libqrexec-utils.h"
 
 /* 
-There is buffered data in "buffer" for client id "client_id", and select()
-reports that "fd" is writable. Write as much as possible to fd, if all sent,
-notify the peer that this client's pipe is no longer full.
+There is buffered data in "buffer" for client and select()
+reports that "fd" is writable. Write as much as possible to fd.
 */
-int flush_client_data(libvchan_t *vchan, int fd, int client_id, struct buffer *buffer)
+int flush_client_data(int fd, struct buffer *buffer)
 {
 	int ret;
 	int len;
 	for (;;) {
 		len = buffer_len(buffer);
+		if (!len) {
+			return WRITE_STDIN_OK;
+		}
 		if (len > MAX_DATA_CHUNK)
 			len = MAX_DATA_CHUNK;
 		ret = write(fd, buffer_data(buffer), len);
@@ -52,27 +54,15 @@ int flush_client_data(libvchan_t *vchan, int fd, int client_id, struct buffer *b
 		// it will be wrong if we change MAX_DATA_CHUNK to something large
 		// as pipes writes are atomic only to PIPE_MAX limit 
 		buffer_remove(buffer, ret);
-		len = buffer_len(buffer);
-		if (!len) {
-			struct server_header s_hdr;
-			s_hdr.type = MSG_XON;
-			s_hdr.client_id = client_id;
-			s_hdr.len = 0;
-			if (libvchan_send(vchan, (char*)&s_hdr, sizeof s_hdr) < 0)
-				return WRITE_STDIN_ERROR;
-			return WRITE_STDIN_OK;
-		}
 	}
 
 }
 
 /*
 Write "len" bytes from "data" to "fd". If not all written, buffer the rest
-to "buffer", and notify the peer that the client "client_id" pipe is full via 
-MSG_XOFF message.
+to "buffer".
 */
-int write_stdin(libvchan_t *vchan, int fd, int client_id, const char *data, int len,
-		struct buffer *buffer)
+int write_stdin(int fd, const char *data, int len, struct buffer *buffer)
 {
 	int ret;
 	int written = 0;
@@ -88,26 +78,17 @@ int write_stdin(libvchan_t *vchan, int fd, int client_id, const char *data, int 
 			exit(1);
 		}
 		if (ret == -1) {
-			struct server_header s_hdr;
-
 			if (errno != EAGAIN)
 				return WRITE_STDIN_ERROR;
 
 			buffer_append(buffer, data + written,
 				      len - written);
 
-			s_hdr.type = MSG_XOFF;
-			s_hdr.client_id = client_id;
-			s_hdr.len = 0;
-			if (libvchan_send(vchan, (char*)&s_hdr, sizeof s_hdr) < 0)
-				return WRITE_STDIN_ERROR;
-
 			return WRITE_STDIN_BUFFERED;
 		}
 		written += ret;
 	}
 	return WRITE_STDIN_OK;
-
 }
 
 /* 
