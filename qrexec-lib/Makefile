@@ -3,6 +3,7 @@ CFLAGS+=-I. -g -O2 -Wall -Wextra -Werror -pie -fPIC `pkg-config --cflags vchan-$
 COMMONIOALL=ioall.o
 SO_VER=1
 LDFLAGS=-shared
+VCHANLIBS = `pkg-config --libs vchan-$(BACKEND_VMM)`
 
 _XENSTORE_H=$(shell ls /usr/include/xenstore.h)
 ifneq "$(_XENSTORE_H)" ""
@@ -12,7 +13,7 @@ endif
 
 all: libqrexec-utils.so.$(SO_VER) libqubes-rpc-filecopy.so.$(SO_VER)
 libqrexec-utils.so.$(SO_VER): unix-server.o ioall.o buffer.o exec.o txrx-vchan.o
-	$(CC) $(LDFLAGS) -Wl,-soname,$@ -o $@ $^ $(XENLIBS)
+	$(CC) $(LDFLAGS) -Wl,-soname,$@ -o $@ $^ $(VCHANLIBS)
 libqubes-rpc-filecopy.so.$(SO_VER): ioall.o copy-file.o crc32.o unpack.o
 	$(CC) $(LDFLAGS) -Wl,-soname,$@ -o $@ $^
 
