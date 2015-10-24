@@ -85,8 +85,8 @@ rm -rf $RPM_BUILD_ROOT
 %{python_sitearch}/qubes/imgconverter.pyo
 
 %files libs
-%{_libdir}/libqrexec-utils.so.1
-%{_libdir}/libqubes-rpc-filecopy.so.1
+%{_libdir}/libqrexec-utils.so.2
+%{_libdir}/libqubes-rpc-filecopy.so.2
 
 %files devel
 %defattr(-,root,root,-)

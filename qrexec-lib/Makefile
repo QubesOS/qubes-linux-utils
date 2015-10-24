@@ -1,7 +1,7 @@
 CC=gcc
 CFLAGS+=-I. -g -O2 -Wall -Wextra -Werror -pie -fPIC `pkg-config --cflags vchan-$(BACKEND_VMM)`
 COMMONIOALL=ioall.o
-SO_VER=1
+SO_VER=2
 LDFLAGS=-shared
 VCHANLIBS = `pkg-config --libs vchan-$(BACKEND_VMM)`
 
