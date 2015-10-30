@@ -1,3 +1,11 @@
+qubes-utils (3.0.12) wheezy; urgency=medium
+
+  * libqrexec-utils: fix linker options
+  * libqrexec-utils: bring back buffered write helpers
+  * libqrexec-utils: bump SO version because of ABI change
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Fri, 30 Oct 2015 15:33:28 +0100
+
 qubes-utils (3.0.11) wheezy; urgency=medium
 
   [ qubesuser ]
