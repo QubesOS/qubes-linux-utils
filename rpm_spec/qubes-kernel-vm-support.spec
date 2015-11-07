@@ -61,6 +61,7 @@ make install-kernel-support DESTDIR=%{buildroot}
 
 %files
 /usr/lib/dracut/modules.d/90qubes-vm
+/usr/lib/dracut/modules.d/90qubes-vm-modules
 /usr/lib/dracut/modules.d/90qubes-vm-simple
 /usr/src/u2mfn-%{version}/
 /usr/sbin/qubes-prepare-vm-kernel

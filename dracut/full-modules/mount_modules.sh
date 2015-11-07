@@ -1,8 +1,8 @@
+#!/bin/sh
 #
 # This file should be places in pre-pivot directory in dracut's initramfs
 #
 
-#!/bin/sh
 
 if ! [ -d $NEWROOT/lib/modules/`uname -r` ]; then
     echo "Waiting for /dev/xvdd device..."

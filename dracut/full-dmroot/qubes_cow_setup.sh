@@ -1,8 +1,8 @@
+#!/bin/sh
 #
 # This file should be places in pre-mount directory in dracut's initramfs
 #
 
-#!/bin/sh
 echo "Qubes initramfs script here:"
 
 if [ -e /dev/mapper/dmroot ] ; then 
