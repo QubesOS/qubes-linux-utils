@@ -37,12 +37,12 @@ EOF
     while ! [ -e /dev/xvdc2 ]; do sleep 0.1; done
 
     echo "0 `cat /sys/block/xvda/size` snapshot /dev/xvda /dev/xvdc2 N 16" | \
-        dmsetup create dmroot || { echo "Qubes: FATAL: cannot create dmroot!"; }
+        dmsetup --noudevsync create dmroot || { echo "Qubes: FATAL: cannot create dmroot!"; }
     echo Qubes: done.
 else
     echo "Qubes: Doing R/W setup for TemplateVM..."
     echo "0 `cat /sys/block/xvda/size` linear /dev/xvda 0" | \
-        dmsetup create dmroot || { echo "Qubes: FATAL: cannot create dmroot!"; exit 1; }
+        dmsetup --noudevsync create dmroot || { echo "Qubes: FATAL: cannot create dmroot!"; exit 1; }
     echo Qubes: done.
 fi
 dmsetup mknodes dmroot
