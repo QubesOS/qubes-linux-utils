@@ -1,0 +1,6 @@
+usr/sbin/meminfo-writer
+lib/systemd/system/qubes-meminfo-writer.service
+usr/libexec/qubes/*
+usr/include/*
+usr/lib/*
+etc/*

@@ -57,7 +57,7 @@ ln -sf . %{name}-%{version}
 %build
 
 %install
-make install-kernel-support DESTDIR=%{buildroot}
+make install-fedora-kernel-support DESTDIR=%{buildroot}
 
 %files
 /usr/lib/dracut/modules.d/90qubes-vm

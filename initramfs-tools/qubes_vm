@@ -1,0 +1,21 @@
+#!/bin/sh
+
+if grep -q control_d /proc/xen/capabilities; then
+    echo "Not intended for dom0"
+    exit 0
+fi
+
+PREREQS="dmsetup"
+case "$1" in
+prereqs)
+    echo "$PREREQS"
+    exit 0
+    ;;
+esac
+
+. /usr/share/initramfs-tools/hook-functions
+
+copy_exec /sbin/sfdisk
+copy_exec /sbin/mkswap
+force_load xen-blkfront
+force_load dm-snapshot

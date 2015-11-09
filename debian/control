@@ -2,7 +2,7 @@ Source: qubes-utils
 Section: admin
 Priority: extra
 Maintainer: Davíð Steinn Geirsson <david@dsg.is>
-Build-Depends: libvchan-xen-dev, libxen-dev, debhelper (>= 8.0.0), quilt (>= 0.60), dh-systemd
+Build-Depends: libvchan-xen-dev, libxen-dev, debhelper (>= 8.0.0), quilt (>= 0.60), dh-systemd, dkms
 Standards-Version: 3.9.3
 Homepage: http://www.qubes-os.org
 Vcs-Git: http://dsg.is/qubes/qubes-linux-utils.git
@@ -15,3 +15,15 @@ Conflicts: qubes-linux-utils
 Recommends: python2.7
 Description: Qubes Linux utilities
  This package includes the basic qubes utilities necessary for domU.
+
+Package: qubes-kernel-vm-support
+Architecture: any
+Depends: dkms, initramfs-tools, ${shlibs:Depends}, ${misc:Depends}
+Description: Qubes VM kernel and initramfs modules
+ This package contains:
+ 1. mkinitramfs module required to setup Qubes VM root filesystem. This package is
+ needed in VM only when the VM uses its own kernel (via pvgrub or so). Otherwise
+ initrd is provided by dom0.
+ .
+ 2. u2mfn kernel module sources (dkms) required by GUI agent and R2 version of
+ libvchan library.

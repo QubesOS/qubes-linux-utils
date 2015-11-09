@@ -25,9 +25,15 @@ install:
 	$(MAKE) -C qmemman install
 	$(MAKE) -C core install
 
-install-kernel-support:
+install-fedora-kernel-support:
 	$(MAKE) -C dracut install
 	$(MAKE) -C kernel-modules install
+
+install-debian-kernel-support:
+	$(MAKE) -C initramfs-tools install
+	$(MAKE) -C kernel-modules install
+	# expand module version
+	echo debian/tmp/usr/src/u2mfn-*/dkms.conf > debian/qubes-kernel-vm-support.dkms
 
 clean:
 	$(MAKE) -C qrexec-lib clean
