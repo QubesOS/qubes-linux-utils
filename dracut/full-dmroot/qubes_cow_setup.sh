@@ -41,6 +41,11 @@ fi
 
 info "Qubes initramfs script here:"
 
+if ! grep -q 'root=[^ ]*dmroot' /proc/cmdline; then
+    warn "dmroot not requested, probably not a Qubes VM"
+    exit 0
+fi
+
 if [ -e /dev/mapper/dmroot ] ; then 
     die "Qubes: FATAL error: /dev/mapper/dmroot already exists?!"
 fi
