@@ -1,3 +1,20 @@
+qubes-utils (3.1.3) wheezy; urgency=medium
+
+  * qrexec-lib: add qfile packing functions to libqubes-rpc-filecopy
+  * dracut: split 'full' dracut module into 'full-dmroot' and 'full-
+    modules'
+  * dracut: fix qubes-vm module dependencies
+  * dracut: mount only subdirectory of /lib/modules
+  * kernel-modules: build/install u2mfn module by default
+  * dracut: add dmsetup --noudevsync since we're running in pre-udev
+    hook
+  * debian: introduce qubes-kernel-vm-support package
+  * dracut: add a safety check preventing qubes_cow_setup.sh running in
+    dom0
+  * qrexec: define NOGUI_CMD_PREFIX
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Wed, 11 Nov 2015 05:12:11 +0100
+
 qubes-utils (3.1.2) wheezy; urgency=medium
 
   [ Marek Marczykowski-Górecki ]
