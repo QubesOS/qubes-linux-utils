@@ -1,3 +1,13 @@
+qubes-utils (3.0.13) wheezy; urgency=medium
+
+  [ Rusty Bird ]
+  * Check if QubesIncoming filesystem supports O_TMPFILE
+
+  [ Marek Marczykowski-Górecki ]
+  * rpm: disable debuginfo subpackage in qubes-kernel-vm-support
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Fri, 13 Nov 2015 23:20:22 +0100
+
 qubes-utils (3.0.12) wheezy; urgency=medium
 
   * libqrexec-utils: fix linker options
