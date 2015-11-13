@@ -112,11 +112,11 @@ void process_one_file_reg(struct file_header *untrusted_hdr,
 	if (use_tmpfile) {
 		fdout = open(".", O_WRONLY | O_TMPFILE, 0700);
 		if (fdout < 0) {
-		   if (errno==ENOENT)
-			   /* if it fails, do not attempt further use - most likely kernel too old */
-			   use_tmpfile = 0;
-		   else
-			   do_exit(errno, untrusted_name);
+			if (errno==ENOENT || /* most likely, kernel too old for O_TMPFILE */
+			    errno==EOPNOTSUPP) /* filesystem has no support for O_TMPFILE */
+				use_tmpfile = 0;
+			else
+				do_exit(errno, untrusted_name);
 		}
 	}
 	if (fdout < 0)
