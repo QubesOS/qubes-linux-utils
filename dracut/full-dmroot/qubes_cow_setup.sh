@@ -62,7 +62,7 @@ if [ `cat /sys/block/xvda/ro` = 1 ] ; then
     while ! [ -e /dev/xvdc ]; do sleep 0.1; done
     VOLATILE_SIZE=$(sfdisk -s /dev/xvdc)
     ROOT_SIZE=$(sfdisk -s /dev/xvda) # kbytes
-    SWAP_SIZE=1024 # kbytes
+    SWAP_SIZE=$(( 1024 * 1024 )) # kbytes
     if [ $VOLATILE_SIZE -lt $(($ROOT_SIZE + $SWAP_SIZE)) ]; then
         ROOT_SIZE=$(($VOLATILE_SIZE - $SWAP_SIZE))
     fi
