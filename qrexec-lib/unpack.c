@@ -208,6 +208,9 @@ void process_one_file(struct file_header *untrusted_hdr)
 int do_unpack(void)
 {
 	struct file_header untrusted_hdr;
+	int cwd_fd;
+	int saved_errno;
+
 	total_bytes = total_files = 0;
 	/* initialize checksum */
 	crc32_sum = 0;
@@ -222,6 +225,12 @@ int do_unpack(void)
 			do_exit(EDQUOT, untrusted_namebuf);
 		process_one_file(&untrusted_hdr);
 	}
+
+	saved_errno = errno;
+	cwd_fd = open(".", O_RDONLY);
+	if (cwd_fd >= 0 && syncfs(cwd_fd) == 0 && close(cwd_fd) == 0)
+		errno = saved_errno;
+
 	send_status_and_crc(errno, untrusted_namebuf);
 	return errno;
 }
