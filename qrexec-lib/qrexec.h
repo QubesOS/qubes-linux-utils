@@ -80,16 +80,16 @@ struct msg_header {
 struct exec_params {
     uint32_t connect_domain; /* target domain name */
     uint32_t connect_port;   /* target vchan port for i/o exchange */
-    char cmdline[0];         /* command line to execute, size = msg_header.len - sizeof(struct exec_params) */
+    char cmdline[0];         /* command line to execute, null terminated, size = msg_header.len - sizeof(struct exec_params) */
 };
 
 struct service_params {
-    char ident[32];
+    char ident[32];          /* null terminated ASCII string */
 };
 
 struct trigger_service_params {
-    char service_name[64];
-    char target_domain[32];
+    char service_name[64];            /* null terminated ASCII string */
+    char target_domain[32];           /* null terminated ASCII string */
     struct service_params request_id; /* service request id */
 };
 
@@ -105,7 +105,7 @@ enum {
     MSG_DATA_STDOUT,
     /* stderr VM->dom0 */
     MSG_DATA_STDERR,
-    /* VM process exit code VM->dom0 (int) */
+    /* VM process exit code VM->dom0 (uint32_t) */
     MSG_DATA_EXIT_CODE,
 };
 
