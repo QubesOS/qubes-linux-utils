@@ -12,22 +12,24 @@ fi
 
 modprobe xenblk || modprobe xen-blkfront || echo "Qubes: Cannot load Xen Block Frontend..."
 
+
 echo "Waiting for /dev/xvda* devices..."
 while ! [ -e /dev/xvda ]; do sleep 0.1; done
+
+SWAP_SIZE=$(( 1024 * 1024 * 2 )) # sectors, 1GB
 
 if [ `cat /sys/block/xvda/ro` = 1 ] ; then
     echo "Qubes: Doing COW setup for AppVM..."
 
     while ! [ -e /dev/xvdc ]; do sleep 0.1; done
-    VOLATILE_SIZE=$(sfdisk -s /dev/xvdc)
-    ROOT_SIZE=$(sfdisk -s /dev/xvda) # kbytes
-    SWAP_SIZE=$(( 1024 * 1024 )) # kbytes
-    if [ $VOLATILE_SIZE -lt $(($ROOT_SIZE + $SWAP_SIZE)) ]; then
-        ROOT_SIZE=$(($VOLATILE_SIZE - $SWAP_SIZE))
+    VOLATILE_SIZE=$(cat /sys/block/xvdc/size) # sectors
+    ROOT_SIZE=$(cat /sys/block/xvda/size) # sectors
+    if [ $VOLATILE_SIZE -lt $SWAP_SIZE ]; then
+        die "volatile.img smaller than 1GB, cannot continue"
     fi
-    sfdisk -q --unit B /dev/xvdc >/dev/null <<EOF
-0,$SWAP_SIZE,S
-,$ROOT_SIZE,L
+    sfdisk -q --unit S /dev/xvdc >/dev/null <<EOF
+1,$SWAP_SIZE,S
+,,L
 EOF
     if [ $? -ne 0 ]; then
         echo "Qubes: failed to setup partitions on volatile device"
