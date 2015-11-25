@@ -56,6 +56,7 @@ function build_initramfs() {
         --conf /dev/null --confdir /var/empty \
         -d "xenblk xen-blkfront cdrom ext4 jbd2 crc16 dm_snapshot" \
         $output_file $kver
+    chmod 644 "$output_file"
 }
 
 if [ -z "$1" ]; then
