@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-Wall -Wextra -Werror -g -O3
+CFLAGS+=-Wall -Wextra -Werror -g -O3
 all:	meminfo-writer
 SBINDIR?=/usr/sbin
 
@@ -9,7 +9,7 @@ ifneq "$(_XENSTORE_H)" ""
 endif
 
 meminfo-writer: meminfo-writer.o
-	$(CC) -g -o meminfo-writer meminfo-writer.o -lxenstore
+	$(CC) $(LDFLAGS) -g -o meminfo-writer meminfo-writer.o -lxenstore
 install:
 	install -D meminfo-writer $(DESTDIR)/$(SBINDIR)/meminfo-writer
 ifeq (1,${DEBIANBUILD})
