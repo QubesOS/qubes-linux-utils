@@ -3,8 +3,8 @@
 # Handle only USB devices
 SUBSYSTEM!="usb", GOTO="qubes_usb_end"
 
-ACTION=="add", IMPORT{program}="/usr/libexec/qubes/udev-usb-add-change"
-ACTION=="change", IMPORT{program}="/usr/libexec/qubes/udev-usb-add-change"
-ACTION=="remove", RUN+="/usr/libexec/qubes/udev-usb-remove"
+ACTION=="add", IMPORT{program}="/usr/lib/qubes/udev-usb-add-change"
+ACTION=="change", IMPORT{program}="/usr/lib/qubes/udev-usb-add-change"
+ACTION=="remove", RUN+="/usr/lib/qubes/udev-usb-remove"
 
 LABEL="qubes_usb_end"

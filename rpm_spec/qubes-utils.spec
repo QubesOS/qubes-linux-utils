@@ -72,8 +72,8 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root,-)
-/etc/udev/rules.d/99-qubes-*.rules
-/usr/libexec/qubes/udev-*
+/lib/udev/rules.d/99-qubes-*.rules
+/usr/lib/qubes/udev-*
 %{_sbindir}/meminfo-writer
 %{_unitdir}/qubes-meminfo-writer.service
 %{_unitdir}/qubes-meminfo-writer-dom0.service
