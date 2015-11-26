@@ -12,18 +12,55 @@ Package: qubes-utils
 Architecture: any
 Depends: qubesdb-vm, libvchan-xen, lsb-base, ${shlibs:Depends}, ${misc:Depends}
 Conflicts: qubes-linux-utils
+Breaks: qubes-core-agent (<< 3.1.4)
 Recommends: python2.7
 Description: Qubes Linux utilities
  This package includes the basic qubes utilities necessary for domU.
 
 Package: qubes-kernel-vm-support
 Architecture: any
-Depends: dkms, initramfs-tools, ${shlibs:Depends}, ${misc:Depends}
+Depends: dkms, initramfs-tools, ${misc:Depends}
 Description: Qubes VM kernel and initramfs modules
  This package contains:
- 1. mkinitramfs module required to setup Qubes VM root filesystem. This package is
- needed in VM only when the VM uses its own kernel (via pvgrub or so). Otherwise
- initrd is provided by dom0.
+ 1. mkinitramfs module required to setup Qubes VM root filesystem. This package
+ is needed in VM only when the VM uses its own kernel (via pvgrub or so).
+ Otherwise initrd is provided by dom0.
  .
  2. u2mfn kernel module sources (dkms) required by GUI agent and R2 version of
  libvchan library.
+
+Package: libqrexec-utils2
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Breaks: qubes-utils (<< 3.1.4)
+Replaces: qubes-utils (<< 3.1.4)
+Description: Library of common functions of qrexec agent and daemon
+ This library contains common helper functions for qrexec agent and daemon.
+
+Package: libqubes-rpc-filecopy2
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Breaks: qubes-utils (<< 3.1.4)
+Replaces: qubes-utils (<< 3.1.4)
+Description: Qubes file copy protocol library
+ This library can be used for both sending files using qfile protocol and for
+ receiving them.
+
+Package: libqrexec-utils-dev
+Architecture: any
+Section: libdevel
+Depends: libqrexec-utils2 (= ${binary:Version}), ${misc:Depends}
+Breaks: qubes-utils (<< 3.1.4)
+Replaces: qubes-utils (<< 3.1.4)
+Description: Development headers for libqrexec-utils
+ This package contains files required to compile qrexec-agent and qrexec-daemon.
+
+Package: libqubes-rpc-filecopy-dev
+Architecture: any
+Section: libdevel
+Depends: libqubes-rpc-filecopy2 (= ${binary:Version}), ${misc:Depends}
+Breaks: qubes-utils (<< 3.1.4)
+Replaces: qubes-utils (<< 3.1.4)
+Description: Development headers for libqrexec-utils
+ This package contains files required to compile Qubes file copy related
+ utilities like qfile-agent.
