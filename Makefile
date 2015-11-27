@@ -33,6 +33,7 @@ install-debian-kernel-support:
 	$(MAKE) -C initramfs-tools install
 	$(MAKE) -C kernel-modules install
 	# expand module version
+	rm -f debian/qubes-kernel-vm-support.dkms
 	echo debian/tmp/usr/src/u2mfn-*/dkms.conf > debian/qubes-kernel-vm-support.dkms
 
 clean:
