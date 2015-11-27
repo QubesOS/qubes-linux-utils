@@ -1,3 +1,32 @@
+qubes-utils (3.1.4) wheezy; urgency=medium
+
+  [ qubesuser ]
+  * Fix u2mfn.ko for > 16TB RAM by not truncating to 32-bit improperly
+
+  [ Rusty Bird ]
+  * Check if QubesIncoming filesystem supports O_TMPFILE
+
+  [ Marek Marczykowski-Górecki ]
+  * rpm: disable debuginfo subpackage in qubes-kernel-vm-support
+  * initramfs: fix swap size
+  * qrexec: add clarification commends in qrexec.h
+
+  [ Rusty Bird ]
+  * qfile-unpacker: syncfs() to avoid qvm-move-to-vm data loss
+
+  [ Marek Marczykowski-Górecki ]
+  * initramfs: use units of sectors in sfdisk call
+  * initramfs: initialize volatile.img partition table also in
+    TemplateVM
+  * qubes-prepare-vm-kernel: ensure proper permissions on initramfs
+  * debian: resolve quilt-build-dep-but-no-series-file lintian warning
+  * Move udev scripts to /usr/lib/qubes, move rules to /lib/udev/
+  * makefile: honor build env CFLAGS and LDFLAGS
+  * debian: split libraries out of qubes-utils package
+  * debian: break hardlink before modifying debian/....dkms
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Fri, 27 Nov 2015 20:44:04 +0100
+
 qubes-utils (3.1.3) wheezy; urgency=medium
 
   * qrexec-lib: add qfile packing functions to libqubes-rpc-filecopy
