@@ -1,3 +1,9 @@
+qubes-utils (3.1.5) wheezy; urgency=medium
+
+  * Fix for "debian: split libraries out of qubes-utils package"
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Mon, 30 Nov 2015 05:55:14 +0100
+
 qubes-utils (3.1.4) wheezy; urgency=medium
 
   [ qubesuser ]
