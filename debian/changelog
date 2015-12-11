@@ -1,3 +1,17 @@
+qubes-utils (3.0.14) wheezy; urgency=medium
+
+  [ Marek Marczykowski-Górecki ]
+  * debian: prevent upgrades without new enough qubes-core-agent
+
+  [ Rusty Bird ]
+  * qfile-unpacker: syncfs() to avoid qvm-move-to-vm data loss
+
+  [ Marek Marczykowski-Górecki ]
+  * qrexec: add clarification commends in qrexec.h
+  * qubes-prepare-vm-kernel: ensure proper permissions on initramfs
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Fri, 11 Dec 2015 21:09:45 +0100
+
 qubes-utils (3.0.13) wheezy; urgency=medium
 
   [ Rusty Bird ]
