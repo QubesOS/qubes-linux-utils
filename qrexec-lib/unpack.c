@@ -33,6 +33,10 @@ void send_status_and_crc(int code, const char *last_filename);
 #define O_TMPFILE_MASK (__O_TMPFILE | O_DIRECTORY | O_CREAT)
 #endif
 
+#if __GLIBC__ > 2 || (__GLIBC__ == 2 && __GLIBC_MINOR__ >= 14)
+#define HAVE_SYNCFS
+#endif
+
 void do_exit(int code, const char *last_filename)
 {
 	close(0);
@@ -208,8 +212,10 @@ void process_one_file(struct file_header *untrusted_hdr)
 int do_unpack(void)
 {
 	struct file_header untrusted_hdr;
+#ifdef HAVE_SYNCFS
 	int cwd_fd;
 	int saved_errno;
+#endif
 
 	total_bytes = total_files = 0;
 	/* initialize checksum */
@@ -226,10 +232,12 @@ int do_unpack(void)
 		process_one_file(&untrusted_hdr);
 	}
 
+#ifdef HAVE_SYNCFS
 	saved_errno = errno;
 	cwd_fd = open(".", O_RDONLY);
 	if (cwd_fd >= 0 && syncfs(cwd_fd) == 0 && close(cwd_fd) == 0)
 		errno = saved_errno;
+#endif
 
 	send_status_and_crc(errno, untrusted_namebuf);
 	return errno;
