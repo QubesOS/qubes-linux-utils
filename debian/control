@@ -12,6 +12,7 @@ Package: qubes-utils
 Architecture: any
 Depends: qubesdb-vm, libvchan-xen, lsb-base, ${shlibs:Depends}, ${misc:Depends}
 Conflicts: qubes-linux-utils
+Breaks: qubes-core-agent (<< 3.0.19)
 Recommends: python2.7
 Description: Qubes Linux utilities
  This package includes the basic qubes utilities necessary for domU.
