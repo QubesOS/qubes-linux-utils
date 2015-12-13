@@ -1,3 +1,13 @@
+qubes-utils (3.1.6) wheezy; urgency=medium
+
+  [ HW42 ]
+  * debian: remove obsolete conffiles in /etc/udev/rules.d
+
+  [ Marek Marczykowski-Górecki ]
+  * qrexec-lib: add glibc version test check for having syncfs
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Sun, 13 Dec 2015 04:38:27 +0100
+
 qubes-utils (3.1.5) wheezy; urgency=medium
 
   * Fix for "debian: split libraries out of qubes-utils package"
