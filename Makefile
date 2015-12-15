@@ -3,6 +3,7 @@ LIBDIR ?= /usr/lib64
 else
 LIBDIR ?= /usr/lib
 endif
+SYSLIBDIR ?= /lib
 INCLUDEDIR ?= /usr/include
 
 export LIBDIR INCLUDEDIR
