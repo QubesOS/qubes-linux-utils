@@ -29,6 +29,15 @@ function recompile_u2mfn() {
     kver=$1
     u2mfn_ver=`dkms status u2mfn|tail -n 1|cut -f 2 -d ' '|tr -d ':,'`
     if ! modinfo -k "$kver" -n u2mfn 2>&1 > /dev/null; then
+        echo "Module u2mfn not available. Checking available source to be built."
+        u2mfn_ver=`cat /usr/src/u2mfn-*/dkms.conf | grep PACKAGE_VERSION | cut -d "=" -f 2 | tr -d '"' | sort -u | head -n 1`
+        if [ -z "$u2mfn_ver" ] ; then
+            echo "No source found for u2mfn. Is qubes-vm-kernel-support installed correctly?"
+            return 1
+        else
+            echo "Found sources for u2mfn version $u2mfn_ver"
+        fi
+
         dkms install u2mfn/$u2mfn_ver -k $kver --no-initrd
     fi
 }

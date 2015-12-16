@@ -6,7 +6,7 @@
 # Maintainer: Olivier Medoc <o_medoc@yahoo.fr>
 pkgname=(qubes-vm-utils qubes-vm-kernel-support)
 pkgver=`cat version`
-pkgrel=3
+pkgrel=4
 epoch=
 pkgdesc="Common Linux files for Qubes VM."
 arch=("x86_64")
@@ -28,7 +28,7 @@ changelog=
 source=(PKGBUILD-initcpio-hook.sh PKGBUILD-initcpio-install.sh PKGBUILD-qubes-prepare-vm-kernel.sh)
 
 noextract=()
-md5sums=(e88b50aed7d28087968da728ec1dc2b6 3d204b0d8acda9cf3ea5ebd5334a04d6 241686bcf643683cfa0249a56a5fa9be)
+md5sums=(e88b50aed7d28087968da728ec1dc2b6 3d204b0d8acda9cf3ea5ebd5334a04d6 76ffd56b376136d7ee44190a0531a4af)
 
 
 build() {
