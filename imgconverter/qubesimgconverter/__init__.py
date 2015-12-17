@@ -233,23 +233,5 @@ def tint(src, dst, colour):
 
     Image.load_from_file(src).tint(colour).save(dst)
 
-def make_padlock(dst, colour, size=ICON_MAXSIZE):
-    cs = cairo.ImageSurface(cairo.FORMAT_ARGB32, size, size)
-
-    cr = cairo.Context(cs)
-    cr.set_source_rgb(*hex_to_float(colour))
-    cr.set_line_width(.125 * size)
-
-    cr.rectangle(.125 * size, .5 * size, .75 * size, .4375 * size)
-    cr.fill()
-
-    cr.move_to(.25 * size, .5 * size)
-    cr.line_to(.25 * size, .375 * size)
-    cr.arc(.5 * size, .375 * size, .25 * size, math.pi, 2 * math.pi)
-    cr.move_to(.75 * size, .375 * size) # this is unneccessary, but helps readability
-    cr.line_to(.75 * size, .5 * size)
-    cr.stroke()
-
-    cs.write_to_png(dst)
 
 # vim: ft=python sw=4 ts=4 et

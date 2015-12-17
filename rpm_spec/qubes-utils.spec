@@ -81,6 +81,7 @@ rm -rf $RPM_BUILD_ROOT
 #%{python_sitearch}/qubes/__init__.pyc
 #%{python_sitearch}/qubes/__init__.pyo
 %{python_sitepath}/qubesimgconverter/__init__.py*
+%{python_sitepath}/qubesimgconverter/imggen.py*
 %{python_sitepath}/qubesimgconverter/test.py*
 %{python_sitepath}/qubesimgconverter-%{version}-py?.?.egg-info/*
 
