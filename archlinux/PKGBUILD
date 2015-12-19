@@ -6,7 +6,7 @@
 # Maintainer: Olivier Medoc <o_medoc@yahoo.fr>
 pkgname=(qubes-vm-utils qubes-vm-kernel-support)
 pkgver=`cat version`
-pkgrel=4
+pkgrel=5
 epoch=
 pkgdesc="Common Linux files for Qubes VM."
 arch=("x86_64")
