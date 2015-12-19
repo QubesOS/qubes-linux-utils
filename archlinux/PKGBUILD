@@ -13,7 +13,6 @@ arch=("x86_64")
 url="http://qubes-os.org/"
 license=('GPL')
 groups=()
-depends=(qubes-libvchan imagemagick python2-cairo)
 makedepends=(gcc make pkgconfig 'qubes-libvchan')
 checkdepends=()
 optdepends=()
@@ -22,7 +21,6 @@ conflicts=()
 replaces=()
 backup=()
 options=('staticlibs')
-install=PKGBUILD-qubes-vm-utils.install
 changelog=
 
 source=(PKGBUILD-initcpio-hook.sh PKGBUILD-initcpio-install.sh PKGBUILD-qubes-prepare-vm-kernel.sh)
@@ -42,13 +40,16 @@ make all
 }
 
 package_qubes-vm-utils() {
+depends=(qubes-libvchan imagemagick python2-cairo)
+install=PKGBUILD-qubes-vm-utils.install
 
 make install DESTDIR=$pkgdir LIBDIR=/usr/lib SYSLIBDIR=/usr/lib SBINDIR=/usr/bin
 
 }
 
 package_qubes-vm-kernel-support() {
-depends=(mkinitcpio dkms)
+depends=(qubes-libvchan mkinitcpio dkms grub)
+install=PKGBUILD-qubes-vm-kernel-support.install
 
 mkdir -p ${pkgdir}/usr/lib/initcpio/install/
 mkdir -p ${pkgdir}/usr/lib/initcpio/hooks/
