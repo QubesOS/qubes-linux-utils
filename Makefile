@@ -3,10 +3,11 @@ LIBDIR ?= /usr/lib64
 else
 LIBDIR ?= /usr/lib
 endif
+SCRIPTSDIR ?= /usr/lib/qubes
 SYSLIBDIR ?= /lib
 INCLUDEDIR ?= /usr/include
 
-export LIBDIR INCLUDEDIR
+export LIBDIR SCRIPTSDIR SYSLIBDIR INCLUDEDIR
 
 help:
 	echo "Use rpmbuild to compile this pacakge"
