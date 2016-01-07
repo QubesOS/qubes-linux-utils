@@ -1,3 +1,15 @@
+qubes-utils (3.1.7) wheezy; urgency=medium
+
+  [ pqg ]
+  * Fix build (installation) on Archlinux
+
+  [ Marek Marczykowski-Górecki ]
+  * Fix building Fedora package after Archlinux build fixes
+  * udev: do not assume static device-mapper major number
+  * udev: ignore devices set to be ignore elsewhere
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Thu, 07 Jan 2016 05:59:40 +0100
+
 qubes-utils (3.1.6) wheezy; urgency=medium
 
   [ HW42 ]
