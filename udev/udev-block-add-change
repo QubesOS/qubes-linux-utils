@@ -9,7 +9,7 @@ QDB_KEY="/qubes-block-devices/$NAME"
 
 xs_remove() {
     if [ "$QUBES_EXPOSED" == "1" ]; then
-        qubesdb-rm "$QDB_KEY"
+        qubesdb-rm "$QDB_KEY/"
         qubesdb-write /qubes-block-devices ''
     fi
     echo QUBES_EXPOSED=0
