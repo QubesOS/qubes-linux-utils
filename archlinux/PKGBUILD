@@ -4,17 +4,16 @@
 # then please put 'unknown'.
 
 # Maintainer: Olivier Medoc <o_medoc@yahoo.fr>
-pkgname=qubes-vm-utils
+pkgname=(qubes-vm-utils qubes-vm-kernel-support)
 pkgver=`cat version`
-pkgrel=3
+pkgrel=5
 epoch=
 pkgdesc="Common Linux files for Qubes VM."
 arch=("x86_64")
 url="http://qubes-os.org/"
 license=('GPL')
 groups=()
-depends=(qubes-libvchan imagemagick python2-cairo)
-makedepends=(qubes-libvchan)
+makedepends=(gcc make pkgconfig 'qubes-libvchan')
 checkdepends=()
 optdepends=()
 provides=()
@@ -22,18 +21,17 @@ conflicts=()
 replaces=()
 backup=()
 options=('staticlibs')
-install=PKGBUILD-qubes-vm-utils.install
 changelog=
 
-source=()
+source=(PKGBUILD-initcpio-hook.sh PKGBUILD-initcpio-install.sh PKGBUILD-qubes-prepare-vm-kernel.sh)
 
 noextract=()
-md5sums=() #generate with 'makepkg -g'
+md5sums=(e88b50aed7d28087968da728ec1dc2b6 3d204b0d8acda9cf3ea5ebd5334a04d6 76ffd56b376136d7ee44190a0531a4af)
 
 
 build() {
 
-for source in qrexec-lib udev qmemman core Makefile; do
+for source in qrexec-lib udev qmemman core kernel-modules Makefile; do
   (ln -s $srcdir/../$source $srcdir/$source)
 done
 
@@ -41,11 +39,31 @@ make all
 
 }
 
-package() {
+package_qubes-vm-utils() {
+depends=(qubes-libvchan imagemagick python2-cairo)
+install=PKGBUILD-qubes-vm-utils.install
 
 make install DESTDIR=$pkgdir LIBDIR=/usr/lib SYSLIBDIR=/usr/lib SBINDIR=/usr/bin
 
 }
+
+package_qubes-vm-kernel-support() {
+depends=(qubes-libvchan mkinitcpio dkms grub)
+install=PKGBUILD-qubes-vm-kernel-support.install
+
+mkdir -p ${pkgdir}/usr/lib/initcpio/install/
+mkdir -p ${pkgdir}/usr/lib/initcpio/hooks/
+mkdir -p ${pkgdir}/usr/bin/
+ls -la ${pkgdir}/usr/bin
+install -m 755 ${srcdir}/PKGBUILD-qubes-prepare-vm-kernel.sh ${pkgdir}/usr/bin/qubes-prepare-vm-kernel
+
+install -m 611 ${srcdir}/PKGBUILD-initcpio-install.sh ${pkgdir}/usr/lib/initcpio/install/qubes
+install -m 611 ${srcdir}/PKGBUILD-initcpio-hook.sh ${pkgdir}/usr/lib/initcpio/hooks/qubes
+
+make install-u2mfn DESTDIR=$pkgdir -C kernel-modules
+
+}
+
 
 # vim:set ts=2 sw=2 et:
 
