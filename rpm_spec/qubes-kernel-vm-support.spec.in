@@ -19,16 +19,14 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #
 
-
-%{!?version: %define version %(cat version)}
-
 # Package contains /usr/lib, but not binary files, which confuses find-debuginfo.sh script.
 %global debug_package %{nil}
 
 Name:		qubes-kernel-vm-support
-Version:	%{version}
+Version:	@VERSION@
 Release:	1%{?dist}
 Summary:	Qubes VM kernel and initramfs modules
+Source0:    qubes-utils-%{version}.tar.gz
 
 Group:		Qubes
 Vendor:     Invisible Things Lab
@@ -39,7 +37,9 @@ Requires:	dracut
 Requires:	dkms
 Requires:	busybox
 
+%if 0%{?qubes_builder}
 %define _builddir %(pwd)
+%endif
 
 %description
 This package contains:
@@ -51,11 +51,7 @@ initrd is provided by dom0.
 libvchan library.
 
 %prep
-# we operate on the current directory, so no need to unpack anything
-# symlink is to generate useful debuginfo packages
-rm -f %{name}-%{version}
-ln -sf . %{name}-%{version}
-%setup -T -D
+%setup -q -n qubes-utils-%{version}
 
 %build
 
