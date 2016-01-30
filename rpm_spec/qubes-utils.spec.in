@@ -1,12 +1,12 @@
-%define version %(cat version)
 %if 0%{?qubes_builder}
 %define _builddir %(pwd)
 %endif
 
 Name:		qubes-utils
-Version:	%{version}
+Version:	@VERSION@
 Release:	1%{?dist}
 Summary:	Common Linux files for Qubes Dom0 and VM
+Source0:    %{name}-%{version}.tar.gz
 
 Group:		Qubes
 License:	GPL
@@ -88,15 +88,10 @@ Release:	1%{?dist}
 Libraries for qubes-utils
 
 %prep
-# we operate on the current directory, so no need to unpack anything
-# symlink is to generate useful debuginfo packages
-rm -f %{name}-%{version}
-ln -sf . %{name}-%{version}
-%setup -T -D
-
+%setup -q
 
 %build
-make all
+make all BACKEND_VMM=@BACKEND_VMM@
 
 %install
 make install DESTDIR=%{buildroot} PYTHON=%{__python2}
