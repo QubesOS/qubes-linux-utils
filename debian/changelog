@@ -1,3 +1,18 @@
+qubes-utils (3.1.8) wheezy; urgency=medium
+
+  [ Marek Marczykowski-Górecki ]
+  * udev: fix hiding devices from qvm-block
+
+  [ Olivier MEDOC ]
+  * archlinux: ensure gcc, make and pkgconfig are makedependencies
+  * archlinux: implement kernel-support
+  * kernel-support: compile u2mfn from source even if it has been never
+    built
+  * archlinux: add an install file specifically for vm-kernel-support
+  * archlinux: fix syntax errors in install file
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Mon, 08 Feb 2016 05:06:21 +0100
+
 qubes-utils (3.1.7) wheezy; urgency=medium
 
   [ pqg ]
