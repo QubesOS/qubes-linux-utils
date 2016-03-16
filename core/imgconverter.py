@@ -42,7 +42,7 @@ MAX_HEIGHT = 5120
 # current max raster icon size in hicolor theme is 256 as of 2013/fedora-18
 # beyond that one probably shall use scalable icons
 # (SVG is currently unsupported)
-ICON_MAXSIZE = 512
+ICON_MAXSIZE = 1024
 
 # header consists of two decimal numbers, SPC and LF
 re_imghdr = re.compile(r'^\d+ \d+\n$')
