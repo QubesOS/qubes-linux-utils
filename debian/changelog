@@ -1,3 +1,9 @@
+qubes-utils (3.0.17) wheezy; urgency=medium
+
+  * udev: fix hiding devices from qvm-block
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Sun, 01 May 2016 22:42:15 +0200
+
 qubes-utils (3.0.16) wheezy; urgency=medium
 
   * udev: do not assume static device-mapper major number
