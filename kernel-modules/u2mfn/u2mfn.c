@@ -76,7 +76,7 @@ static long u2mfn_ioctl(struct file *f, unsigned int cmd,
 	case U2MFN_GET_MFN_FOR_PAGE:
 		down_read(&current->mm->mmap_sem);
 		ret = get_user_pages
-		    (current, current->mm, data, 1, 1, 0, &user_page, 0);
+		    (data, 1, 1, 0, &user_page, 0);
 		up_read(&current->mm->mmap_sem);
 		if (ret != 1) {
 			printk("U2MFN_GET_MFN_FOR_PAGE: get_user_pages failed, ret=0x%lx\n", ret);
