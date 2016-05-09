@@ -75,8 +75,13 @@ static long u2mfn_ioctl(struct file *f, unsigned int cmd,
 	switch (cmd) {
 	case U2MFN_GET_MFN_FOR_PAGE:
 		down_read(&current->mm->mmap_sem);
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 6, 0)
 		ret = get_user_pages
 		    (data, 1, 1, 0, &user_page, 0);
+#else
+		ret = get_user_pages
+		    (current, current->mm, data, 1, 1, 0, &user_page, 0);
+#endif
 		up_read(&current->mm->mmap_sem);
 		if (ret != 1) {
 			printk("U2MFN_GET_MFN_FOR_PAGE: get_user_pages failed, ret=0x%lx\n", ret);
