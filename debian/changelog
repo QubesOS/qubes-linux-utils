@@ -1,3 +1,15 @@
+qubes-utils (3.2.0) wheezy; urgency=medium
+
+  [ Johanna A ]
+  * Builds against linux v4.6-rc4
+
+  [ Marek Marczykowski-Górecki ]
+  * u2mfn: build for both 4.6+ and older kernels
+  * udev/qvm-block: exclude devices used elsewhere
+  * udev/qvm-block: exclude device if its partition is already attached
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Mon, 16 May 2016 11:54:16 +0200
+
 qubes-utils (3.1.8) wheezy; urgency=medium
 
   [ Marek Marczykowski-Górecki ]
