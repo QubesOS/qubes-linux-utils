@@ -36,11 +36,21 @@ is_used() {
     return 1
 }
 
+is_attached() {
+    dev_hex=$(stat -c %t:%T /dev/$(basename $1))
+    xenstore-ls backend/vbd | grep -q "physical-device = \"$dev_hex\""
+}
+
 # update info about parent devices, if any:
 if [ -f /sys$DEVPATH/partition ]; then
     parent=$(dirname $(readlink -f /sys$DEVPATH))
     udevadm trigger \
         --property-match=DEVPATH=/$(realpath --relative-to=/sys $parent)
+    # if parent device is already attached, skip its partitions
+    if is_attached $parent; then
+        xs_remove
+        exit 0
+    fi
 fi
 
 # and underlying devices of device-mapper (if any)
@@ -58,9 +68,15 @@ if is_used /sys$DEVPATH; then
 fi
 
 # or one of its partitions is used
+# or already attached (prevent attaching both device and its partition(s) at
+# the same time)
 for part in /sys$DEVPATH/$NAME*; do
     if [ -d $part ]; then
         if is_used $part; then
+            xs_remove
+            exit 0
+        fi
+        if is_attached $part; then
             xs_remove
             exit 0
         fi
