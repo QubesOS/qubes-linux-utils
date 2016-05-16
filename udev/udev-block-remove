@@ -26,6 +26,11 @@ device_detach() {
     xenstore-rm $xs_path
 }
 
+# update info about underlying devices of device-mapper (if any)
+# at this stage device-mapper is already removed, so can't check what devices
+# were used there
+udevadm trigger --subsystem-match=block
+
 for XS_DEV_PATH in `xenstore-ls -f backend/vbd | grep 'backend/vbd/[0-9]*/[0-9]* ' | cut -f 1 -d ' '`; do
     CUR_DEVICE=`xenstore-read "$XS_DEV_PATH/params"`
     if [ "$CUR_DEVICE" == "$DEVNAME" ]; then

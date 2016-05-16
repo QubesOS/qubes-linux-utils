@@ -1,5 +1,7 @@
 #!/bin/bash
 
+shopt -s nullglob
+
 export LC_CTYPE=en_US.UTF-8
 NAME=${DEVNAME#/dev/}
 DESC="`echo "${ID_MODEL} (${ID_FS_LABEL})" | iconv -f utf8 -t ascii//TRANSLIT`"
@@ -15,26 +17,62 @@ xs_remove() {
     echo QUBES_EXPOSED=0
 }
 
-# Ignore mounted...
-if fgrep -q $DEVNAME /proc/mounts; then
+is_used() {
+    local sys_devpath=$1
+    # mounted
+    if fgrep -q $(basename $sys_devpath) /proc/mounts; then
+        return 0
+    fi
+    # part of other device-mapper
+    if [ -n "`ls -A $sys_devpath/holders 2> /dev/null`" ]; then
+        return 0
+    fi
+    # open device-mapper device
+    if [ -f "$sys_devpath/dm/name" ] && \
+            /sbin/dmsetup info "$(cat $sys_devpath/dm/name)" |\
+                grep -q "^Open count:.*[1-9]"; then
+        return 0
+    fi
+    return 1
+}
+
+# update info about parent devices, if any:
+if [ -f /sys$DEVPATH/partition ]; then
+    parent=$(dirname $(readlink -f /sys$DEVPATH))
+    udevadm trigger \
+        --property-match=DEVPATH=/$(realpath --relative-to=/sys $parent)
+fi
+
+# and underlying devices of device-mapper (if any)
+for dev in /sys$DEVPATH/slaves/*; do
+    udevadm trigger \
+        --property-match=DEVPATH=/$(realpath --relative-to=/sys $dev)
+done
+
+# then take care of this device:
+
+# device itself is already used
+if is_used /sys$DEVPATH; then
     xs_remove
     exit 0
 fi
-# ... and used by device-mapper
-if [ -n "`ls -A /sys/$DEVPATH/holders 2> /dev/null`" ]; then
-    xs_remove
-    exit 0
-fi
-# ... and used device-mapper devices
-if [ -n "$DM_NAME" ] && /sbin/dmsetup info "$DM_NAME" | grep -q "^Open count:.*[1-9]"; then
-    xs_remove
-    exit 0
-fi
-# ... and "empty" loop devices
+
+# or one of its partitions is used
+for part in /sys$DEVPATH/$NAME*; do
+    if [ -d $part ]; then
+        if is_used $part; then
+            xs_remove
+            exit 0
+        fi
+    fi
+done
+
+# or "empty" loop device
 if [ "$MAJOR" -eq 7 -a ! -d /sys/$DEVPATH/loop ]; then
     xs_remove
     exit 0
 fi
+
 # ... and temporary devices used during VM startup
 if [[ "$NAME" = 'loop'* ]] && \
        [[ "`cat /sys/block/${NAME%p*}/loop/backing_file`" = \
