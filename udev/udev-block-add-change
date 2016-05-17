@@ -2,6 +2,7 @@
 
 shopt -s nullglob
 
+
 export LC_CTYPE=en_US.UTF-8
 NAME=${DEVNAME#/dev/}
 DESC="`echo "${ID_MODEL} (${ID_FS_LABEL})" | iconv -f utf8 -t ascii//TRANSLIT`"
@@ -36,9 +37,18 @@ is_used() {
     return 1
 }
 
+# communicate with xenstored through socket in dom0
+# trying to access xenstore before xenstored is started, hang forever (in
+# non-killable state), so better fail ('-s' in VM if /proc/xen isn't mounted
+# yet) than hang dom0 boot
+if [ ! -r /proc/xen/capabilities ] || grep -q control_d /proc/xen/capabilities; then
+    XENSTORE_LS="xenstore-ls -s"
+else
+    XENSTORE_LS="xenstore-ls"
+fi
 is_attached() {
     dev_hex=$(stat -c %t:%T /dev/$(basename $1))
-    xenstore-ls backend/vbd | grep -q "physical-device = \"$dev_hex\""
+    $XENSTORE_LS backend/vbd | grep -q "physical-device = \"$dev_hex\""
 }
 
 # update info about parent devices, if any:
