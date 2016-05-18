@@ -1,3 +1,9 @@
+qubes-utils (3.2.1) wheezy; urgency=medium
+
+  * udev: fix deadlock on xenstore access during dom0 boot
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Wed, 18 May 2016 02:59:37 +0200
+
 qubes-utils (3.2.0) wheezy; urgency=medium
 
   [ Johanna A ]
