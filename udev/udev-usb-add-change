@@ -24,8 +24,10 @@ DESC="${ID_VENDOR_ID}:${ID_MODEL_ID} ${ID_SERIAL}"
 VERSION=`cat /sys/$DEVPATH/version`
 if [ "${VERSION}" = " 1.00" -o "${VERSION}" = " 1.10" ] ; then
 	VERSION=1
-elif [ "${VERSION}" = " 2.00" ] ; then
+elif [ "${VERSION}" = " 2.00" -o "${VERSION}" = " 2.10" ] ; then
 	VERSION=2
+elif [ "${VERSION}" = " 3.00" -o "${VERSION}" = " 3.10" ] ; then
+	VERSION=3
 else
 	# FIXME: silently ignoring devices with unexpected USB version
 	exit 0
@@ -38,4 +40,4 @@ qubesdb-write "$QDB_KEY/usb-ver" "$VERSION"
 qubesdb-write /qubes-usb-devices ''
 
 # Make sure PVUSB backend driver is loaded.
-/sbin/modprobe xen-usbback 2> /dev/null || /sbin/modprobe usbbk
+/sbin/modprobe xen-usbback 2> /dev/null || true
