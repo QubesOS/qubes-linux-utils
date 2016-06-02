@@ -24,8 +24,8 @@
 #include <libvchan.h>
 
 struct buffer {
-	char *data;
-	int buflen;
+    char *data;
+    int buflen;
 };
 
 /* return codes for buffered writes */
@@ -48,7 +48,7 @@ int write_stdin(int fd, const char *data, int len, struct buffer *buffer);
 int fork_and_flush_stdin(int fd, struct buffer *buffer);
 
 void do_fork_exec(const char *cmdline, int *pid, int *stdin_fd, int *stdout_fd,
-		  int *stderr_fd);
+        int *stderr_fd);
 void wait_for_vchan_or_argfd(libvchan_t *vchan, int max, fd_set * rdset, fd_set * wrset);
 int read_vchan_all(libvchan_t *vchan, void *data, size_t size);
 int write_vchan_all(libvchan_t *vchan, const void *data, size_t size);

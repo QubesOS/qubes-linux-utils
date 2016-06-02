@@ -28,51 +28,51 @@
 
 int wait_for_vchan_or_argfd_once(libvchan_t *ctrl, int max, fd_set * rdset, fd_set * wrset)
 {
-	int vfd, ret;
-	struct timespec tv = { 1, 100000000 };
-	sigset_t empty_set;
+    int vfd, ret;
+    struct timespec tv = { 1, 100000000 };
+    sigset_t empty_set;
 
-	sigemptyset(&empty_set);
+    sigemptyset(&empty_set);
 
-	vfd = libvchan_fd_for_select(ctrl);
-	FD_SET(vfd, rdset);
-	if (vfd > max)
-		max = vfd;
-	max++;
-	ret = pselect(max, rdset, wrset, NULL, &tv, &empty_set);
-	if (ret < 0) {
-		if (errno != EINTR) {
-			perror("select");
-			exit(1);
-		} else {
-			FD_ZERO(rdset);
-			FD_ZERO(wrset);
-			fprintf(stderr, "eintr\n");
-			return 1;
-		}
+    vfd = libvchan_fd_for_select(ctrl);
+    FD_SET(vfd, rdset);
+    if (vfd > max)
+        max = vfd;
+    max++;
+    ret = pselect(max, rdset, wrset, NULL, &tv, &empty_set);
+    if (ret < 0) {
+        if (errno != EINTR) {
+            perror("select");
+            exit(1);
+        } else {
+            FD_ZERO(rdset);
+            FD_ZERO(wrset);
+            fprintf(stderr, "eintr\n");
+            return 1;
+        }
 
-	}
-	if (!libvchan_is_open(ctrl)) {
-		fprintf(stderr, "libvchan_is_eof\n");
-		exit(0);
-	}
-	if (FD_ISSET(vfd, rdset))
-		// the following will never block; we need to do this to
-		// clear libvchan_fd pending state 
-		libvchan_wait(ctrl);
-	if (libvchan_data_ready(ctrl))
-		return 1;
-	return ret;
+    }
+    if (!libvchan_is_open(ctrl)) {
+        fprintf(stderr, "libvchan_is_eof\n");
+        exit(0);
+    }
+    if (FD_ISSET(vfd, rdset))
+        // the following will never block; we need to do this to
+        // clear libvchan_fd pending state 
+        libvchan_wait(ctrl);
+    if (libvchan_data_ready(ctrl))
+        return 1;
+    return ret;
 }
 
 void wait_for_vchan_or_argfd(libvchan_t *ctrl, int max, fd_set * rdset, fd_set * wrset)
 {
-	fd_set r = *rdset, w = *wrset;
-	do {
-		*rdset = r;
-		*wrset = w;
-	}
-	while (wait_for_vchan_or_argfd_once(ctrl, max, rdset, wrset) == 0);
+    fd_set r = *rdset, w = *wrset;
+    do {
+        *rdset = r;
+        *wrset = w;
+    }
+    while (wait_for_vchan_or_argfd_once(ctrl, max, rdset, wrset) == 0);
 }
 
 int write_vchan_all(libvchan_t *vchan, const void *data, size_t size) {
