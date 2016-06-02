@@ -1,3 +1,13 @@
+qubes-utils (3.2.2) wheezy; urgency=medium
+
+  * udev: expose USB 3.0 devices for PV USB
+  * udev: ignore usbip-connected USB devices
+  * udev: fix removing USB entries
+  * qrexec-lib: convert tabs to spaces
+  * travis: initial version
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Thu, 02 Jun 2016 02:55:11 +0200
+
 qubes-utils (3.2.1) wheezy; urgency=medium
 
   * udev: fix deadlock on xenstore access during dom0 boot
