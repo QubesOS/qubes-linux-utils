@@ -27,90 +27,90 @@
 
 void perror_wrapper(const char * msg)
 {
-	int prev=errno;
-	perror(msg);
-	errno=prev;
+    int prev=errno;
+    perror(msg);
+    errno=prev;
 }
 
 void set_nonblock(int fd)
 {
-	int fl = fcntl(fd, F_GETFL, 0);
-	if (fl & O_NONBLOCK)
-		return;
-	fcntl(fd, F_SETFL, fl | O_NONBLOCK);
+    int fl = fcntl(fd, F_GETFL, 0);
+    if (fl & O_NONBLOCK)
+        return;
+    fcntl(fd, F_SETFL, fl | O_NONBLOCK);
 }
 
 void set_block(int fd)
 {
-	int fl = fcntl(fd, F_GETFL, 0);
-	if (!(fl & O_NONBLOCK))
-		return;
-	fcntl(fd, F_SETFL, fl & ~O_NONBLOCK);
+    int fl = fcntl(fd, F_GETFL, 0);
+    if (!(fl & O_NONBLOCK))
+        return;
+    fcntl(fd, F_SETFL, fl & ~O_NONBLOCK);
 }
 
 int write_all(int fd, const void *buf, int size)
 {
-	int written = 0;
-	int ret;
-	while (written < size) {
-		ret = write(fd, (char *) buf + written, size - written);
-		if (ret == -1 && errno == EINTR)
-			continue;
-		if (ret <= 0) {
-			return 0;
-		}
-		written += ret;
-	}
-//      fprintf(stderr, "sent %d bytes\n", size);
-	return 1;
+    int written = 0;
+    int ret;
+    while (written < size) {
+        ret = write(fd, (char *) buf + written, size - written);
+        if (ret == -1 && errno == EINTR)
+            continue;
+        if (ret <= 0) {
+            return 0;
+        }
+        written += ret;
+    }
+    //      fprintf(stderr, "sent %d bytes\n", size);
+    return 1;
 }
 
 int read_all(int fd, void *buf, int size)
 {
-	int got_read = 0;
-	int ret;
-	while (got_read < size) {
-		ret = read(fd, (char *) buf + got_read, size - got_read);
-		if (ret == -1 && errno == EINTR)
-			continue;
-		if (ret == 0) {
-			errno = 0;
-			fprintf(stderr, "EOF\n");
-			return 0;
-		}
-		if (ret < 0) {
-			if (errno != EAGAIN)
-				perror_wrapper("read");
-			return 0;
-		}
-		if (got_read == 0) {
-			// force blocking operation on further reads
-			set_block(fd);
-		}
-		got_read += ret;
-	}
-//      fprintf(stderr, "read %d bytes\n", size);
-	return 1;
+    int got_read = 0;
+    int ret;
+    while (got_read < size) {
+        ret = read(fd, (char *) buf + got_read, size - got_read);
+        if (ret == -1 && errno == EINTR)
+            continue;
+        if (ret == 0) {
+            errno = 0;
+            fprintf(stderr, "EOF\n");
+            return 0;
+        }
+        if (ret < 0) {
+            if (errno != EAGAIN)
+                perror_wrapper("read");
+            return 0;
+        }
+        if (got_read == 0) {
+            // force blocking operation on further reads
+            set_block(fd);
+        }
+        got_read += ret;
+    }
+    //      fprintf(stderr, "read %d bytes\n", size);
+    return 1;
 }
 
 int copy_fd_all(int fdout, int fdin)
 {
-	int ret;
-	char buf[4096];
-	for (;;) {
-		ret = read(fdin, buf, sizeof(buf));
-		if (ret == -1 && errno == EINTR)
-			continue;
-		if (!ret)
-			break;
-		if (ret < 0) {
-			perror_wrapper("read");
-			return 0;
-		}
-		if (!write_all(fdout, buf, ret)) {
-			perror_wrapper("write");
-			return 0;
-		}
-	}
-	return 1;
+    int ret;
+    char buf[4096];
+    for (;;) {
+        ret = read(fdin, buf, sizeof(buf));
+        if (ret == -1 && errno == EINTR)
+            continue;
+        if (!ret)
+            break;
+        if (ret < 0) {
+            perror_wrapper("read");
+            return 0;
+        }
+        if (!write_all(fdout, buf, ret)) {
+            perror_wrapper("write");
+            return 0;
+        }
+    }
+    return 1;
 }

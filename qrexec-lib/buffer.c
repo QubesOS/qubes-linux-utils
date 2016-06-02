@@ -28,88 +28,88 @@
 static int total_mem;
 static char *limited_malloc(int len)
 {
-	char *ret;
-	total_mem += len;
-	if (total_mem > BUFFER_LIMIT) {
-		fprintf(stderr, "attempt to allocate >BUFFER_LIMIT\n");
-		exit(1);
-	}
-	ret = malloc(len);
-	if (!ret) {
-		perror("malloc");
-		exit(1);
-	}
-	return ret;
+    char *ret;
+    total_mem += len;
+    if (total_mem > BUFFER_LIMIT) {
+        fprintf(stderr, "attempt to allocate >BUFFER_LIMIT\n");
+        exit(1);
+    }
+    ret = malloc(len);
+    if (!ret) {
+        perror("malloc");
+        exit(1);
+    }
+    return ret;
 }
 
 static void limited_free(char *ptr, int len)
 {
-	free(ptr);
-	total_mem -= len;
+    free(ptr);
+    total_mem -= len;
 }
 
 void buffer_init(struct buffer *b)
 {
-	b->buflen = 0;
-	b->data = NULL;
+    b->buflen = 0;
+    b->data = NULL;
 }
 
 void buffer_free(struct buffer *b)
 {
-	if (b->buflen)
-		limited_free(b->data, b->buflen);
-	buffer_init(b);
+    if (b->buflen)
+        limited_free(b->data, b->buflen);
+    buffer_init(b);
 }
 
 /*
-The following two functions can be made much more efficient.
-Yet the profiling output show they are not significant CPU hogs, so
-we keep them so simple to make them obviously correct.
-*/
+   The following two functions can be made much more efficient.
+   Yet the profiling output show they are not significant CPU hogs, so
+   we keep them so simple to make them obviously correct.
+   */
 
 void buffer_append(struct buffer *b, const char *data, int len)
 {
-	int newsize;
-	char *qdata;
-	if (len < 0 || len > BUFFER_LIMIT) {
-		fprintf(stderr, "buffer_append %d\n", len);
-		exit(1);
-	}
-	if (len == 0)
-		return;
-	newsize = len + b->buflen;
-	qdata = limited_malloc(len + b->buflen);
-	memcpy(qdata, b->data, b->buflen);
-	memcpy(qdata + b->buflen, data, len);
-	buffer_free(b);
-	b->buflen = newsize;
-	b->data = qdata;
+    int newsize;
+    char *qdata;
+    if (len < 0 || len > BUFFER_LIMIT) {
+        fprintf(stderr, "buffer_append %d\n", len);
+        exit(1);
+    }
+    if (len == 0)
+        return;
+    newsize = len + b->buflen;
+    qdata = limited_malloc(len + b->buflen);
+    memcpy(qdata, b->data, b->buflen);
+    memcpy(qdata + b->buflen, data, len);
+    buffer_free(b);
+    b->buflen = newsize;
+    b->data = qdata;
 }
 
 void buffer_remove(struct buffer *b, int len)
 {
-	int newsize;
-	char *qdata = NULL;
-	if (len < 0 || len > b->buflen) {
-		fprintf(stderr, "buffer_remove %d/%d\n", len, b->buflen);
-		exit(1);
-	}
-	newsize = b->buflen - len;
-	if (newsize > 0) {
-		qdata = limited_malloc(newsize);
-		memcpy(qdata, b->data + len, newsize);
-	}
-	buffer_free(b);
-	b->buflen = newsize;
-	b->data = qdata;
+    int newsize;
+    char *qdata = NULL;
+    if (len < 0 || len > b->buflen) {
+        fprintf(stderr, "buffer_remove %d/%d\n", len, b->buflen);
+        exit(1);
+    }
+    newsize = b->buflen - len;
+    if (newsize > 0) {
+        qdata = limited_malloc(newsize);
+        memcpy(qdata, b->data + len, newsize);
+    }
+    buffer_free(b);
+    b->buflen = newsize;
+    b->data = qdata;
 }
 
 int buffer_len(struct buffer *b)
 {
-	return b->buflen;
+    return b->buflen;
 }
 
 void *buffer_data(struct buffer *b)
 {
-	return b->data;
+    return b->data;
 }

@@ -28,56 +28,56 @@
 
 static do_exec_t *exec_func = NULL;
 void register_exec_func(do_exec_t *func) {
-	exec_func = func;
+    exec_func = func;
 }
 
 void fix_fds(int fdin, int fdout, int fderr)
 {
-	int i;
-	for (i = 0; i < 256; i++)
-		if (i != fdin && i != fdout && i != fderr)
-			close(i);
-	dup2(fdin, 0);
-	dup2(fdout, 1);
-	dup2(fderr, 2);
-	close(fdin);
-	close(fdout);
-	if (fderr != 2)
-		close(fderr);
+    int i;
+    for (i = 0; i < 256; i++)
+        if (i != fdin && i != fdout && i != fderr)
+            close(i);
+    dup2(fdin, 0);
+    dup2(fdout, 1);
+    dup2(fderr, 2);
+    close(fdin);
+    close(fdout);
+    if (fderr != 2)
+        close(fderr);
 }
 
 void do_fork_exec(const char *cmdline, int *pid, int *stdin_fd, int *stdout_fd,
-		  int *stderr_fd)
+        int *stderr_fd)
 {
-	int inpipe[2], outpipe[2], errpipe[2];
+    int inpipe[2], outpipe[2], errpipe[2];
 
-	if (socketpair(AF_UNIX, SOCK_STREAM, 0, inpipe) || 
-			socketpair(AF_UNIX, SOCK_STREAM, 0, outpipe) || 
-			(stderr_fd && socketpair(AF_UNIX, SOCK_STREAM, 0, errpipe))) {
-		perror("socketpair");
-		exit(1);
-	}
-	switch (*pid = fork()) {
-	case -1:
-		perror("fork");
-		exit(-1);
-	case 0:
-		if (stderr_fd) {
-			fix_fds(inpipe[0], outpipe[1], errpipe[1]);
-		} else
-			fix_fds(inpipe[0], outpipe[1], 2);
+    if (socketpair(AF_UNIX, SOCK_STREAM, 0, inpipe) || 
+            socketpair(AF_UNIX, SOCK_STREAM, 0, outpipe) || 
+            (stderr_fd && socketpair(AF_UNIX, SOCK_STREAM, 0, errpipe))) {
+        perror("socketpair");
+        exit(1);
+    }
+    switch (*pid = fork()) {
+        case -1:
+            perror("fork");
+            exit(-1);
+        case 0:
+            if (stderr_fd) {
+                fix_fds(inpipe[0], outpipe[1], errpipe[1]);
+            } else
+                fix_fds(inpipe[0], outpipe[1], 2);
 
-		if (exec_func != NULL)
-			exec_func(cmdline);
-		exit(-1);
-	default:;
-	}
-	close(inpipe[0]);
-	close(outpipe[1]);
-	*stdin_fd = inpipe[1];
-	*stdout_fd = outpipe[0];
-	if (stderr_fd) {
-		close(errpipe[1]);
-		*stderr_fd = errpipe[0];
-	}
+            if (exec_func != NULL)
+                exec_func(cmdline);
+            exit(-1);
+        default:;
+    }
+    close(inpipe[0]);
+    close(outpipe[1]);
+    *stdin_fd = inpipe[1];
+    *stdout_fd = outpipe[0];
+    if (stderr_fd) {
+        close(errpipe[1]);
+        *stderr_fd = errpipe[0];
+    }
 }

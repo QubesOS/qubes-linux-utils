@@ -29,45 +29,45 @@
 
 int get_server_socket(const char *socket_address)
 {
-	struct sockaddr_un sockname;
-	int s;
+    struct sockaddr_un sockname;
+    int s;
 
-	unlink(socket_address);
+    unlink(socket_address);
 
-	s = socket(AF_UNIX, SOCK_STREAM, 0);
-	if (s < 0) {
-		printf("socket() failed\n");
-		exit(1);
-	}
-	memset(&sockname, 0, sizeof(sockname));
-	sockname.sun_family = AF_UNIX;
-	strncpy(sockname.sun_path, socket_address, sizeof sockname.sun_path);
-	sockname.sun_path[sizeof sockname.sun_path - 1] = 0;
+    s = socket(AF_UNIX, SOCK_STREAM, 0);
+    if (s < 0) {
+        printf("socket() failed\n");
+        exit(1);
+    }
+    memset(&sockname, 0, sizeof(sockname));
+    sockname.sun_family = AF_UNIX;
+    strncpy(sockname.sun_path, socket_address, sizeof sockname.sun_path);
+    sockname.sun_path[sizeof sockname.sun_path - 1] = 0;
 
-	if (bind(s, (struct sockaddr *) &sockname, sizeof(sockname)) == -1) {
-		printf("bind() failed\n");
-		close(s);
-		exit(1);
-	}
-//      chmod(sockname.sun_path, 0666);
-	if (listen(s, 5) == -1) {
-		perror("listen() failed\n");
-		close(s);
-		exit(1);
-	}
-	return s;
+    if (bind(s, (struct sockaddr *) &sockname, sizeof(sockname)) == -1) {
+        printf("bind() failed\n");
+        close(s);
+        exit(1);
+    }
+    //      chmod(sockname.sun_path, 0666);
+    if (listen(s, 5) == -1) {
+        perror("listen() failed\n");
+        close(s);
+        exit(1);
+    }
+    return s;
 }
 
 int do_accept(int s)
 {
-	struct sockaddr_un peer;
-	unsigned int addrlen;
-	int fd;
-	addrlen = sizeof(peer);
-	fd = accept(s, (struct sockaddr *) &peer, &addrlen);
-	if (fd == -1) {
-		perror("unix accept");
-		exit(1);
-	}
-	return fd;
+    struct sockaddr_un peer;
+    unsigned int addrlen;
+    int fd;
+    addrlen = sizeof(peer);
+    fd = accept(s, (struct sockaddr *) &peer, &addrlen);
+    if (fd == -1) {
+        perror("unix accept");
+        exit(1);
+    }
+    return fd;
 }

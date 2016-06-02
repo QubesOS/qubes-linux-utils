@@ -35,32 +35,32 @@
 #include <sys/types.h>
 
 struct file_header {
-	unsigned int namelen;
-	unsigned int mode;
-	unsigned long long filelen;
-	unsigned int atime;
-	unsigned int atime_nsec;
-	unsigned int mtime;
-	unsigned int mtime_nsec;
+    unsigned int namelen;
+    unsigned int mode;
+    unsigned long long filelen;
+    unsigned int atime;
+    unsigned int atime_nsec;
+    unsigned int mtime;
+    unsigned int mtime_nsec;
 };
 
 struct result_header {
-	uint32_t error_code;
-	uint32_t _pad;
-	uint64_t crc32;
+    uint32_t error_code;
+    uint32_t _pad;
+    uint64_t crc32;
 } __attribute__((packed));
 
 /* optional info about last processed file */
 struct result_header_ext {
-	uint32_t last_namelen;
-	char last_name[0];
+    uint32_t last_namelen;
+    char last_name[0];
 } __attribute__((packed));
 
 enum {
-	COPY_FILE_OK,
-	COPY_FILE_READ_EOF,
-	COPY_FILE_READ_ERROR,
-	COPY_FILE_WRITE_ERROR
+    COPY_FILE_OK,
+    COPY_FILE_READ_EOF,
+    COPY_FILE_READ_ERROR,
+    COPY_FILE_WRITE_ERROR
 };
 
 /* feedback handling */
