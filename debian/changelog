@@ -1,3 +1,12 @@
+qubes-utils (3.1.9) wheezy; urgency=medium
+
+  * udev/qvm-block: exclude devices used elsewhere
+  * udev/qvm-block: exclude device if its partition is already attached
+  * udev: fix deadlock on xenstore access during dom0 boot
+  * qrexec-lib: convert tabs to spaces
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Sat, 25 Jun 2016 15:35:35 +0200
+
 qubes-utils (3.1.8) wheezy; urgency=medium
 
   [ Marek Marczykowski-Górecki ]
