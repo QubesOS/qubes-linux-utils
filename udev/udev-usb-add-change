@@ -21,17 +21,7 @@ XSNAME=`basename ${DEVPATH} | tr . _`
 #DESC=`python -c "dev='%d-%d' % (int('${BUSNUM}'.lstrip('0')), (int('${DEVNUM}'.lstrip('0'))-1)); from xen.util import vusb_util; print vusb_util.get_usbdevice_info(dev);"`
 DESC="${ID_VENDOR_ID}:${ID_MODEL_ID} ${ID_SERIAL}"
 
-VERSION=`cat /sys/$DEVPATH/version`
-if [ "${VERSION}" = " 1.00" -o "${VERSION}" = " 1.10" ] ; then
-	VERSION=1
-elif [ "${VERSION}" = " 2.00" -o "${VERSION}" = " 2.10" ] ; then
-	VERSION=2
-elif [ "${VERSION}" = " 3.00" -o "${VERSION}" = " 3.10" ] ; then
-	VERSION=3
-else
-	# FIXME: silently ignoring devices with unexpected USB version
-	exit 0
-fi
+VERSION=`cat /sys/$DEVPATH/version | tr -d ' '|cut -f 1 -d .`
 
 # ignore usbip-connected devices, as most likely already passed through from
 # another VM
