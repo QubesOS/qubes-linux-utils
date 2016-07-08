@@ -5,6 +5,7 @@ Maintainer: Davíð Steinn Geirsson <david@dsg.is>
 Build-Depends:
  libvchan-xen-dev,
  libxen-dev,
+ pkg-config,
  debhelper (>= 9.0.0),
  dh-systemd,
  dkms
