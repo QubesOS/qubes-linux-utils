@@ -86,11 +86,7 @@ fi
 # the same time)
 for part in /sys$DEVPATH/$NAME*; do
     if [ -d $part ]; then
-        if is_used $part; then
-            xs_remove
-            exit 0
-        fi
-        if is_attached $part; then
+        if is_used $part || is_attached $part; then
             xs_remove
             exit 0
         fi
