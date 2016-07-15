@@ -11,6 +11,10 @@ MODE=w
 QDB_KEY="/qubes-block-devices/$NAME"
 
 xs_remove() {
+    if is_attached /sys$DEVPATH; then
+        return 0
+    fi
+
     if [ "$QUBES_EXPOSED" == "1" ]; then
         qubesdb-rm "$QDB_KEY/"
         qubesdb-write /qubes-block-devices ''
