@@ -11,6 +11,10 @@ MODE=w
 QDB_KEY="/qubes-block-devices/$NAME"
 
 xs_remove() {
+    if is_attached /sys$DEVPATH; then
+        return 0
+    fi
+
     if [ "$QUBES_EXPOSED" == "1" ]; then
         qubesdb-rm "$QDB_KEY/"
         qubesdb-write /qubes-block-devices ''
@@ -20,8 +24,8 @@ xs_remove() {
 
 is_used() {
     local sys_devpath=$1
-    # mounted
-    if fgrep -q $(basename $sys_devpath) /proc/mounts; then
+    # mounted; or enabled swap
+    if lsblk -dnr -o MOUNTPOINT "$DEVNAME" | grep -q .; then
         return 0
     fi
     # part of other device-mapper
@@ -82,11 +86,7 @@ fi
 # the same time)
 for part in /sys$DEVPATH/$NAME*; do
     if [ -d $part ]; then
-        if is_used $part; then
-            xs_remove
-            exit 0
-        fi
-        if is_attached $part; then
+        if is_used $part || is_attached $part; then
             xs_remove
             exit 0
         fi
