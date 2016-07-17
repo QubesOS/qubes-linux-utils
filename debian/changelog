@@ -1,3 +1,20 @@
+qubes-utils (3.2.3) wheezy; urgency=medium
+
+  [ Marek Marczykowski-Górecki ]
+  * udev: make USB device version detection more generic
+  * debian: reformat Build-Depends
+  * debian: add pkg-config to Build-Depends
+
+  [ Rusty Bird ]
+  * udev-block-add-change: better mount status check
+  * udev-block-add-change: don't exclude already attached devs
+  * udev-block-add-change: simplify a check
+
+  [ Marek Marczykowski-Górecki ]
+  * udev-block-add-change: fix checking if partition is mounted
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Sun, 17 Jul 2016 05:17:40 +0200
+
 qubes-utils (3.2.2) wheezy; urgency=medium
 
   * udev: expose USB 3.0 devices for PV USB
