@@ -24,8 +24,9 @@ xs_remove() {
 
 is_used() {
     local sys_devpath=$1
+    local devname=$(grep ^DEVNAME= $sys_devpath/uevent | cut -f 2 -d =)
     # mounted; or enabled swap
-    if lsblk -dnr -o MOUNTPOINT "$DEVNAME" | grep -q .; then
+    if lsblk -dnr -o MOUNTPOINT "/dev/$devname" | grep -q .; then
         return 0
     fi
     # part of other device-mapper
