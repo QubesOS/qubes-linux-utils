@@ -12,6 +12,10 @@ fi
 
 modprobe xenblk || modprobe xen-blkfront || echo "Qubes: Cannot load Xen Block Frontend..."
 
+die() {
+    echo "$@" >&2
+    exit 1
+}
 
 echo "Waiting for /dev/xvda* devices..."
 while ! [ -e /dev/xvda ]; do sleep 0.1; done
