@@ -1,0 +1,13 @@
+[Trigger]
+Type = File
+Operation = Install
+Operation = Upgrade
+Target = usr/lib/modules/*/
+Target = !usr/lib/modules/extramodules-*
+Target = !usr/lib/modules/*/?*
+
+[Action]
+Description = Building and preparing the Qubes kernel modules...
+When = PostTransaction
+Exec = /usr/bin/qubes-prepare-vm-kernel
+NeedsTargets

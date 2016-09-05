@@ -6,7 +6,7 @@
 # Maintainer: Olivier Medoc <o_medoc@yahoo.fr>
 pkgname=(qubes-vm-utils qubes-vm-kernel-support)
 pkgver=`cat version`
-pkgrel=5
+pkgrel=7
 epoch=
 pkgdesc="Common Linux files for Qubes VM."
 arch=("x86_64")
@@ -23,10 +23,19 @@ backup=()
 options=('staticlibs')
 changelog=
 
-source=(PKGBUILD-initcpio-hook.sh PKGBUILD-initcpio-install.sh PKGBUILD-qubes-prepare-vm-kernel.sh)
+source=(PKGBUILD-initcpio-hook.sh
+	PKGBUILD-initcpio-install.sh
+	PKGBUILD-qubes-prepare-vm-kernel.sh
+	PKGBUILD-qubes-prepare-vm-kernel.hook
+	)
+
+md5sums=(e88b50aed7d28087968da728ec1dc2b6
+	3d204b0d8acda9cf3ea5ebd5334a04d6
+	6b33d5cdacf9873d270bf785e3c4f39b
+	8e0754a613a2fa0a578361455d225b48
+	)
 
 noextract=()
-md5sums=(e88b50aed7d28087968da728ec1dc2b6 3d204b0d8acda9cf3ea5ebd5334a04d6 76ffd56b376136d7ee44190a0531a4af)
 
 
 build() {
@@ -53,12 +62,14 @@ install=PKGBUILD-qubes-vm-kernel-support.install
 
 mkdir -p ${pkgdir}/usr/lib/initcpio/install/
 mkdir -p ${pkgdir}/usr/lib/initcpio/hooks/
+mkdir -p ${pkgdir}/usr/share/libalpm/hooks/
 mkdir -p ${pkgdir}/usr/bin/
 ls -la ${pkgdir}/usr/bin
 install -m 755 ${srcdir}/PKGBUILD-qubes-prepare-vm-kernel.sh ${pkgdir}/usr/bin/qubes-prepare-vm-kernel
 
 install -m 611 ${srcdir}/PKGBUILD-initcpio-install.sh ${pkgdir}/usr/lib/initcpio/install/qubes
 install -m 611 ${srcdir}/PKGBUILD-initcpio-hook.sh ${pkgdir}/usr/lib/initcpio/hooks/qubes
+install -m 611 ${srcdir}/PKGBUILD-qubes-prepare-vm-kernel.hook ${pkgdir}/usr/share/libalpm/hooks/80-qubes-prepare-vm-kernel.hook
 
 make install-u2mfn DESTDIR=$pkgdir -C kernel-modules
 
