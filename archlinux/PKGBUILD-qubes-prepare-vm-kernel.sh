@@ -75,15 +75,20 @@ do_prepare_xen_kernel() {
 	kernel_version="$1"
 	kernel_base="$2"
 	kernel_code="$3"
+	if [ -n "$kernel_code" ] ; then
+		kernel_name="linux-$kernel_code"
+	else
+		kernel_name="linux"
+	fi
 	output_dir="$basedir/$kernel_version"
 	echo "--> Building files for $kernel_version in $output_dir"
 
 	mkdir -p "$output_dir"
-	cp "/boot/vmlinuz-linux-$kernel_code" "$output_dir/vmlinuz-linux-$kernel_code"
+	cp "/boot/vmlinuz-$kernel_name" "$output_dir/vmlinuz-$kernel_name"
 	echo "---> Generating modules.img"
 	build_modules_img "$kernel_version" "$output_dir/modules.img"
 	echo "---> Generating initramfs"
-	build_initcpio "$kernel_version" "$output_dir/initramfs-$kernel_code.img"
+	build_initcpio "$kernel_version" "$output_dir/initramfs-$kernel_name.img"
 
 	echo "--> Done."
 
