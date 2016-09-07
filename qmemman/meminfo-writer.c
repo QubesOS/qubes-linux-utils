@@ -78,10 +78,7 @@ const char *parse(const char *meminfo_buf, const char* dom_current_buf)
 	    || (used_mem > prev_used_mem && used_mem / 10 > (MemTotal+12) / 13
 		&& used_mem_diff > used_mem_change_threshold/2)) {
 		prev_used_mem = used_mem;
-		sprintf(outbuf,
-			"MemTotal: %lld kB\nMemFree: %lld kB\nBuffers: %lld kB\nCached: %lld kB\n"
-			"SwapTotal: %lld kB\nSwapFree: %lld kB\n", MemTotal,
-			MemFree, Buffers, Cached, SwapTotal, SwapFree);
+		sprintf(outbuf, "%lld", used_mem);
 		return outbuf;
 	}
 	return NULL;
