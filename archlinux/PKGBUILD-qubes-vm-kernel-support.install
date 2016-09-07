@@ -17,6 +17,8 @@ post_install() {
 
 post_upgrade() {
   help
+  echo "Removing qubes required hooks to mkinitcpio.conf"
+  sed 's/^HOOKS="lvm2 qubes base/HOOKS="base/' -i /etc/mkinitcpio.conf
 }
 
 post_remove() {
