@@ -56,10 +56,18 @@ function build_initramfs() {
 function build_initcpio() {
     kver=$1
     output_file=$2
+    echo $output_file
+    config_file=/etc/mkinitcpio-qubes.conf
 
-    mkinitcpio -k "$kver" -g "$output_file" -A qubes,lvm2
+    echo "--> Building initcpio configuration file"
+    sed 's/^HOOKS="base/HOOKS="lvm2 qubes base/' "/etc/mkinitcpio.conf" > "$config_file"
+
+    mkinitcpio --config "$config_file" -k "$kver" -g "$output_file"
     
     chmod 644 "$output_file"
+
+    echo "--> Copy built initramfs to /boot"
+    cp "$output_file" /boot/
 }
 
 do_prepare_xen_kernel() {
