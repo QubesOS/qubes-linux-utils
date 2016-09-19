@@ -7,7 +7,7 @@ clean:
 .PHONY: clean
 
 install:
-	python setup.py install -O1 --skip-build --root $(DESTDIR)
+	python setup.py install -O1 --skip-build --prefix=/usr --root $(DESTDIR)
 #ifeq (1,${DEBIANBUILD})
 #	cp *.py $(DESTDIR)/$(PYTHON_SITEARCH)/qubes/
 #else
