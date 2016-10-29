@@ -75,7 +75,10 @@ static long u2mfn_ioctl(struct file *f, unsigned int cmd,
 	switch (cmd) {
 	case U2MFN_GET_MFN_FOR_PAGE:
 		down_read(&current->mm->mmap_sem);
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 6, 0)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 9, 0)
+		ret = get_user_pages
+			(data, 1, (FOLL_WRITE | FOLL_FORCE), &user_page, 0);
+#elif LINUX_VERSION_CODE >= KERNEL_VERSION(4, 6, 0)
 		ret = get_user_pages
 		    (data, 1, 1, 0, &user_page, 0);
 #else
