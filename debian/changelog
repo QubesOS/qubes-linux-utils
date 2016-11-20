@@ -1,3 +1,19 @@
+qubes-utils (3.1.10) wheezy; urgency=medium
+
+  [ Marek Marczykowski-Górecki ]
+  * debian: reformat Build-Depends
+  * debian: add pkg-config to Build-Depends
+
+  [ Rusty Bird ]
+  * udev-block-add-change: better mount status check
+  * udev-block-add-change: don't exclude already attached devs
+  * udev-block-add-change: simplify a check
+
+  [ Marek Marczykowski-Górecki ]
+  * udev-block-add-change: fix checking if partition is mounted
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Sun, 20 Nov 2016 17:05:41 +0100
+
 qubes-utils (3.1.9) wheezy; urgency=medium
 
   * udev/qvm-block: exclude devices used elsewhere
