@@ -1,9 +1,11 @@
- #!/bin/sh
+#!/bin/sh
 #
 # The Qubes OS Project, http://www.qubes-os.org
 #
 # Copyright (C) 2015  Marek Marczykowski-Górecki
 #                       <marmarekp@invisiblethingslab.com>
+#
+# Copyright © 2016 Sébastien Luttringer
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -24,23 +26,6 @@
 set -e
 
 basedir=/var/lib/qubes/vm-kernels
-
-function recompile_u2mfn() {
-    kver=$1
-    u2mfn_ver=`dkms status u2mfn|tail -n 1|cut -f 2 -d ' '|tr -d ':,'`
-    if ! modinfo -k "$kver" -n u2mfn 2>&1 > /dev/null; then
-        echo "Module u2mfn not available. Checking available source to be built."
-        u2mfn_ver=`cat /usr/src/u2mfn-*/dkms.conf | grep PACKAGE_VERSION | cut -d "=" -f 2 | tr -d '"' | sort -u | head -n 1`
-        if [ -z "$u2mfn_ver" ] ; then
-            echo "No source found for u2mfn. Is qubes-vm-kernel-support installed correctly?"
-            return 1
-        else
-            echo "Found sources for u2mfn version $u2mfn_ver"
-        fi
-
-        dkms install u2mfn/$u2mfn_ver -k $kver --no-initrd
-    fi
-}
 
 function build_modules_img() {
     kver=$1
@@ -71,45 +56,120 @@ function build_initramfs() {
 function build_initcpio() {
     kver=$1
     output_file=$2
+    echo $output_file
+    config_file=/etc/mkinitcpio-qubes.conf
 
-    mkinitcpio -k "$kver" -g "$output_file" -A qubes,lvm2
+    echo "--> Building initcpio configuration file"
+    sed 's/^HOOKS="base/HOOKS="lvm2 qubes base/' "/etc/mkinitcpio.conf" > "$config_file"
+
+    mkinitcpio --config "$config_file" -k "$kver" -g "$output_file"
     
     chmod 644 "$output_file"
+
+    echo "--> Copy built initramfs to /boot"
+    cp "$output_file" /boot/
 }
 
-if [ -z "$1" ]; then
-    echo "Usage: $0 <kernel-version> <kernel-name> [<display-kernel-version>]" >&2
-    exit 1
-fi
+do_prepare_xen_kernel() {
 
-if [ ! -d /lib/modules/$1 ]; then
-    echo "ERROR: Kernel version $1 not installed" >&2
-    exit 1
-fi
+	kernel_version="$1"
+	kernel_base="$2"
+	kernel_code="$3"
+	if [ -n "$kernel_code" ] ; then
+		kernel_name="linux-$kernel_code"
+	else
+		kernel_name="linux"
+	fi
+	output_dir="$basedir/$kernel_version"
+	echo "--> Building files for $kernel_version in $output_dir"
 
-kernel_version=$1
+	mkdir -p "$output_dir"
+	cp "/boot/vmlinuz-$kernel_name" "$output_dir/vmlinuz-$kernel_name"
+	echo "---> Generating modules.img"
+	build_modules_img "$kernel_version" "$output_dir/modules.img"
+	echo "---> Generating initramfs"
+	build_initcpio "$kernel_version" "$output_dir/initramfs-$kernel_name.img"
 
-if [ -n "$2" ]; then
-    kernel_code="-linux-$2"
-else
-    kernel_code="-linux"
-fi
+	echo "--> Done."
 
-if [ -n "$3" ]; then
-    output_dir="$basedir/$3"
-else
-    output_dir="$basedir/$kernel_version"
-fi
+}
 
-echo "--> Building files for $kernel_version in $output_dir"
+# display what to run and run it quietly
+run() {
+	echo "==> $*"
+	"$@" > /dev/null
+}
 
-echo "---> Recompiling kernel module (u2mfn)"
-recompile_u2mfn "$kernel_version"
-mkdir -p "$output_dir"
-cp "/boot/vmlinuz$kernel_code" "$output_dir/vmlinuz$kernel_code"
-echo "---> Generating modules.img"
-build_modules_img "$kernel_version" "$output_dir/modules.img"
-echo "---> Generating initramfs"
-build_initcpio "$kernel_version" "$output_dir/initramfs$kernel_code.img"
+# check kernel is valid for action
+# it means kernel and its headers are installed
+# $1: kernel version
+check_kernel() {
+	local kver="$1"; shift
+	echo "Install tree: $install_tree/$kver/kernel"
+	if [[ ! -d "$install_tree/$kver/kernel" ]]; then
+		echo "==> No kernel $kver modules. You must install them to use DKMS!"
+		return 1
+	elif [[ ! -d "$install_tree/$kver/build/include" ]]; then
+		echo "==> No kernel $kver headers. You must install them to use DKMS!"
+		return 1
+	fi
+	return 0
+}
 
-echo "--> Done."
+# handle actions on kernel addition/upgrade/removal
+# $1: kernel version
+# $*: dkms args
+do_kernel() {
+	local kver="$1"; shift
+	check_kernel "$kver" || return
+	# do $@ once for each dkms module in $source_tree
+	local path
+	for path in "$install_tree"/"$kver"/extra/u2mfn.ko; do
+		echo "Preparing kernel for $path"
+		if [[ "$path" =~ ^$install_tree/([^/]+)-([^/]+)/extra/u2mfn\.ko$ ]]; then
+			do_prepare_xen_kernel "$kver" "${BASH_REMATCH[1]}" "${BASH_REMATCH[2]}"
+		fi
+	done
+}
+
+# emulated program entry point
+main() {
+
+	# prevent to have all each dkms call to fail
+	if (( EUID )); then
+		echo 'You must be root to use this hook' >&2
+		exit 1
+	fi
+
+	# dkms path from framework config
+	# note: the alpm hooks which trigger this script use static path
+	source_tree='/usr/src'
+	install_tree='/usr/lib/modules'
+
+	# check source_tree and install_tree exists
+	local path
+	for path in "$source_tree" "$install_tree"; do
+		if [[ ! -d "$path" ]]; then
+			echo "==> Missing mandatory directory: $path. Exiting!"
+			return 1
+		fi
+	done
+
+	if [ -n "$1" ] ; then
+			echo $install_tree
+			if [[ "$1" =~ ^$install_tree/([^/]+)/ ]]; then
+				do_kernel "${BASH_REMATCH[1]}"
+			fi
+	else
+		# parse stdin paths to guess what do do
+		while read -r path; do
+			if [[ "/$path" =~ ^$install_tree/([^/]+)/ ]]; then
+				do_kernel "${BASH_REMATCH[1]}"
+			fi
+		done
+	fi
+
+	return 0
+}
+
+main "$@"
