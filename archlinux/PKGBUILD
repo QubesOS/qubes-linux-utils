@@ -54,8 +54,6 @@ install=PKGBUILD-qubes-vm-kernel-support.install
 mkdir -p ${pkgdir}/usr/lib/initcpio/install/
 mkdir -p ${pkgdir}/usr/lib/initcpio/hooks/
 mkdir -p ${pkgdir}/usr/bin/
-ls -la ${pkgdir}/usr/bin
-install -m 755 ${srcdir}/PKGBUILD-qubes-prepare-vm-kernel.sh ${pkgdir}/usr/bin/qubes-prepare-vm-kernel
 
 install -m 611 ${srcdir}/PKGBUILD-initcpio-install.sh ${pkgdir}/usr/lib/initcpio/install/qubes
 install -m 611 ${srcdir}/PKGBUILD-initcpio-hook.sh ${pkgdir}/usr/lib/initcpio/hooks/qubes
