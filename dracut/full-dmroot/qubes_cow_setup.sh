@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# This file should be placed in pre-mount directory in dracut's initramfs, or
+# This file should be placed in pre-trigger directory in dracut's initramfs, or
 # scripts/local-top in case of initramfs-tools
 #
 

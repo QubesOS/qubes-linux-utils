@@ -14,7 +14,7 @@ depends() {
 }
 
 install() {
-    inst_hook pre-udev 90 $moddir/qubes_cow_setup.sh
+    inst_hook pre-trigger 90 $moddir/qubes_cow_setup.sh
     inst_multiple \
         sfdisk \
         mkswap
