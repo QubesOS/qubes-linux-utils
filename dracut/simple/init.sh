@@ -83,7 +83,6 @@ if ! [ -d "$NEWROOT/lib/modules/$kver/kernel" ]; then
     rmdir /tmp/modules
 fi
 
-
 umount /dev /sys /proc
 
 exec switch_root $NEWROOT /sbin/init
