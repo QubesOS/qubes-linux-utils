@@ -56,14 +56,21 @@ log_begin "Waiting for /dev/xvda* devices..."
 while ! [ -e /dev/xvda ]; do sleep 0.1; done
 log_end
 
+# prefer first partition if exists
+if [ -b /dev/xvda1 ]; then
+    ROOT_DEV=xvda1
+else
+    ROOT_DEV=xvda
+fi
+
 SWAP_SIZE=$(( 1024 * 1024 * 2 )) # sectors, 1GB
 
-if [ `cat /sys/block/xvda/ro` = 1 ] ; then
+if [ `cat /sys/class/block/$ROOT_DEV/ro` = 1 ] ; then
     log_begin "Qubes: Doing COW setup for AppVM..."
 
     while ! [ -e /dev/xvdc ]; do sleep 0.1; done
-    VOLATILE_SIZE=$(cat /sys/block/xvdc/size) # sectors
-    ROOT_SIZE=$(cat /sys/block/xvda/size) # sectors
+    VOLATILE_SIZE=$(cat /sys/class/block/xvdc/size) # sectors
+    ROOT_SIZE=$(cat /sys/class/block/$ROOT_DEV/size) # sectors
     if [ $VOLATILE_SIZE -lt $SWAP_SIZE ]; then
         die "volatile.img smaller than 1GB, cannot continue"
     fi
@@ -78,7 +85,7 @@ EOF
     mkswap /dev/xvdc1
     while ! [ -e /dev/xvdc2 ]; do sleep 0.1; done
 
-    echo "0 `cat /sys/block/xvda/size` snapshot /dev/xvda /dev/xvdc2 N 16" | \
+    echo "0 `cat /sys/class/block/$ROOT_DEV/size` snapshot /dev/$ROOT_DEV /dev/xvdc2 N 16" | \
         dmsetup --noudevsync create dmroot || die "Qubes: FATAL: cannot create dmroot!"
     log_end
 else
@@ -92,8 +99,17 @@ EOF
     fi
     while ! [ -e /dev/xvdc1 ]; do sleep 0.1; done
     mkswap /dev/xvdc1
-    echo "0 `cat /sys/block/xvda/size` linear /dev/xvda 0" | \
-        dmsetup --noudevsync create dmroot || die "Qubes: FATAL: cannot create dmroot!"
+    if [ "$ROOT_DEV" = "xvda1" ]; then
+        # grub2-probe for some reason can't parse dm-linear pointing at
+        # partition device directly, but can when it points at it indirectly
+        # through base device and offset; lets make life easier for users of
+        # grub2-install
+        DM_ROOT="/dev/xvda $(cat /sys/class/block/$ROOT_DEV/start)"
+    else
+        DM_ROOT="/dev/$ROOT_DEV 0"
+    fi
+    echo "0 `cat /sys/class/block/$ROOT_DEV/size` linear $DM_ROOT" | \
+        dmsetup create dmroot || { echo "Qubes: FATAL: cannot create dmroot!"; exit 1; }
     log_end
 fi
 dmsetup mknodes dmroot
