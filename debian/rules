@@ -13,5 +13,5 @@ override_dh_auto_build:
 	make all LIBDIR=/usr/lib DEBIANBUILD=1
 
 override_dh_auto_install:
-	make install LIBDIR=/usr/lib DEBIANBUILD=1 
+	make install LIBDIR=/usr/lib DEBIANBUILD=1 PYTHON_PREFIX_ARG=--install-layout=deb
 	make install-debian-kernel-support LIBDIR=/usr/lib DEBIANBUILD=1 
