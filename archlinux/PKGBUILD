@@ -6,7 +6,7 @@
 # Maintainer: Olivier Medoc <o_medoc@yahoo.fr>
 pkgname=(qubes-vm-utils qubes-vm-kernel-support)
 pkgver=`cat version`
-pkgrel=9
+pkgrel=10
 epoch=
 pkgdesc="Common Linux files for Qubes VM."
 arch=("x86_64")
@@ -26,12 +26,12 @@ changelog=
 source=(PKGBUILD-initcpio-hook.sh PKGBUILD-initcpio-install.sh)
 
 noextract=()
-md5sums=(e88b50aed7d28087968da728ec1dc2b6 3d204b0d8acda9cf3ea5ebd5334a04d6)
+md5sums=(SKIP)
 
 
 build() {
 
-for source in qrexec-lib udev qmemman core kernel-modules Makefile; do
+for source in qrexec-lib udev qmemman core kernel-modules Makefile dracut; do
   (ln -s $srcdir/../$source $srcdir/$source)
 done
 
@@ -53,11 +53,12 @@ install=PKGBUILD-qubes-vm-kernel-support.install
 
 mkdir -p ${pkgdir}/usr/lib/initcpio/install/
 mkdir -p ${pkgdir}/usr/lib/initcpio/hooks/
+mkdir -p ${pkgdir}/usr/lib/qubes/
 mkdir -p ${pkgdir}/usr/bin/
 
 install -m 611 ${srcdir}/PKGBUILD-initcpio-install.sh ${pkgdir}/usr/lib/initcpio/install/qubes
 install -m 611 ${srcdir}/PKGBUILD-initcpio-hook.sh ${pkgdir}/usr/lib/initcpio/hooks/qubes
-
+install -m 755 ${srcdir}/dracut/full-dmroot/qubes_cow_setup.sh ${pkgdir}/usr/lib/qubes/qubes_cow_setup.sh
 make install-u2mfn DESTDIR=$pkgdir -C kernel-modules
 
 }
