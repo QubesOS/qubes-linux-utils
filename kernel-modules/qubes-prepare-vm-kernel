@@ -26,11 +26,28 @@ set -e
 basedir=/var/lib/qubes/vm-kernels
 
 function recompile_u2mfn() {
-    kver=$1
-    u2mfn_ver=`dkms status u2mfn|tail -n 1|cut -f 2 -d ' '|tr -d ':,'`
-    if ! modinfo -k "$kver" -n u2mfn >/dev/null; then
-        dkms install u2mfn/$u2mfn_ver -k $kver --no-initrd
+    kver="${1}"
+
+    if modinfo -k "$kver" -n u2mfn >/dev/null 2>&1; then
+        echo "---> The u2mfn kernel module is already installed for ${kver}."
+        return
     fi
+
+    echo "---> Compiling the u2mfn kernel module"
+
+    # ls's -v option sorts the u2mfn directories according to
+    # their version numbers, which lets "tail -n1" capture the
+    # latest version.
+    u2mfn_ver="$(ls -1v /usr/src/u2mfn-*/dkms.conf 2>/dev/null | tail -n1 | \
+        xargs --no-run-if-empty grep -F PACKAGE_VERSION | \
+        cut -d= -f2 | tr -d "\"'")"
+
+    if test -z "${u2mfn_ver}"; then
+        echo "ERROR: Could not detect the location of the DKMS tree of the u2mfn module."
+        exit 1
+    fi
+
+    dkms install --no-initrd "u2mfn/${u2mfn_ver}" -k "${kver}"
 }
 
 function build_modules_img() {
@@ -78,7 +95,6 @@ fi
 
 echo "--> Building files for $kernel_version in $output_dir"
 
-echo "---> Recompiling kernel module (u2mfn)"
 recompile_u2mfn "$kernel_version"
 mkdir -p "$output_dir"
 cp "/boot/vmlinuz-$kernel_version" "$output_dir/vmlinuz"
