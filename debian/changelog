@@ -1,3 +1,22 @@
+qubes-utils (4.0.0) unstable; urgency=medium
+
+  [ Wojtek Porczyk ]
+  * debian/control: remove unneeded qubesdb dependency
+  * Package imgconverter as separate Python module
+  * Move imggen module from artwork.
+
+  [ Marek Marczykowski-Górecki ]
+  * dracut: add missing 'die' function to 'simple' module
+  * qmemman-meminfo-writer: send simplified meminfo value
+  * Add python-setuptools to build depends
+  * debian: adjust file list
+  * Install python modules to /usr
+  * initramfs: move qubes_cow_setup hook to pre-trigger
+  * initramfs: add support for root.img with partition table
+  * debian: fix install location of python files
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Sat, 08 Apr 2017 13:58:53 +0200
+
 qubes-utils (3.2.4) unstable; urgency=medium
 
   [ Johanna A ]
