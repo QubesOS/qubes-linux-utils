@@ -19,6 +19,8 @@ Requires:	%{name}-libs
 Requires:	ImageMagick
 Requires:	pycairo
 BuildRequires:  qubes-libvchan-devel
+# for meminfo-writer
+BuildRequires:  xen-devel
 
 %description
 Common Linux files for Qubes Dom0 and VM
