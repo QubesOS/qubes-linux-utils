@@ -1,3 +1,21 @@
+qubes-utils (4.0.1) unstable; urgency=medium
+
+  [ Marek Marczykowski-Górecki ]
+  * travis: switch to Qubes 4.0
+  * rpm: add missing build requires
+  * travis: drop fc23 vm packages building
+
+  [ unman ]
+  * Improve error message when file exists
+
+  [ Marek Marczykowski-Górecki ]
+  * rpm: packge qubesimgconverter for both python2 and python3
+  * imgconverter: make it really work on python3
+  * imgconverter: use core3 API in get_from_vm()
+  * rpm: add missing build requires
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Thu, 18 May 2017 01:54:46 +0200
+
 qubes-utils (4.0.0) unstable; urgency=medium
 
   [ Wojtek Porczyk ]
