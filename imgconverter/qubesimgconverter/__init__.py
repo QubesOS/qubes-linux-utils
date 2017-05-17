@@ -197,7 +197,7 @@ expects header+RGBA on stdin. This method is invoked from qvm-imgconverter-clien
 
         try:
             sys.stdout.write(open(filename).read())
-        except Exception, e:
+        except Exception as e:
             raise Exception('Something went wrong: {0!s}'.format(e))
         finally:
             sys.stdout.close()

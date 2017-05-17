@@ -1,13 +1,15 @@
+PYTHON ?= python
+
 all:
-	python setup.py build
+	$(PYTHON) setup.py build
 .PHONY: all
 
 clean:
-	python setup.py clean
+	$(PYTHON) setup.py clean
 .PHONY: clean
 
 install:
-	python setup.py install -O1 --skip-build $(PYTHON_PREFIX_ARG) --root $(DESTDIR)
+	$(PYTHON) setup.py install -O1 $(PYTHON_PREFIX_ARG) --root $(DESTDIR)
 #ifeq (1,${DEBIANBUILD})
 #	cp *.py $(DESTDIR)/$(PYTHON_SITEARCH)/qubes/
 #else

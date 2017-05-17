@@ -3,8 +3,6 @@
 %define _builddir %(pwd)
 %endif
 
-%{!?python_sitepath: %define python_sitepath %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib(0)")}
-
 Name:		qubes-utils
 Version:	%{version}
 Release:	1%{?dist}
@@ -17,7 +15,7 @@ URL:		http://www.qubes-os.org
 Requires:	udev
 Requires:	%{name}-libs
 Requires:	ImageMagick
-Requires:	pycairo
+Requires:	python3-qubesimgconverter
 BuildRequires:  qubes-libvchan-devel
 BuildRequires:  python-setuptools
 # for meminfo-writer
@@ -25,6 +23,22 @@ BuildRequires:  xen-devel
 
 %description
 Common Linux files for Qubes Dom0 and VM
+
+%package -n python2-qubesimgconverter
+Summary:    Python package qubesimgconverter
+Requires:   python
+Requires:   pycairo
+
+%description -n python2-qubesimgconverter
+Python package qubesimgconverter
+
+%package -n python3-qubesimgconverter
+Summary:    Python package qubesimgconverter
+Requires:   python3
+Requires:   python3-cairo
+
+%description -n python3-qubesimgconverter
+Python package qubesimgconverter
 
 %package devel
 Summary:	Development headers for qubes-utils
@@ -53,7 +67,9 @@ ln -sf . %{name}-%{version}
 make all
 
 %install
-make install DESTDIR=%{buildroot}
+make install DESTDIR=%{buildroot} PYTHON=%{__python2}
+rm -rf imgconverter/build
+%make_install -C imgconverter PYTHON=%{__python3}
 
 %post
 # dom0
@@ -80,13 +96,19 @@ rm -rf $RPM_BUILD_ROOT
 %{_sbindir}/meminfo-writer
 %{_unitdir}/qubes-meminfo-writer.service
 %{_unitdir}/qubes-meminfo-writer-dom0.service
-#%{python_sitearch}/qubes/__init__.py
-#%{python_sitearch}/qubes/__init__.pyc
-#%{python_sitearch}/qubes/__init__.pyo
-%{python_sitepath}/qubesimgconverter/__init__.py*
-%{python_sitepath}/qubesimgconverter/imggen.py*
-%{python_sitepath}/qubesimgconverter/test.py*
-%{python_sitepath}/qubesimgconverter-%{version}-py?.?.egg-info/*
+
+%files -n python2-qubesimgconverter
+%{python_sitelib}/qubesimgconverter/__init__.py*
+%{python_sitelib}/qubesimgconverter/imggen.py*
+%{python_sitelib}/qubesimgconverter/test.py*
+%{python_sitelib}/qubesimgconverter-%{version}-py?.?.egg-info/*
+
+%files -n python3-qubesimgconverter
+%{python3_sitelib}/qubesimgconverter/__init__.py
+%{python3_sitelib}/qubesimgconverter/imggen.py
+%{python3_sitelib}/qubesimgconverter/test.py
+%{python3_sitelib}/qubesimgconverter-%{version}-py?.?.egg-info/*
+%{python3_sitelib}/qubesimgconverter/__pycache__
 
 %files libs
 %{_libdir}/libqrexec-utils.so.2
