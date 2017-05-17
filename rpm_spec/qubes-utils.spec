@@ -18,6 +18,8 @@ Requires:	ImageMagick
 Requires:	python3-qubesimgconverter
 BuildRequires:  qubes-libvchan-devel
 BuildRequires:  python-setuptools
+BuildRequires:  python2-rpm-macros
+BuildRequires:  python3-rpm-macros
 # for meminfo-writer
 BuildRequires:  xen-devel
 
