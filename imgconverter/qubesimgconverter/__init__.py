@@ -27,7 +27,10 @@ import colorsys
 import math
 import os
 import re
-import cStringIO as StringIO
+try:
+    from io import BytesIO
+except ImportError:
+    from cStringIO import StringIO as BytesIO
 import subprocess
 import sys
 import unittest
@@ -45,7 +48,7 @@ MAX_HEIGHT = 5120
 ICON_MAXSIZE = 512
 
 # header consists of two decimal numbers, SPC and LF
-re_imghdr = re.compile(r'^\d+ \d+\n$')
+re_imghdr = re.compile(br'^\d+ \d+\n$')
 imghdrlen = lambda w, h: int(math.ceil(math.log10(w)) \
     + math.ceil(math.log10(h)) \
     + 2)
@@ -87,14 +90,23 @@ get_from_stream(), get_from_vm(), get_xdg_icon_from_vm(), get_through_dvm()'''
 
         r, g, b = hex_to_float(colour)
         h, _, s = colorsys.rgb_to_hls(r, g, b)
-        result = StringIO.StringIO()
+        result = BytesIO()
 
-        for i in xrange(0, self._size[0] * self._size[1] * 4, 4):
-            r, g, b, a = tuple(ord(c) / 255. for c in self._rgba[i:i+4])
-            _, l, _ = colorsys.rgb_to_hls(r, g, b)
-            r, g, b = colorsys.hls_to_rgb(h, l, s)
+        # duplicate the whole loop for performance reasons
+        if sys.version_info[0] < 3:
+            for i in range(0, self._size[0] * self._size[1] * 4, 4):
+                r, g, b, a = tuple(ord(c) / 255. for c in self._rgba[i:i+4])
+                _, l, _ = colorsys.rgb_to_hls(r, g, b)
+                r, g, b = colorsys.hls_to_rgb(h, l, s)
 
-            result.write(''.join(chr(int(i * 255)) for i in [r, g, b, a]))
+                result.write(b''.join(chr(int(i * 255)) for i in [r, g, b, a]))
+        else:
+            for i in range(0, self._size[0] * self._size[1] * 4, 4):
+                r, g, b, a = tuple(c / 255. for c in self._rgba[i:i + 4])
+                _, l, _ = colorsys.rgb_to_hls(r, g, b)
+                r, g, b = colorsys.hls_to_rgb(h, l, s)
+
+                result.write(bytes(int(i * 255) for i in [r, g, b, a]))
 
         return self.__class__(rgba=result.getvalue(), size=self._size)
 
@@ -218,8 +230,8 @@ def hex_to_float(colour, channels=3, depth=8):
     if depth % 4 != 0:
         raise NotImplementedError('depths not divisible by 4 are unsupported')
 
-    length = channels * depth / 4
-    step = depth / 4
+    length = channels * depth // 4
+    step = depth // 4
 
     # get rid of '#' or '0x' in front of hex values
     colour = colour[-length:]
