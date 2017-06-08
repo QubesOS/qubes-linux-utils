@@ -1,6 +1,5 @@
 #define _GNU_SOURCE /* For O_NOFOLLOW. */
 #include <errno.h>
-#include <ioall.h>
 #include <fcntl.h>
 #include <sys/time.h>
 #include <sys/stat.h>
@@ -10,6 +9,7 @@
 #include <stdio.h>
 #include <limits.h>
 #include "libqubes-rpc-filecopy.h"
+#include "ioall.h"
 #include "crc32.h"
 
 char untrusted_namebuf[MAX_PATH_LENGTH];
