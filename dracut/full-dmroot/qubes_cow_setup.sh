@@ -87,6 +87,7 @@ EOF
 
     echo "0 `cat /sys/class/block/$ROOT_DEV/size` snapshot /dev/$ROOT_DEV /dev/xvdc2 N 16" | \
         dmsetup --noudevsync create dmroot || die "Qubes: FATAL: cannot create dmroot!"
+    dmsetup mknodes dmroot
     log_end
 else
     log_begin "Qubes: Doing R/W setup for TemplateVM..."
@@ -99,17 +100,7 @@ EOF
     fi
     while ! [ -e /dev/xvdc1 ]; do sleep 0.1; done
     mkswap /dev/xvdc1
-    if [ "$ROOT_DEV" = "xvda1" ]; then
-        # grub2-probe for some reason can't parse dm-linear pointing at
-        # partition device directly, but can when it points at it indirectly
-        # through base device and offset; lets make life easier for users of
-        # grub2-install
-        DM_ROOT="/dev/xvda $(cat /sys/class/block/$ROOT_DEV/start)"
-    else
-        DM_ROOT="/dev/$ROOT_DEV 0"
-    fi
-    echo "0 `cat /sys/class/block/$ROOT_DEV/size` linear $DM_ROOT" | \
-        dmsetup create dmroot || { echo "Qubes: FATAL: cannot create dmroot!"; exit 1; }
+    printf 'KERNEL=="%s", SYMLINK+="mapper/dmroot"' "$ROOT_DEV" >> \
+        /etc/udev/rules.d/99-root.rules
     log_end
 fi
-dmsetup mknodes dmroot
