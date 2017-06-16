@@ -237,6 +237,8 @@ int do_unpack(void)
     cwd_fd = open(".", O_RDONLY);
     if (cwd_fd >= 0 && syncfs(cwd_fd) == 0 && close(cwd_fd) == 0)
         errno = saved_errno;
+#else
+    sync();
 #endif
 
     send_status_and_crc(errno, untrusted_namebuf);
