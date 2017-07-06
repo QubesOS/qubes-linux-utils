@@ -14,7 +14,7 @@ ENV{MAJOR}=="202", GOTO="qubes_block_end"
 KERNEL=="dm-*", ENV{DM_NAME}=="snapshot-*", GOTO="qubes_block_end"
 KERNEL=="dm-*", ENV{DM_NAME}=="origin-*", GOTO="qubes_block_end"
 KERNEL=="dm-*", ENV{DM_NAME}=="", GOTO="qubes_block_end"
-KERNEL=="dm-*", ENV{DM_UDEV_DISABLE_DISK_RULES_FLAG}=="1", GOTO="qubes_block_end"
+ENV{DM_UDEV_DISABLE_DISK_RULES_FLAG}=="1", GOTO="qubes_block_end"
 
 IMPORT{db}="QUBES_EXPOSED"
 ACTION=="add", IMPORT{program}="/usr/lib/qubes/udev-block-add-change"
