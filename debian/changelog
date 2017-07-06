@@ -1,3 +1,14 @@
+qubes-utils (4.0.3) unstable; urgency=medium
+
+  [ Rusty Bird ]
+  * Fall back to sync() if syncfs() is unavailable
+
+  [ Marek Marczykowski-Górecki ]
+  * udev: don't list in qvm-block any device marked to be ignored by
+    udev
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Thu, 06 Jul 2017 19:41:04 +0200
+
 qubes-utils (4.0.2) unstable; urgency=medium
 
   [ Paras Chetal ]
