@@ -54,6 +54,11 @@ static inline unsigned long VIRT_TO_MFN(void *addr)
 }
 #endif
 
+static int u2mfn_get_mfn(pte_t *pte, pgtable_t token, unsigned long addr, void *data) {
+    *((unsigned long *) data) = pfn_to_mfn(pte_pfn(*pte));
+    return 0;
+}
+
 /// User virtual address to mfn translator
 /**
     \param cmd ignored
@@ -63,9 +68,8 @@ static inline unsigned long VIRT_TO_MFN(void *addr)
 static long u2mfn_ioctl(struct file *f, unsigned int cmd,
 		       unsigned long data)
 {
-	struct page *user_page;
-	void *kaddr;
 	long ret;
+	unsigned long mfn;
 
 	if (_IOC_TYPE(cmd) != U2MFN_MAGIC) {
 		printk("Qubes u2mfn: wrong IOCTL magic");
@@ -74,26 +78,15 @@ static long u2mfn_ioctl(struct file *f, unsigned int cmd,
 
 	switch (cmd) {
 	case U2MFN_GET_MFN_FOR_PAGE:
-		down_read(&current->mm->mmap_sem);
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 9, 0)
-		ret = get_user_pages
-			(data, 1, (FOLL_WRITE | FOLL_FORCE), &user_page, 0);
-#elif LINUX_VERSION_CODE >= KERNEL_VERSION(4, 6, 0)
-		ret = get_user_pages
-		    (data, 1, 1, 0, &user_page, 0);
-#else
-		ret = get_user_pages
-		    (current, current->mm, data, 1, 1, 0, &user_page, 0);
-#endif
-		up_read(&current->mm->mmap_sem);
-		if (ret != 1) {
-			printk("U2MFN_GET_MFN_FOR_PAGE: get_user_pages failed, ret=0x%lx\n", ret);
+		ret = apply_to_page_range(current->mm, data, PAGE_SIZE, u2mfn_get_mfn, &mfn);
+
+		if (ret < 0 || mfn == INVALID_P2M_ENTRY) {
+			printk("U2MFN_GET_MFN_FOR_PAGE: failed to get mfn, "
+			       "addr=0x%lx ret=0x%lx\n", data, ret);
 			return -1;
 		}
-		kaddr = kmap(user_page);
-		ret = VIRT_TO_MFN(kaddr);
-		kunmap(user_page);
-		put_page(user_page);
+
+		ret = mfn;
 		break;
 
 	case U2MFN_GET_LAST_MFN:
