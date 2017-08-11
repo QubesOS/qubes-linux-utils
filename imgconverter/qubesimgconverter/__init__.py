@@ -49,9 +49,9 @@ ICON_MAXSIZE = 512
 
 # header consists of two decimal numbers, SPC and LF
 re_imghdr = re.compile(br'^\d+ \d+\n$')
-imghdrlen = lambda w, h: int(math.ceil(math.log10(w)) \
-    + math.ceil(math.log10(h)) \
-    + 2)
+def imghdrlen(w, h):
+    # width & height are inclusive max vals, and +2 for ' ' and '\n'
+    return len(str(w)) + len(str(h)) + 2
 
 class Image(object):
     def __init__(self, rgba, size):
