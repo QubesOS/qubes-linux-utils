@@ -54,6 +54,7 @@ class TestCaseImage(unittest.TestCase):
 class TestCaseFunctionsAndConstants(unittest.TestCase):
     def test_00_imghdrlen(self):
         self.assertEqual(qubesimgconverter.imghdrlen(8, 15), len('8 15\n'))
+        self.assertEqual(qubesimgconverter.imghdrlen(100, 100), len('100 100\n'))
 
     def test_01_re_imghdr(self):
         self.assertTrue(qubesimgconverter.re_imghdr.match('8 15\n'))
