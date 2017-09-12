@@ -9,6 +9,5 @@ install:
 	mkdir -p $(DESTDIR)$(SCRIPTSDIR)
 	cp udev-block-add-change $(DESTDIR)$(SCRIPTSDIR)
 	cp udev-block-remove $(DESTDIR)$(SCRIPTSDIR)
-	cp udev-block-cleanup $(DESTDIR)$(SCRIPTSDIR)
 	cp udev-usb-add-change $(DESTDIR)$(SCRIPTSDIR)
 	cp udev-usb-remove $(DESTDIR)$(SCRIPTSDIR)

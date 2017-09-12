@@ -15,11 +15,10 @@ xs_remove() {
         return 0
     fi
 
-    if [ "$QUBES_EXPOSED" == "1" ]; then
+    if qubesdb-read -q "$QDB_KEY/desc" >/dev/null; then
         qubesdb-rm "$QDB_KEY/"
         qubesdb-write /qubes-block-devices ''
     fi
-    echo QUBES_EXPOSED=0
 }
 
 is_used() {
@@ -42,6 +41,14 @@ is_used() {
     return 1
 }
 
+refresh_another() {
+    # launch this script for other device
+    local devpath=$1
+    local launch_env=$(udevadm info -q all -x -p "$devpath" \
+            | grep ^E: | cut -d ' ' -f 2-)
+    env -i PATH=$PATH $launch_env $0
+}
+
 # communicate with xenstored through socket in dom0
 # trying to access xenstore before xenstored is started, hang forever (in
 # non-killable state), so better fail ('-s' in VM if /proc/xen isn't mounted
@@ -53,14 +60,16 @@ else
 fi
 is_attached() {
     dev_hex=$(stat -c %t:%T /dev/$(basename $1))
+    if [ -z "$dev_hex" -o "$dev_hex" = "0:0" ]; then
+        return 1
+    fi
     $XENSTORE_LS backend/vbd | grep -q "physical-device = \"$dev_hex\""
 }
 
 # update info about parent devices, if any:
 if [ -f /sys$DEVPATH/partition ]; then
     parent=$(dirname $(readlink -f /sys$DEVPATH))
-    udevadm trigger \
-        --property-match=DEVPATH=/$(realpath --relative-to=/sys $parent)
+    refresh_another /$(realpath --relative-to=/sys $parent)
     # if parent device is already attached, skip its partitions
     if is_attached $parent; then
         xs_remove
@@ -70,11 +79,22 @@ fi
 
 # and underlying devices of device-mapper (if any)
 for dev in /sys$DEVPATH/slaves/*; do
-    udevadm trigger \
-        --property-match=DEVPATH=/$(realpath --relative-to=/sys $dev)
+    refresh_another /$(realpath --relative-to=/sys $dev)
 done
 
+# cache slave devices for remove event
+if [ -n "$DM_NAME" ]; then
+    ls -1 /sys$DEVPATH/slaves/ > /var/run/qubes/block-slave-cache-$NAME
+fi
+
 # then take care of this device:
+
+# udev rules already excluded this device:
+
+if [ "$DM_UDEV_DISABLE_DISK_RULES_FLAG" = "1" ]; then
+    xs_remove
+    exit 0
+fi
 
 # device itself is already used
 if is_used /sys$DEVPATH; then
@@ -100,12 +120,19 @@ if [ "$MAJOR" -eq 7 -a ! -d /sys/$DEVPATH/loop ]; then
     exit 0
 fi
 
-# ... and temporary devices used during VM startup
-if [[ "$NAME" = 'loop'* ]] && \
-       [[ "`cat /sys/block/${NAME%p*}/loop/backing_file`" = \
-            '/var/lib/qubes/'*'/volatile.img' ]]; then
-    xs_remove
-    exit 0
+# ... and loop devices from excluded directories
+if [[ "$NAME" = 'loop'* ]]; then
+    backing_file=$(cat /sys/block/${NAME%p*}/loop/backing_file)
+    if [ -n "$backing_file" ]; then
+        dir_to_check=$(dirname "$backing_file")
+        while [ "$dir_to_check" != "/" -a "$dir_to_check" != "." ]; do
+            if [ -e "$dir_to_check/.qubes-exclude-block-devices" ]; then
+                xs_remove
+                exit 0
+            fi
+            dir_to_check=$(dirname "$dir_to_check")
+        done
+    fi
 fi
 
 # Check if device is read-only
@@ -138,7 +165,6 @@ qubesdb-write \
     "$QDB_KEY/size" "$SIZE" \
     "$QDB_KEY/mode" "$MODE" \
     /qubes-block-devices ''
-echo QUBES_EXPOSED=1
 
 # Make sure that block backend is loaded
 /sbin/modprobe xen-blkback 2> /dev/null || /sbin/modprobe blkbk
