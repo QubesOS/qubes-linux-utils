@@ -100,7 +100,7 @@ void wait_for_result(void)
                      * desynchronized in this case */
                     return;
                 }
-                /* fall though */
+		/* fallthrough */
             default:
                 call_error_handler("File copy: %s%s%s",
                         strerror(hdr.error_code), last_filename_prefix, last_filename);
