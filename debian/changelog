@@ -1,3 +1,14 @@
+qubes-utils (4.0.7) unstable; urgency=medium
+
+  [ Olivier MEDOC ]
+  * Fix gcc Werror because of a typo in a switch/case explicit
+    fallthrough comment
+
+  [ Marek Marczykowski-Górecki ]
+  * udev: fix loop devices exclusion based on directory flagfile
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Fri, 15 Sep 2017 13:43:18 +0200
+
 qubes-utils (4.0.6) unstable; urgency=medium
 
   [ Jean-Philippe Ouellet ]
