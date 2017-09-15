@@ -45,7 +45,7 @@ refresh_another() {
     # launch this script for other device
     local devpath=$1
     local launch_env=$(udevadm info -q all -x -p "$devpath" \
-            | grep ^E: | cut -d ' ' -f 2-)
+            | grep ^E: | cut -d ' ' -f 2- | tr ' ' ':')
     env -i PATH=$PATH $launch_env $0
 }
 
@@ -122,7 +122,7 @@ fi
 
 # ... and loop devices from excluded directories
 if [[ "$NAME" = 'loop'* ]]; then
-    backing_file=$(cat /sys/block/${NAME%p*}/loop/backing_file)
+    backing_file=$(cat /sys/block/${NAME}/loop/backing_file)
     if [ -n "$backing_file" ]; then
         dir_to_check=$(dirname "$backing_file")
         while [ "$dir_to_check" != "/" -a "$dir_to_check" != "." ]; do
