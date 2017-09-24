@@ -1,3 +1,29 @@
+qubes-utils (3.2.5) unstable; urgency=medium
+
+  [ unman ]
+  * Improve error message when file exists
+
+  [ Marek Marczykowski-Górecki ]
+  * rpm: add missing build requires
+
+  [ Rusty Bird ]
+  * Fall back to sync() if syncfs() is unavailable
+
+  [ Olivier MEDOC ]
+  * Fix gcc Werror because of a typo in a switch/case explicit
+    fallthrough comment
+
+  [ Marek Marczykowski-Górecki ]
+  * initramfs: move qubes_cow_setup hook to pre-trigger
+
+  [ Paras Chetal ]
+  * Fix include header syntax
+
+  [ Marek Marczykowski-Górecki ]
+  * travis: add fc25 and fc26 build targets
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Sun, 24 Sep 2017 21:54:29 +0200
+
 qubes-utils (3.2.4) unstable; urgency=medium
 
   [ Johanna A ]
