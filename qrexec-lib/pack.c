@@ -100,10 +100,10 @@ void wait_for_result(void)
                      * desynchronized in this case */
                     return;
                 }
-		/* fallthrough */
+		call_error_handler("File copy: %s%s%s",strerror(hdr.error_code), last_filename_prefix, last_filename);
+		break;
             default:
-                call_error_handler("File copy: %s%s%s",
-                        strerror(hdr.error_code), last_filename_prefix, last_filename);
+		call_error_handler("File copy: %s%s%s",strerror(hdr.error_code), last_filename_prefix, last_filename);
         }
     }
     if (hdr.crc32 != crc32_sum) {
