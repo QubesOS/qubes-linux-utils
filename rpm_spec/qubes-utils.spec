@@ -18,6 +18,11 @@ Requires:	ImageMagick
 Requires:	python3-qubesimgconverter
 BuildRequires:  qubes-libvchan-devel
 BuildRequires:  python-setuptools
+%if 0%{?rhel} >= 7
+BuildRequires:  python34-setuptools
+%else
+BuildRequires:  python3-setuptools
+%endif
 BuildRequires:  python2-rpm-macros
 BuildRequires:  python3-rpm-macros
 # for meminfo-writer
@@ -36,8 +41,13 @@ Python package qubesimgconverter
 
 %package -n python3-qubesimgconverter
 Summary:    Python package qubesimgconverter
+%if 0%{?rhel} >= 7
+Requires:   python34
+Requires:   pycairo
+%else
 Requires:   python3
 Requires:   python3-cairo
+%endif
 
 %description -n python3-qubesimgconverter
 Python package qubesimgconverter
