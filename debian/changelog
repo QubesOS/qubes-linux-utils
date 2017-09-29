@@ -1,3 +1,13 @@
+qubes-utils (4.0.8) unstable; urgency=medium
+
+  [ Frédéric Pierret ]
+  * Fix CentOS dependencies: python3
+
+  [ Marek Marczykowski-Górecki ]
+  * travis: add fc26 build
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Sat, 30 Sep 2017 01:59:38 +0200
+
 qubes-utils (4.0.7) unstable; urgency=medium
 
   [ Olivier MEDOC ]
