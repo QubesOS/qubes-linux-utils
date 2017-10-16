@@ -35,13 +35,16 @@ function recompile_u2mfn() {
 
 function build_modules_img() {
     kver=$1
-    output_file=$2
+    initramfs=$2
+    output_file=$3
 
     mkdir /tmp/qubes-modules-$kver
     truncate -s 400M /tmp/qubes-modules-$kver.img
     mkfs -t ext3 -F /tmp/qubes-modules-$kver.img > /dev/null
     mount /tmp/qubes-modules-$kver.img /tmp/qubes-modules-$kver -o loop
     cp -a -t /tmp/qubes-modules-$kver /lib/modules/$kver
+    cp "/boot/vmlinuz-$kver" "/tmp/qubes-modules-$kver/vmlinuz"
+    cp "$initramfs" "/tmp/qubes-modules-$kver/initramfs"
     umount /tmp/qubes-modules-$kver
     rmdir /tmp/qubes-modules-$kver
     mv /tmp/qubes-modules-$kver.img $output_file
@@ -82,9 +85,10 @@ echo "---> Recompiling kernel module (u2mfn)"
 recompile_u2mfn "$kernel_version"
 mkdir -p "$output_dir"
 cp "/boot/vmlinuz-$kernel_version" "$output_dir/vmlinuz"
-echo "---> Generating modules.img"
-build_modules_img "$kernel_version" "$output_dir/modules.img"
 echo "---> Generating initramfs"
 build_initramfs "$kernel_version" "$output_dir/initramfs"
+echo "---> Generating modules.img"
+build_modules_img "$kernel_version" "$output_dir/initramfs" \
+    "$output_dir/modules.img"
 
 echo "--> Done."
