@@ -100,7 +100,10 @@ EOF
     fi
     while ! [ -e /dev/xvdc1 ]; do sleep 0.1; done
     mkswap /dev/xvdc1
-    printf 'KERNEL=="%s", SYMLINK+="mapper/dmroot"' "$ROOT_DEV" >> \
+    mkdir -p /etc/udev/rules.d
+    printf 'KERNEL=="%s", SYMLINK+="mapper/dmroot"\n' "$ROOT_DEV" >> \
         /etc/udev/rules.d/99-root.rules
+    udevadm control -R
+    udevadm trigger
     log_end
 fi
