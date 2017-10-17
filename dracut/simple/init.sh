@@ -20,9 +20,18 @@ die() {
 echo "Waiting for /dev/xvda* devices..."
 while ! [ -e /dev/xvda ]; do sleep 0.1; done
 
-# prefer first partition if exists
+# prefer partition if exists
 if [ -b /dev/xvda1 ]; then
-    ROOT_DEV=xvda1
+    if [ -d /dev/disk/by-partlabel ]; then
+        ROOT_DEV=$(basename $(readlink "/dev/disk/by-partlabel/Root\\x20filesystem"))
+    else
+        ROOT_DEV=$(grep -l "PARTNAME=Root filesystem" /sys/block/xvda/xvda*/uevent |\
+            grep -o "xvda[0-9]")
+    fi
+    if [ -z "$ROOT_DEV" ]; then
+        # fallback to third partition
+        ROOT_DEV=xvda3
+    fi
 else
     ROOT_DEV=xvda
 fi

@@ -56,9 +56,13 @@ log_begin "Waiting for /dev/xvda* devices..."
 while ! [ -e /dev/xvda ]; do sleep 0.1; done
 log_end
 
-# prefer first partition if exists
+# prefer partition if exists
 if [ -b /dev/xvda1 ]; then
-    ROOT_DEV=xvda1
+    if [ -d /dev/disk/by-partlabel ]; then
+        ROOT_DEV=$(basename $(readlink "/dev/disk/by-partlabel/Root\\x20filesystem"))
+    else
+        ROOT_DEV=xvda3
+    fi
 else
     ROOT_DEV=xvda
 fi
