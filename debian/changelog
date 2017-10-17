@@ -1,3 +1,12 @@
+qubes-utils (4.0.9) unstable; urgency=medium
+
+  * Fix initramfs scripts on Debian
+  * qubes-prepare-vm-kernel: Include kernel and initramfs inside
+    modules.img
+  * initramfs: add support for variable partitions layout
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Tue, 17 Oct 2017 23:54:15 +0200
+
 qubes-utils (4.0.8) unstable; urgency=medium
 
   [ Frédéric Pierret ]
