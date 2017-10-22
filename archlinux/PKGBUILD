@@ -13,7 +13,7 @@ arch=("x86_64")
 url="http://qubes-os.org/"
 license=('GPL')
 groups=()
-makedepends=(gcc make pkgconfig 'qubes-libvchan' 'python-setuptools')
+makedepends=(gcc make pkgconfig 'qubes-libvchan' 'python-setuptools' 'python2-setuptools')
 checkdepends=()
 optdepends=()
 provides=()
@@ -31,11 +31,16 @@ md5sums=(SKIP)
 
 build() {
 
-for source in qrexec-lib udev qmemman core kernel-modules Makefile dracut; do
+for source in qrexec-lib udev qmemman core kernel-modules Makefile dracut imgconverter; do
   (ln -s $srcdir/../$source $srcdir/$source)
 done
 
-make all
+# Build all with python2
+PYTHON=python2 make all
+
+# Build imgconverter with python3
+make -C imgconverter all
+
 
 }
 
@@ -43,7 +48,11 @@ package_qubes-vm-utils() {
 depends=(qubes-libvchan imagemagick python2-cairo)
 install=PKGBUILD-qubes-vm-utils.install
 
-make install DESTDIR=$pkgdir LIBDIR=/usr/lib SYSLIBDIR=/usr/lib SBINDIR=/usr/bin
+# Install all for python2
+PYTHON=python2 make install DESTDIR=$pkgdir LIBDIR=/usr/lib SYSLIBDIR=/usr/lib SBINDIR=/usr/bin
+
+# Install imgconverter as python3
+make -C imgconverter install DESTDIR=$pkgdir LIBDIR=/usr/lib SYSLIBDIR=/usr/lib SBINDIR=/usr/bin
 
 }
 
