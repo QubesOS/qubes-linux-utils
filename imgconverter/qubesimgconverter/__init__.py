@@ -23,8 +23,6 @@ Toolkit for secure transfer and conversion of images between Qubes VMs.'''
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 
-import colorsys
-import math
 import os
 import re
 try:
@@ -36,6 +34,7 @@ import sys
 import unittest
 
 import PIL.Image
+import numpy
 
 # those are for "zOMG UlTRa HD! WalLLpapPer 8K!!1!" to work seamlessly;
 # 8192 * 5120 * 4 B = 160 MiB, so DoS by memory exhaustion is unlikely
@@ -94,27 +93,59 @@ get_from_stream(), get_from_vm(), get_xdg_icon_from_vm(), get_through_dvm()'''
     def tint(self, colour):
         '''Return new tinted image'''
 
-        r, g, b = hex_to_float(colour)
-        h, _, s = colorsys.rgb_to_hls(r, g, b)
-        result = BytesIO()
+        tr, tg, tb = hex_to_int(colour)
+        tM = max(tr, tg, tb)
+        tm = min(tr, tg, tb)
+        tl2 = tM + tm
 
-        # duplicate the whole loop for performance reasons
-        if sys.version_info[0] < 3:
-            for i in range(0, self._size[0] * self._size[1] * 4, 4):
-                r, g, b, a = tuple(ord(c) / 255. for c in self._rgba[i:i+4])
-                _, l, _ = colorsys.rgb_to_hls(r, g, b)
-                r, g, b = colorsys.hls_to_rgb(h, l, s)
-
-                result.write(b''.join(chr(int(i * 255)) for i in [r, g, b, a]))
+        # (trn/tdn, tgn/tdn, tbn/tdn) is the tint color with lightness set to 0.5
+        if tl2 == 0 or tl2 == 510: # avoid division by 0
+            tdn = 2
+            trn = 1
+            tgn = 1
+            tbn = 1
+        elif tl2 <= 255:
+            tdn = tl2
+            trn = tr
+            tgn = tg
+            tbn = tb
         else:
-            for i in range(0, self._size[0] * self._size[1] * 4, 4):
-                r, g, b, a = tuple(c / 255. for c in self._rgba[i:i + 4])
-                _, l, _ = colorsys.rgb_to_hls(r, g, b)
-                r, g, b = colorsys.hls_to_rgb(h, l, s)
+            tdn = 510 - tl2
+            trn = tdn - (255 - tr)
+            tgn = tdn - (255 - tg)
+            tbn = tdn - (255 - tb)
 
-                result.write(bytes(int(i * 255) for i in [r, g, b, a]))
+        # (trni/tdn, tgni/tdn, tbni/tdn) is the inverted tint color with lightness set to 0.5
+        trni = tdn - trn
+        tgni = tdn - tgn
+        tbni = tdn - tbn
 
-        return self.__class__(rgba=result.getvalue(), size=self._size)
+        tdn255 = tdn * 255
+
+        # use a 1D image representation since we only process a single pixel at a time
+        pixels = self._size[0] * self._size[1]
+        x = numpy.fromstring(self._rgba, 'B').reshape(pixels, 4)
+        r = x[:, 0]
+        g = x[:, 1]
+        b = x[:, 2]
+        a = x[:, 3]
+        M = numpy.maximum(numpy.maximum(r, g), b)
+        m = numpy.minimum(numpy.minimum(r, g), b)
+
+        # l2 is the lightness of the pixel in the original image in 0-510 range
+        l2 = M.astype('u4') + m.astype('u4')
+        l2i = 510 - l2
+        l2low = l2 <= 255
+
+        # change lightness of tint color to lightness of image pixel
+        # if l2 is low, just multiply tint color with 0.5 lightness by pixel lightness
+        # else, invert tint color, multiply by inverted pixel lightness, then invert again
+        rt = (numpy.select([l2low, True], [l2 * trn, tdn255 - l2i * trni]) // tdn).astype('B')
+        gt = (numpy.select([l2low, True], [l2 * tgn, tdn255 - l2i * tgni]) // tdn).astype('B')
+        bt = (numpy.select([l2low, True], [l2 * tbn, tdn255 - l2i * tbni]) // tdn).astype('B')
+
+        xt = numpy.column_stack((rt, gt, bt, a))
+        return self.__class__(rgba=xt.tobytes(), size=self._size)
 
     @classmethod
     def load_from_file(cls, filename):
@@ -235,19 +266,16 @@ expects header+RGBA on stdin. This method is invoked from qvm-imgconverter-clien
     def __ne__(self, other):
         return not self.__eq__(other)
 
-def hex_to_float(colour, channels=3, depth=8):
-    '''Convert hex colour definition to tuple of floats.'''
+def hex_to_int(colour, channels=3, depth=1):
+    '''Convert hex colour definition to tuple of ints.'''
 
-    if depth % 4 != 0:
-        raise NotImplementedError('depths not divisible by 4 are unsupported')
-
-    length = channels * depth // 4
-    step = depth // 4
+    length = channels * depth * 2
+    step = depth * 2
 
     # get rid of '#' or '0x' in front of hex values
     colour = colour[-length:]
 
-    return tuple(int(colour[i:i+step], 0x10) / float(2**depth - 1) for i in range(0, length, step))
+    return tuple(int(colour[i:i+step], 0x10) for i in range(0, length, step))
 
 def tint(src, dst, colour):
     '''Tint image to reflect vm label.
