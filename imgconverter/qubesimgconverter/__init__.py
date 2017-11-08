@@ -35,6 +35,7 @@ import subprocess
 import sys
 import unittest
 
+import PIL.Image
 
 # those are for "zOMG UlTRa HD! WalLLpapPer 8K!!1!" to work seamlessly;
 # 8192 * 5120 * 4 B = 160 MiB, so DoS by memory exhaustion is unlikely
@@ -71,6 +72,12 @@ get_from_stream(), get_from_vm(), get_xdg_icon_from_vm(), get_through_dvm()'''
 
         if p.wait():
             raise Exception('Conversion failed')
+
+    def save_pil(self, dst):
+        '''Save image to disk using PIL.'''
+
+        img = PIL.Image.frombytes('RGBA', self._size, self._rgba)
+        img.save(dst)
 
     @property
     def data(self):
@@ -128,6 +135,12 @@ get_from_stream(), get_from_vm(), get_xdg_icon_from_vm(), get_through_dvm()'''
         p.wait()
 
         return cls(rgba=rgba, size=size)
+
+    def load_from_file_pil(cls, filename):
+        '''Loads image from local file using PIL.'''
+        img = PIL.Image.open(filename)
+        img = img.convert('RGBA')
+        return cls(rgba=img.tobytes(), size=img.size)
 
     @classmethod
     def get_from_stream(cls, stream, max_width=MAX_WIDTH, max_height=MAX_HEIGHT):
@@ -239,9 +252,9 @@ def hex_to_float(colour, channels=3, depth=8):
 def tint(src, dst, colour):
     '''Tint image to reflect vm label.
 
-    src and dst may specify format, like png:aqq.gif'''
+    src and dst may NOT specify ImageMagick format'''
 
-    Image.load_from_file(src).tint(colour).save(dst)
+    Image.load_from_file_pil(src).tint(colour).save_pil(dst)
 
 
 # vim: ft=python sw=4 ts=4 et
