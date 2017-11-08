@@ -49,21 +49,20 @@ refresh_another() {
     env -i PATH=$PATH $launch_env $0
 }
 
-# communicate with xenstored through socket in dom0
-# trying to access xenstore before xenstored is started, hang forever (in
-# non-killable state), so better fail ('-s' in VM if /proc/xen isn't mounted
-# yet) than hang dom0 boot
-if [ ! -r /proc/xen/capabilities ] || grep -q control_d /proc/xen/capabilities; then
-    XENSTORE_LS="xenstore-ls -s"
-else
-    XENSTORE_LS="xenstore-ls"
-fi
 is_attached() {
     dev_hex=$(stat -c %t:%T /dev/$(basename $1))
     if [ -z "$dev_hex" -o "$dev_hex" = "0:0" ]; then
         return 1
     fi
-    $XENSTORE_LS backend/vbd | grep -q "physical-device = \"$dev_hex\""
+    # looking at sysfs is much faster than looking at xenstore
+    # this code requires no subprocesses and doesn't hit argument length limitations
+    for i in /sys/bus/xen-backend/drivers/vbd/vbd-*/physical_device; do
+        read i_dev_hex < "$i"
+        if test "$i_dev_hex" == "$dev_hex"; then
+            return 0
+        fi
+    done
+    return 1
 }
 
 # update info about parent devices, if any:
