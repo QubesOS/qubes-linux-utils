@@ -96,31 +96,18 @@ get_from_stream(), get_from_vm(), get_xdg_icon_from_vm(), get_through_dvm()'''
         tr, tg, tb = hex_to_int(colour)
         tM = max(tr, tg, tb)
         tm = min(tr, tg, tb)
-        tl2 = tM + tm
 
-        # (trn/tdn, tgn/tdn, tbn/tdn) is the tint color with lightness set to 0.5
-        if tl2 == 0 or tl2 == 510: # avoid division by 0
-            tdn = 2
+        # (trn/tdn, tgn/tdn, tbn/tdn) is the tint color with maximum saturation
+        if tm == tM:
             trn = 1
             tgn = 1
             tbn = 1
-        elif tl2 <= 255:
-            tdn = tl2
-            trn = tr
-            tgn = tg
-            tbn = tb
+            tdn = 2
         else:
-            tdn = 510 - tl2
-            trn = tdn - (255 - tr)
-            tgn = tdn - (255 - tg)
-            tbn = tdn - (255 - tb)
-
-        # (trni/tdn, tgni/tdn, tbni/tdn) is the inverted tint color with lightness set to 0.5
-        trni = tdn - trn
-        tgni = tdn - tgn
-        tbni = tdn - tbn
-
-        tdn255 = tdn * 255
+            trn = tr - tm
+            tgn = tg - tm
+            tbn = tb - tm
+            tdn = tM - tm
 
         # use a 1D image representation since we only process a single pixel at a time
         pixels = self._size[0] * self._size[1]
@@ -129,20 +116,40 @@ get_from_stream(), get_from_vm(), get_xdg_icon_from_vm(), get_through_dvm()'''
         g = x[:, 1]
         b = x[:, 2]
         a = x[:, 3]
-        M = numpy.maximum(numpy.maximum(r, g), b)
-        m = numpy.minimum(numpy.minimum(r, g), b)
+        M = numpy.maximum(numpy.maximum(r, g), b).astype('u4')
+        m = numpy.minimum(numpy.minimum(r, g), b).astype('u4')
 
-        # l2 is the lightness of the pixel in the original image in 0-510 range
-        l2 = M.astype('u4') + m.astype('u4')
-        l2i = 510 - l2
-        l2low = l2 <= 255
+        # Tn/Td is how much chroma range is reserved for the tint color
+        # 0 -> greyscale image becomes greyscale image
+        # 1 -> image becomes solid tint color
+        Tn = 1
+        Td = 4
 
-        # change lightness of tint color to lightness of image pixel
-        # if l2 is low, just multiply tint color with 0.5 lightness by pixel lightness
-        # else, invert tint color, multiply by inverted pixel lightness, then invert again
-        rt = (numpy.select([l2low, True], [l2 * trn, tdn255 - l2i * trni]) // tdn).astype('B')
-        gt = (numpy.select([l2low, True], [l2 * tgn, tdn255 - l2i * tgni]) // tdn).astype('B')
-        bt = (numpy.select([l2low, True], [l2 * tbn, tdn255 - l2i * tbni]) // tdn).astype('B')
+        # set chroma to the original pixel chroma mapped to the Tn/Td .. 1 range
+        # float c2 = (Tn/Td) + (1.0 - Tn/Td) * c
+
+        # set lightness to the original pixel lightness mapped to the range for the new chroma value
+        # float m2 = m * (1.0 - c2) / (1.0 - c)
+
+        c = M - m
+
+        c2 = (Tn * 255) + (Td - Tn) * c
+        c2d = Td
+
+        m2 = ((255 * c2d) - c2) * m
+        # the maximum avoids division by 0 when c = 255 (m2 is 0 anyway, so m2d doesn't matter)
+        m2d = numpy.maximum((255 - c) * c2d, 1)
+
+        # precomputed values
+        c2d_tdn = tdn * c2d
+        m2_c2d_tdn = m2 * c2d_tdn
+        m2d_c2d_tdn = m2d * c2d_tdn
+        c2_m2d = c2 * m2d
+
+        # float vt = m2 + tvn * c2
+        rt = ((m2_c2d_tdn + trn * c2_m2d) // m2d_c2d_tdn).astype('B')
+        gt = ((m2_c2d_tdn + tgn * c2_m2d) // m2d_c2d_tdn).astype('B')
+        bt = ((m2_c2d_tdn + tbn * c2_m2d) // m2d_c2d_tdn).astype('B')
 
         xt = numpy.column_stack((rt, gt, bt, a))
         return self.__class__(rgba=xt.tobytes(), size=self._size)
