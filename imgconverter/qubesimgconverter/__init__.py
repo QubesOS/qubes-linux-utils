@@ -35,7 +35,6 @@ import subprocess
 import sys
 import unittest
 
-import cairo
 
 # those are for "zOMG UlTRa HD! WalLLpapPer 8K!!1!" to work seamlessly;
 # 8192 * 5120 * 4 B = 160 MiB, so DoS by memory exhaustion is unlikely
