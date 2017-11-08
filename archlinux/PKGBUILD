@@ -45,7 +45,7 @@ make -C imgconverter all
 }
 
 package_qubes-vm-utils() {
-depends=(qubes-libvchan imagemagick python2-cairo)
+depends=(qubes-libvchan imagemagick python2-cairo python2-pillow python2-numpy python-pillow python-numpy)
 install=PKGBUILD-qubes-vm-utils.install
 
 # Install all for python2
