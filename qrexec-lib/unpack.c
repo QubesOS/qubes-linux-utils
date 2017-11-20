@@ -77,6 +77,7 @@ void send_status_and_crc(int code, const char *last_filename) {
 
     saved_errno = errno;
     hdr.error_code = code;
+    hdr._pad = 0;
     hdr.crc32 = crc32_sum;
     if (!write_all(1, &hdr, sizeof(hdr)))
         perror("write status");
