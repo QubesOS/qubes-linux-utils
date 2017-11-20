@@ -35,13 +35,13 @@
 #include <sys/types.h>
 
 struct file_header {
-    unsigned int namelen;
-    unsigned int mode;
-    unsigned long long filelen;
-    unsigned int atime;
-    unsigned int atime_nsec;
-    unsigned int mtime;
-    unsigned int mtime_nsec;
+    uint32_t namelen;
+    uint32_t mode;
+    uint64_t filelen;
+    uint32_t atime;
+    uint32_t atime_nsec;
+    uint32_t mtime;
+    uint32_t mtime_nsec;
 };
 
 struct result_header {
