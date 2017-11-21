@@ -1,3 +1,20 @@
+qubes-utils (4.0.11) unstable; urgency=medium
+
+  [ qubesuser ]
+  * remove unused cairo import
+  * add Python pillow and numpy dependencies
+  * use PIL image library instead of ImageMagick to load/save images
+    when tinting
+  * reimplement tint algorithm with numpy for reasonable performance
+  * replace tinting algorithm with one that partially preserves
+    saturation too
+
+  [ Marek Marczykowski-Górecki ]
+  * Add missing classmethod decorator
+  * Make udev-block-add-change executable again
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Tue, 21 Nov 2017 05:34:50 +0100
+
 qubes-utils (4.0.10) unstable; urgency=medium
 
   [ Olivier MEDOC ]
