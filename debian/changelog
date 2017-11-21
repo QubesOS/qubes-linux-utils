@@ -1,3 +1,20 @@
+qubes-utils (4.0.10) unstable; urgency=medium
+
+  [ Olivier MEDOC ]
+  * archlinux: build imgconverter with both python2 and python3
+
+  [ qubesuser ]
+  * Speed up udev-block-add-change by not using xenstore
+
+  [ Your Name ]
+  * This commit specifies the integer width explicitly to match
+    `result_header_ext` etc.
+
+  [ Marek Marczykowski-Górecki ]
+  * Initialize pad field in filecopy final response
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Tue, 21 Nov 2017 04:46:49 +0100
+
 qubes-utils (4.0.9) unstable; urgency=medium
 
   * Fix initramfs scripts on Debian
