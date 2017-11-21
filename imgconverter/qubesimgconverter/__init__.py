@@ -174,6 +174,7 @@ get_from_stream(), get_from_vm(), get_xdg_icon_from_vm(), get_through_dvm()'''
 
         return cls(rgba=rgba, size=size)
 
+    @classmethod
     def load_from_file_pil(cls, filename):
         '''Loads image from local file using PIL.'''
         img = PIL.Image.open(filename)
