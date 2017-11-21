@@ -17,7 +17,7 @@ Vcs-Git: http://dsg.is/qubes/qubes-linux-utils.git
 
 Package: qubes-utils
 Architecture: any
-Depends: libvchan-xen, lsb-base, ${shlibs:Depends}, ${misc:Depends}
+Depends: libvchan-xen, lsb-base, python-pil, python-numpy, python3-pil, python3-numpy, ${shlibs:Depends}, ${misc:Depends}
 Conflicts: qubes-linux-utils
 Breaks: qubes-core-agent (<< 3.1.4)
 Recommends: python2.7

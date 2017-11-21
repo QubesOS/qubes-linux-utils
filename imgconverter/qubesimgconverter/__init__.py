@@ -23,8 +23,6 @@ Toolkit for secure transfer and conversion of images between Qubes VMs.'''
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 
-import colorsys
-import math
 import os
 import re
 try:
@@ -35,7 +33,8 @@ import subprocess
 import sys
 import unittest
 
-import cairo
+import PIL.Image
+import numpy
 
 # those are for "zOMG UlTRa HD! WalLLpapPer 8K!!1!" to work seamlessly;
 # 8192 * 5120 * 4 B = 160 MiB, so DoS by memory exhaustion is unlikely
@@ -73,6 +72,12 @@ get_from_stream(), get_from_vm(), get_xdg_icon_from_vm(), get_through_dvm()'''
         if p.wait():
             raise Exception('Conversion failed')
 
+    def save_pil(self, dst):
+        '''Save image to disk using PIL.'''
+
+        img = PIL.Image.frombytes('RGBA', self._size, self._rgba)
+        img.save(dst)
+
     @property
     def data(self):
         return self._rgba
@@ -88,27 +93,66 @@ get_from_stream(), get_from_vm(), get_xdg_icon_from_vm(), get_through_dvm()'''
     def tint(self, colour):
         '''Return new tinted image'''
 
-        r, g, b = hex_to_float(colour)
-        h, _, s = colorsys.rgb_to_hls(r, g, b)
-        result = BytesIO()
+        tr, tg, tb = hex_to_int(colour)
+        tM = max(tr, tg, tb)
+        tm = min(tr, tg, tb)
 
-        # duplicate the whole loop for performance reasons
-        if sys.version_info[0] < 3:
-            for i in range(0, self._size[0] * self._size[1] * 4, 4):
-                r, g, b, a = tuple(ord(c) / 255. for c in self._rgba[i:i+4])
-                _, l, _ = colorsys.rgb_to_hls(r, g, b)
-                r, g, b = colorsys.hls_to_rgb(h, l, s)
-
-                result.write(b''.join(chr(int(i * 255)) for i in [r, g, b, a]))
+        # (trn/tdn, tgn/tdn, tbn/tdn) is the tint color with maximum saturation
+        if tm == tM:
+            trn = 1
+            tgn = 1
+            tbn = 1
+            tdn = 2
         else:
-            for i in range(0, self._size[0] * self._size[1] * 4, 4):
-                r, g, b, a = tuple(c / 255. for c in self._rgba[i:i + 4])
-                _, l, _ = colorsys.rgb_to_hls(r, g, b)
-                r, g, b = colorsys.hls_to_rgb(h, l, s)
+            trn = tr - tm
+            tgn = tg - tm
+            tbn = tb - tm
+            tdn = tM - tm
 
-                result.write(bytes(int(i * 255) for i in [r, g, b, a]))
+        # use a 1D image representation since we only process a single pixel at a time
+        pixels = self._size[0] * self._size[1]
+        x = numpy.fromstring(self._rgba, 'B').reshape(pixels, 4)
+        r = x[:, 0]
+        g = x[:, 1]
+        b = x[:, 2]
+        a = x[:, 3]
+        M = numpy.maximum(numpy.maximum(r, g), b).astype('u4')
+        m = numpy.minimum(numpy.minimum(r, g), b).astype('u4')
 
-        return self.__class__(rgba=result.getvalue(), size=self._size)
+        # Tn/Td is how much chroma range is reserved for the tint color
+        # 0 -> greyscale image becomes greyscale image
+        # 1 -> image becomes solid tint color
+        Tn = 1
+        Td = 4
+
+        # set chroma to the original pixel chroma mapped to the Tn/Td .. 1 range
+        # float c2 = (Tn/Td) + (1.0 - Tn/Td) * c
+
+        # set lightness to the original pixel lightness mapped to the range for the new chroma value
+        # float m2 = m * (1.0 - c2) / (1.0 - c)
+
+        c = M - m
+
+        c2 = (Tn * 255) + (Td - Tn) * c
+        c2d = Td
+
+        m2 = ((255 * c2d) - c2) * m
+        # the maximum avoids division by 0 when c = 255 (m2 is 0 anyway, so m2d doesn't matter)
+        m2d = numpy.maximum((255 - c) * c2d, 1)
+
+        # precomputed values
+        c2d_tdn = tdn * c2d
+        m2_c2d_tdn = m2 * c2d_tdn
+        m2d_c2d_tdn = m2d * c2d_tdn
+        c2_m2d = c2 * m2d
+
+        # float vt = m2 + tvn * c2
+        rt = ((m2_c2d_tdn + trn * c2_m2d) // m2d_c2d_tdn).astype('B')
+        gt = ((m2_c2d_tdn + tgn * c2_m2d) // m2d_c2d_tdn).astype('B')
+        bt = ((m2_c2d_tdn + tbn * c2_m2d) // m2d_c2d_tdn).astype('B')
+
+        xt = numpy.column_stack((rt, gt, bt, a))
+        return self.__class__(rgba=xt.tobytes(), size=self._size)
 
     @classmethod
     def load_from_file(cls, filename):
@@ -129,6 +173,12 @@ get_from_stream(), get_from_vm(), get_xdg_icon_from_vm(), get_through_dvm()'''
         p.wait()
 
         return cls(rgba=rgba, size=size)
+
+    def load_from_file_pil(cls, filename):
+        '''Loads image from local file using PIL.'''
+        img = PIL.Image.open(filename)
+        img = img.convert('RGBA')
+        return cls(rgba=img.tobytes(), size=img.size)
 
     @classmethod
     def get_from_stream(cls, stream, max_width=MAX_WIDTH, max_height=MAX_HEIGHT):
@@ -223,26 +273,23 @@ expects header+RGBA on stdin. This method is invoked from qvm-imgconverter-clien
     def __ne__(self, other):
         return not self.__eq__(other)
 
-def hex_to_float(colour, channels=3, depth=8):
-    '''Convert hex colour definition to tuple of floats.'''
+def hex_to_int(colour, channels=3, depth=1):
+    '''Convert hex colour definition to tuple of ints.'''
 
-    if depth % 4 != 0:
-        raise NotImplementedError('depths not divisible by 4 are unsupported')
-
-    length = channels * depth // 4
-    step = depth // 4
+    length = channels * depth * 2
+    step = depth * 2
 
     # get rid of '#' or '0x' in front of hex values
     colour = colour[-length:]
 
-    return tuple(int(colour[i:i+step], 0x10) / float(2**depth - 1) for i in range(0, length, step))
+    return tuple(int(colour[i:i+step], 0x10) for i in range(0, length, step))
 
 def tint(src, dst, colour):
     '''Tint image to reflect vm label.
 
-    src and dst may specify format, like png:aqq.gif'''
+    src and dst may NOT specify ImageMagick format'''
 
-    Image.load_from_file(src).tint(colour).save(dst)
+    Image.load_from_file_pil(src).tint(colour).save_pil(dst)
 
 
 # vim: ft=python sw=4 ts=4 et
