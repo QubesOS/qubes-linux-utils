@@ -26,7 +26,8 @@ Description: Qubes Linux utilities
 
 Package: qubes-kernel-vm-support
 Architecture: any
-Depends: dkms, initramfs-tools, ${misc:Depends}
+Recommends: initramfs-tools
+Depends: dkms, ${misc:Depends}
 Description: Qubes VM kernel and initramfs modules
  This package contains:
  1. mkinitramfs module required to setup Qubes VM root filesystem. This package
