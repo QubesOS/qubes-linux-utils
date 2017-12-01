@@ -3,6 +3,8 @@
 %define _builddir %(pwd)
 %endif
 
+%undefine _debugsource_packages
+
 Name:		qubes-utils
 Version:	%{version}
 Release:	1%{?dist}
