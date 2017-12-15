@@ -24,6 +24,7 @@
 #include <stdlib.h>
 #include <signal.h>
 #include <errno.h>
+#include <sys/select.h>
 #include <libvchan.h>
 
 int wait_for_vchan_or_argfd_once(libvchan_t *ctrl, int max, fd_set * rdset, fd_set * wrset)
