@@ -24,8 +24,8 @@ class TestCaseImage(unittest.TestCase):
         image = self.image.tint('#0000ff')
 
         self.assertEqual(image._rgba,
-            '\x00\x00\x00\xff' '\x00\x00\xff\xff'
-            '\x00\x00\xff\xff' '\x00\x00\x00\xff')
+            '\x00\x00\x3f\xff' '\x00\x00\xff\xff'
+            '\x00\x00\xff\xff' '\x00\x00\x3f\xff')
 
     def test_10_get_from_stream(self):
         io = StringIO.StringIO('{0[0]} {0[1]}\n{1}'.format(self.size, self.rgba))
@@ -63,14 +63,15 @@ class TestCaseFunctionsAndConstants(unittest.TestCase):
         self.assertIsNone(qubesimgconverter.re_imghdr.match('x yx\n'))
 
     def test_10_hex_to_float_result_00(self):
-        self.assertEqual(qubesimgconverter.hex_to_float('#000000'), (0.0, 0.0, 0.0))
+        self.assertEqual(qubesimgconverter.hex_to_int('#000000'), (0, 0, 0))
 
     def test_11_hex_to_float_result_ff(self):
-        self.assertEqual(qubesimgconverter.hex_to_float('0xffffff'), (1.0, 1.0, 1.0))
+        self.assertEqual(qubesimgconverter.hex_to_int('0xffffff'),
+            (0xff, 0xff, 0xff))
 
     def test_12_hex_to_float_depth_3_not_implemented(self):
-        with self.assertRaises(NotImplementedError):
-            qubesimgconverter.hex_to_float('123456', depth=3)
+        with self.assertRaises(ValueError):
+            qubesimgconverter.hex_to_int('123456', depth=3)
 
 if __name__ == '__main__':
     unittest.main()
