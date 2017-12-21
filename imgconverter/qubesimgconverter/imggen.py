@@ -38,7 +38,8 @@ def make_padlock(dst, colour, size=qubesimgconverter.ICON_MAXSIZE, disp=False):
     cs = cairo.ImageSurface(cairo.FORMAT_ARGB32, size, size)
 
     cr = cairo.Context(cs)
-    cr.set_source_rgb(*qubesimgconverter.hex_to_float(colour))
+    cr.set_source_rgb(*[c / 256.0
+        for c in qubesimgconverter.hex_to_int(colour)])
     cr.set_line_width(.125 * size)
 
     cr.rectangle(.125 * size, .5 * size, .75 * size, .4375 * size)
@@ -76,7 +77,7 @@ def make_padlock(dst, colour, size=qubesimgconverter.ICON_MAXSIZE, disp=False):
             cr.arc_negative(cx, cy, radius + width,         offset + (i + 1) * arrow - gap, offset + i * arrow)
             cr.close_path()
 
-        cr.set_source_rgb(*qubesimgconverter.hex_to_float('0xcc0000')) # tango's red
+        cr.set_source_rgb(0xcc / 256.0, 0, 0)  # tango's red
         cr.set_line_width(.0500 * size)
         cr.set_line_join(cairo.LINE_JOIN_ROUND)
         cr.stroke_preserve()
