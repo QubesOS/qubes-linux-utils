@@ -2,7 +2,10 @@
 
 from __future__ import absolute_import
 
-import cStringIO as StringIO
+try:
+    from io import BytesIO
+except ImportError:
+    from cStringIO import StringIO as BytesIO
 import unittest
 
 import qubesimgconverter
@@ -10,8 +13,8 @@ import qubesimgconverter
 class TestCaseImage(unittest.TestCase):
     def setUp(self):
         self.rgba = \
-            '\x00\x00\x00\xff' '\xff\x00\x00\xff' \
-            '\x00\xff\x00\xff' '\x00\x00\x00\xff'
+            b'\x00\x00\x00\xff' b'\xff\x00\x00\xff' \
+            b'\x00\xff\x00\xff' b'\x00\x00\x00\xff'
         self.size = (2, 2)
 
         self.image = qubesimgconverter.Image(rgba=self.rgba, size=self.size)
@@ -24,11 +27,11 @@ class TestCaseImage(unittest.TestCase):
         image = self.image.tint('#0000ff')
 
         self.assertEqual(image._rgba,
-            '\x00\x00\x3f\xff' '\x00\x00\xff\xff'
-            '\x00\x00\xff\xff' '\x00\x00\x3f\xff')
+            b'\x00\x00\x3f\xff' b'\x00\x00\xff\xff'
+            b'\x00\x00\xff\xff' b'\x00\x00\x3f\xff')
 
     def test_10_get_from_stream(self):
-        io = StringIO.StringIO('{0[0]} {0[1]}\n{1}'.format(self.size, self.rgba))
+        io = BytesIO('{0[0]} {0[1]}\n'.format(self.size).encode() + self.rgba)
 
         image = qubesimgconverter.Image.get_from_stream(io)
 
@@ -36,13 +39,14 @@ class TestCaseImage(unittest.TestCase):
         self.assertEqual(image._size, self.size)
 
     def test_11_get_from_stream_malformed(self):
-        io = StringIO.StringIO('{0[0]} {0[1]}\n{1}'.format(self.size, self.rgba[-1])) # one byte too short
+        io = BytesIO('{0[0]} {0[1]}\n'.format(self.size).encode() +
+                     self.rgba[:-1])  # one byte too short
 
         with self.assertRaises(Exception):
             image = qubesimgconverter.Image.get_from_stream(io)
 
     def test_12_get_from_stream_too_big(self):
-        io = StringIO.StringIO('{0[0]} {0[1]}\n{1}'.format(self.size, self.rgba)) # 2x2
+        io = BytesIO('{0[0]} {0[1]}\n'.format(self.size).encode() + self.rgba)  # 2x2
 
         with self.assertRaises(Exception):
             image = qubesimgconverter.Image.get_from_stream(io, max_width=1)
@@ -57,10 +61,10 @@ class TestCaseFunctionsAndConstants(unittest.TestCase):
         self.assertEqual(qubesimgconverter.imghdrlen(100, 100), len('100 100\n'))
 
     def test_01_re_imghdr(self):
-        self.assertTrue(qubesimgconverter.re_imghdr.match('8 15\n'))
-        self.assertIsNone(qubesimgconverter.re_imghdr.match('8 15'))
-        self.assertIsNone(qubesimgconverter.re_imghdr.match('815\n'))
-        self.assertIsNone(qubesimgconverter.re_imghdr.match('x yx\n'))
+        self.assertTrue(qubesimgconverter.re_imghdr.match(b'8 15\n'))
+        self.assertIsNone(qubesimgconverter.re_imghdr.match(b'8 15'))
+        self.assertIsNone(qubesimgconverter.re_imghdr.match(b'815\n'))
+        self.assertIsNone(qubesimgconverter.re_imghdr.match(b'x yx\n'))
 
     def test_10_hex_to_float_result_00(self):
         self.assertEqual(qubesimgconverter.hex_to_int('#000000'), (0, 0, 0))
