@@ -1,9 +1,16 @@
 sudo: required
 dist: trusty
-language: generic
-install: git clone https://github.com/QubesOS/qubes-builder ~/qubes-builder
-script: ~/qubes-builder/scripts/travis-build
+language: python
+python:
+  - '2.7'
+install:
+ - test -z "$TESTS_ONLY" || pip install -r ci/requirements.txt
+ - test -n "$TESTS_ONLY" || git clone https://github.com/QubesOS/qubes-builder ~/qubes-builder
+script:
+ - test -z "$TESTS_ONLY" || python -m unittest discover -v imgconverter
+ - test -n "$TESTS_ONLY" || ~/qubes-builder/scripts/travis-build
 env:
+ - TESTS_ONLY=1
  - DIST_DOM0=fc25 USE_QUBES_REPO_VERSION=4.0 USE_QUBES_REPO_TESTING=1
  - DISTS_VM=fc24 USE_QUBES_REPO_VERSION=4.0 USE_QUBES_REPO_TESTING=1
  - DISTS_VM=fc25 USE_QUBES_REPO_VERSION=4.0 USE_QUBES_REPO_TESTING=1
