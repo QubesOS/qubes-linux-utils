@@ -250,9 +250,8 @@ get_from_stream(), get_from_vm(), get_xdg_icon_from_vm(), get_through_dvm()'''
         '''Master end of image filter: writes untrusted image to stdout and
 expects header+RGBA on stdin. This method is invoked from qvm-imgconverter-client.'''
 
-        filetype = None
         if ':' in filename:
-            filetype, filename = filename.split(':', 1)[0]
+            filetype, filename = filename.split(':', 1)
             sys.stdout.write('{0}:-\n'.format(filetype))
         else:
             sys.stdout.write('-\n')
