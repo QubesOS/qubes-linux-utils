@@ -7,7 +7,7 @@ install:
  - test -z "$TESTS_ONLY" || pip install -r ci/requirements.txt
  - test -n "$TESTS_ONLY" || git clone https://github.com/QubesOS/qubes-builder ~/qubes-builder
 script:
- - test -z "$TESTS_ONLY" || python -m unittest discover -v imgconverter
+ - test -z "$TESTS_ONLY" || python -m unittest discover -v imgconverter -p test.py
  - test -n "$TESTS_ONLY" || ~/qubes-builder/scripts/travis-build
 env:
  - DIST_DOM0=fc25 USE_QUBES_REPO_VERSION=4.0 USE_QUBES_REPO_TESTING=1
