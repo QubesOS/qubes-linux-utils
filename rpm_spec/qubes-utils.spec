@@ -117,13 +117,15 @@ rm -rf $RPM_BUILD_ROOT
 %{python_sitelib}/qubesimgconverter/__init__.py*
 %{python_sitelib}/qubesimgconverter/imggen.py*
 %{python_sitelib}/qubesimgconverter/test.py*
-%{python_sitelib}/qubesimgconverter-%{version}-py?.?.egg-info/*
+%{python_sitelib}/qubesimgconverter/test_integ.py*
+%{python_sitelib}/qubesimgconverter-%{version}-py?.?.egg-info
 
 %files -n python3-qubesimgconverter
 %{python3_sitelib}/qubesimgconverter/__init__.py
 %{python3_sitelib}/qubesimgconverter/imggen.py
 %{python3_sitelib}/qubesimgconverter/test.py
-%{python3_sitelib}/qubesimgconverter-%{version}-py?.?.egg-info/*
+%{python3_sitelib}/qubesimgconverter/test_integ.py
+%{python3_sitelib}/qubesimgconverter-%{version}-py?.?.egg-info
 %{python3_sitelib}/qubesimgconverter/__pycache__
 
 %files libs

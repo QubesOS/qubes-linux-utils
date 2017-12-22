@@ -9,6 +9,11 @@ setuptools.setup(
     license='GPL2+',
     url='https://www.qubes-os.org/',
     packages=['qubesimgconverter'],
+    entry_points={
+        'qubes.tests.extra.for_template':
+            'qubesimgconverter = qubesimgconverter.test_integ:list_tests',
+    }
+
 )
 
 # vim: ts=4 sts=4 sw=4 et
