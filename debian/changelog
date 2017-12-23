@@ -1,3 +1,23 @@
+qubes-utils (4.0.13) unstable; urgency=medium
+
+  [ Marek Marczykowski-Górecki ]
+  * imgconverter: fix make_padlock function
+  * Update tests
+  * travis: run imgconverter unit tests
+  * Make tests python3 compatible
+  * travis: run tests also on python3
+  * travis: enable deploy stage for master-staging -> master gate
+
+  [ Gianluca Guida ]
+  * Fix qrexec-lib headers
+
+  [ Marek Marczykowski-Górecki ]
+  * imgconverter: fix handling explicit file type
+  * tests: integration tests for qvm-convert-img
+  * travis: run only unit tests
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Sat, 23 Dec 2017 02:50:19 +0100
+
 qubes-utils (4.0.12) unstable; urgency=medium
 
   [ Marek Marczykowski-Górecki ]
