@@ -32,7 +32,6 @@
 #define NOGUI_CMD_PREFIX "nogui:"
 #define NOGUI_CMD_PREFIX_LEN (sizeof(NOGUI_CMD_PREFIX)-1)
 #define VCHAN_BASE_PORT 512
-#define MAX_DATA_CHUNK 4096
 
 /* Messages sent over control vchan between daemon(dom0) and agent(vm).
  * The same are used between client(dom0) and daemon(dom0).
