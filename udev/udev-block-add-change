@@ -119,6 +119,12 @@ if [ "$MAJOR" -eq 7 -a ! -d /sys/$DEVPATH/loop ]; then
     exit 0
 fi
 
+# or unconnected Network Block Device
+if [ "$MAJOR" -eq 43 -a ! -e /sys/$DEVPATH/pid ]; then
+    xs_remove
+    exit 0
+fi
+
 # ... and loop devices from excluded directories
 if [[ "$NAME" = 'loop'* ]]; then
     backing_file=$(cat /sys/block/${NAME}/loop/backing_file)
