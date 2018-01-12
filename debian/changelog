@@ -1,3 +1,13 @@
+qubes-utils (4.0.14) unstable; urgency=medium
+
+  [ Reynir Björnsson ]
+  * Remove duplicate #define
+
+  [ Rusty Bird ]
+  * udev-block-add-change: ignore unconnected Network Block Device
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Fri, 12 Jan 2018 06:16:05 +0100
+
 qubes-utils (4.0.13) unstable; urgency=medium
 
   [ Marek Marczykowski-Górecki ]
