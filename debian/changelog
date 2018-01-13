@@ -1,3 +1,10 @@
+qubes-utils (3.2.6) unstable; urgency=medium
+
+  [ HW42 ]
+  * u2mfn: get mfn via pte
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Sat, 13 Jan 2018 03:35:31 +0100
+
 qubes-utils (3.2.5) unstable; urgency=medium
 
   [ unman ]
