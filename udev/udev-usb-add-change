@@ -25,7 +25,7 @@ VERSION=`cat /sys/$DEVPATH/version | tr -d ' '|cut -f 1 -d .`
 
 # ignore usbip-connected devices, as most likely already passed through from
 # another VM
-if [ "`echo $DEVPATH | cut -d / -f 2-4`" = "devices/platform/vhci_hcd" ]; then
+if echo $DEVPATH | grep -q /vhci_hcd; then
     exit 0
 fi
 
