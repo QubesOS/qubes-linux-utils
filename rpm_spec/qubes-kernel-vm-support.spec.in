@@ -37,10 +37,6 @@ Requires:	dracut
 Requires:	dkms
 Requires:	busybox
 
-%if 0%{?qubes_builder}
-%define _builddir %(pwd)
-%endif
-
 %description
 This package contains:
 1. Dracut module required to setup Qubes VM root filesystem. This package is
