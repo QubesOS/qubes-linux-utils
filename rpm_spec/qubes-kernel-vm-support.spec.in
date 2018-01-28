@@ -19,9 +19,6 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #
 
-# Package contains /usr/lib, but not binary files, which confuses find-debuginfo.sh script.
-%global debug_package %{nil}
-
 Name:		qubes-kernel-vm-support
 Version:	@VERSION@
 Release:	1%{?dist}
@@ -47,8 +44,6 @@ libvchan library.
 
 %prep
 %setup -q -n qubes-utils-%{version}
-
-%build
 
 %install
 make install-fedora-kernel-support DESTDIR=%{buildroot}
