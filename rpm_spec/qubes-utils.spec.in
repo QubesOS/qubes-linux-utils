@@ -1,7 +1,3 @@
-%if 0%{?qubes_builder}
-%define _builddir %(pwd)
-%endif
-
 Name:		qubes-utils
 Version:	@VERSION@
 Release:	1%{?dist}

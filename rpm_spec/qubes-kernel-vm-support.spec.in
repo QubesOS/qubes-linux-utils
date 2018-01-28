@@ -36,10 +36,6 @@ URL:		http://www.qubes-os.org
 Requires:	dracut
 Requires:	dkms
 
-%if 0%{?qubes_builder}
-%define _builddir %(pwd)
-%endif
-
 %description
 This package contains:
 1. Dracut module required to setup Qubes VM root filesystem. This package is
