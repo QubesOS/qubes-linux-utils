@@ -24,11 +24,36 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdio.h>
+#include <string.h>
+#include "qrexec.h"
 #include "libqrexec-utils.h"
 
 static do_exec_t *exec_func = NULL;
 void register_exec_func(do_exec_t *func) {
     exec_func = func;
+}
+
+void exec_qubes_rpc_if_requested(char *prog, char *const envp[]) {
+    /* avoid calling qubes-rpc-multiplexer through shell */
+    if (strncmp(prog, RPC_REQUEST_COMMAND, RPC_REQUEST_COMMAND_LEN) == 0) {
+        char *tok;
+        char *argv[16]; // right now 6 are used, but allow future extensions
+        size_t i = 0;
+
+        tok=strtok(prog, " ");
+        do {
+            if (i >= sizeof(argv)/sizeof(argv[0])-1) {
+                fprintf(stderr, "To many arguments to %s\n", RPC_REQUEST_COMMAND);
+                exit(1);
+            }
+            argv[i++] = tok;
+        } while ((tok=strtok(NULL, " ")));
+        argv[i] = NULL;
+        argv[0] = QUBES_RPC_MULTIPLEXER_PATH;
+        execve(QUBES_RPC_MULTIPLEXER_PATH, argv, envp);
+        perror("exec qubes-rpc-multiplexer");
+        exit(1);
+    }
 }
 
 void fix_fds(int fdin, int fdout, int fderr)
@@ -68,7 +93,7 @@ void do_fork_exec(const char *cmdline, int *pid, int *stdin_fd, int *stdout_fd,
                 fix_fds(inpipe[0], outpipe[1], 2);
 
             if (exec_func != NULL)
-                exec_func(cmdline);
+                exec_func((char*)cmdline);
             exit(-1);
         default:;
     }
