@@ -33,8 +33,14 @@ struct buffer {
 #define WRITE_STDIN_BUFFERED  1 /* something still in the buffer */
 #define WRITE_STDIN_ERROR     2 /* write error, errno set */
 
-typedef void (do_exec_t)(const char *);
+typedef void (do_exec_t)(char *);
 void register_exec_func(do_exec_t *func);
+/*
+ * exec() qubes-rpc-multiplexer if *prog* starts with magic "QUBESRPC" keyword,
+ * do not return in that case; pass *envp* to execve() as en environment
+ * otherwise, return false without any action
+ */
+void exec_qubes_rpc_if_requested(char *prog, char *const envp[]);
 
 void buffer_init(struct buffer *b);
 void buffer_free(struct buffer *b);
