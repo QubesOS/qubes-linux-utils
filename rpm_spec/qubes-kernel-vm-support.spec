@@ -37,7 +37,6 @@ URL:		http://www.qubes-os.org
 
 Requires:	dracut
 Requires:	dkms
-Requires:	busybox
 
 %define _builddir %(pwd)
 
