@@ -10,7 +10,7 @@ if [ -e /dev/mapper/dmroot ] ; then
     echo "Qubes: FATAL error: /dev/mapper/dmroot already exists?!"
 fi
 
-modprobe xenblk || modprobe xen-blkfront || echo "Qubes: Cannot load Xen Block Frontend..."
+/sbin/modprobe xenblk || /sbin/modprobe xen-blkfront || echo "Qubes: Cannot load Xen Block Frontend..."
 
 die() {
     echo "$@" >&2
@@ -47,7 +47,7 @@ if [ `cat /sys/class/block/$ROOT_DEV/ro` = 1 ] ; then
     if [ $VOLATILE_SIZE -lt $SWAP_SIZE ]; then
         die "volatile.img smaller than 1GB, cannot continue"
     fi
-    sfdisk -q --unit S /dev/xvdc >/dev/null <<EOF
+    /sbin/sfdisk -q --unit S /dev/xvdc >/dev/null <<EOF
 1,$SWAP_SIZE,S
 ,,L
 EOF
@@ -56,29 +56,29 @@ EOF
         exit 1
     fi
     while ! [ -e /dev/xvdc1 ]; do sleep 0.1; done
-    mkswap /dev/xvdc1
+    /sbin/mkswap /dev/xvdc1
     while ! [ -e /dev/xvdc2 ]; do sleep 0.1; done
 
     echo "0 `cat /sys/class/block/$ROOT_DEV/size` snapshot /dev/$ROOT_DEV /dev/xvdc2 N 16" | \
-        dmsetup create dmroot || { echo "Qubes: FATAL: cannot create dmroot!"; exit 1; }
-    dmsetup mknodes dmroot
+        /sbin/dmsetup create dmroot || { echo "Qubes: FATAL: cannot create dmroot!"; exit 1; }
+    /sbin/dmsetup mknodes dmroot
     echo Qubes: done.
 else
     echo "Qubes: Doing R/W setup for TemplateVM..."
     while ! [ -e /dev/xvdc ]; do sleep 0.1; done
-    sfdisk -q --unit S /dev/xvdc >/dev/null <<EOF
+    /sbin/sfdisk -q --unit S /dev/xvdc >/dev/null <<EOF
 1,$SWAP_SIZE,S
 EOF
     if [ $? -ne 0 ]; then
         die "Qubes: failed to setup partitions on volatile device"
     fi
     while ! [ -e /dev/xvdc1 ]; do sleep 0.1; done
-    mkswap /dev/xvdc1
+    /sbin/mkswap /dev/xvdc1
     ln -s ../$ROOT_DEV /dev/mapper/dmroot
     echo Qubes: done.
 fi
 
-modprobe ext4
+/sbin/modprobe ext4
 
 mkdir -p /sysroot
 mount /dev/mapper/dmroot /sysroot -o ro
@@ -104,4 +104,4 @@ fi
 
 umount /dev /sys /proc
 
-exec switch_root $NEWROOT /sbin/init
+exec /sbin/switch_root $NEWROOT /sbin/init

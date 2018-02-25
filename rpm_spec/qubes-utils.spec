@@ -15,7 +15,11 @@ URL:		http://www.qubes-os.org
 Requires:	udev
 Requires:	%{name}-libs
 Requires:	ImageMagick
+%if 0%{?rhel} >= 7
+Requires:	python34-qubesimgconverter
+%else
 Requires:	python3-qubesimgconverter
+%endif
 BuildRequires:  qubes-libvchan-devel
 BuildRequires:  python-setuptools
 %if 0%{?rhel} >= 7
@@ -35,26 +39,38 @@ Common Linux files for Qubes Dom0 and VM
 Summary:    Python package qubesimgconverter
 Requires:   python
 Requires:   pycairo
+%if 0%{?rhel} >= 7
+Requires:   python-pillow
+Requires:   numpy
+%else
 Requires:   python2-pillow
 Requires:   python2-numpy
+%endif
 
 %description -n python2-qubesimgconverter
 Python package qubesimgconverter
 
+%if 0%{?rhel} >= 7
+%package -n python34-qubesimgconverter
+Summary:    Python package qubesimgconverter
+Requires:   python34
+Requires:   python34-cairo
+Requires:   python34-pillow
+Requires:   python34-numpy
+
+%description -n python34-qubesimgconverter
+Python package qubesimgconverter
+%else
 %package -n python3-qubesimgconverter
 Summary:    Python package qubesimgconverter
-%if 0%{?rhel} >= 7
-Requires:   python34
-Requires:   pycairo
-%else
 Requires:   python3
 Requires:   python3-cairo
-%endif
 Requires:   python3-pillow
 Requires:   python3-numpy
 
 %description -n python3-qubesimgconverter
 Python package qubesimgconverter
+%endif
 
 %package devel
 Summary:	Development headers for qubes-utils
@@ -120,7 +136,11 @@ rm -rf $RPM_BUILD_ROOT
 %{python_sitelib}/qubesimgconverter/test_integ.py*
 %{python_sitelib}/qubesimgconverter-%{version}-py?.?.egg-info
 
+%if 0%{?rhel} >= 7
+%files -n python34-qubesimgconverter
+%else
 %files -n python3-qubesimgconverter
+%endif
 %{python3_sitelib}/qubesimgconverter/__init__.py
 %{python3_sitelib}/qubesimgconverter/imggen.py
 %{python3_sitelib}/qubesimgconverter/test.py
