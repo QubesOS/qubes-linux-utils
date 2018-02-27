@@ -1,3 +1,14 @@
+qubes-utils (4.0.17) unstable; urgency=medium
+
+  [ Frédéric Pierret ]
+  * Fix python3 package names with respect to CentOS for consistency
+    with python34 names
+  * Remove busybox as it is not provided in RHEL7 anymore
+  * centos: fix python packages names
+  * drop busybox dependance
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Tue, 27 Feb 2018 15:17:12 +0100
+
 qubes-utils (4.0.16) unstable; urgency=medium
 
   * qrexec: provide common function for handling service call
