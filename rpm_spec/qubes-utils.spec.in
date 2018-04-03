@@ -90,4 +90,4 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/libqubes-rpc-filecopy.so
 
 %changelog
-
+@CHANGELOG@
