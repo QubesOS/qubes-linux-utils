@@ -62,4 +62,4 @@ dkms add -m u2mfn -v %{version} --rpm_safe_upgrade
 dkms remove -m u2mfn -v %{version} --all --rpm_safe_upgrade
 
 %changelog
-
+@CHANGELOG@
