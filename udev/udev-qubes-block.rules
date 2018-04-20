@@ -10,6 +10,9 @@ KERNEL=="xvda|xvdb|xvdc*|xvdd", ENV{UDISKS_IGNORE}="1"
 # Skip xen-blkfront devices
 ENV{MAJOR}=="202", GOTO="qubes_block_end"
 
+# skip devices excluded elsewhere
+ENV{DM_UDEV_DISABLE_DISK_RULES_FLAG}=="1", GOTO="qubes_block_end"
+
 # Skip device-mapper devices
 KERNEL=="dm-*", ENV{DM_NAME}=="snapshot-*", GOTO="qubes_block_end"
 KERNEL=="dm-*", ENV{DM_NAME}=="origin-*", GOTO="qubes_block_end"
