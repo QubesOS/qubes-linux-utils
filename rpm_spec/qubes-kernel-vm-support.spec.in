@@ -19,16 +19,11 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #
 
-
-%{!?version: %define version %(cat version)}
-
-# Package contains /usr/lib, but not binary files, which confuses find-debuginfo.sh script.
-%global debug_package %{nil}
-
 Name:		qubes-kernel-vm-support
-Version:	%{version}
+Version:	@VERSION@
 Release:	1%{?dist}
 Summary:	Qubes VM kernel and initramfs modules
+Source0:    qubes-utils-%{version}.tar.gz
 
 Group:		Qubes
 Vendor:     Invisible Things Lab
@@ -37,8 +32,6 @@ URL:		http://www.qubes-os.org
 
 Requires:	dracut
 Requires:	dkms
-
-%define _builddir %(pwd)
 
 %description
 This package contains:
@@ -50,13 +43,7 @@ initrd is provided by dom0.
 libvchan library.
 
 %prep
-# we operate on the current directory, so no need to unpack anything
-# symlink is to generate useful debuginfo packages
-rm -f %{name}-%{version}
-ln -sf . %{name}-%{version}
-%setup -T -D
-
-%build
+%setup -q -n qubes-utils-%{version}
 
 %install
 make install-fedora-kernel-support DESTDIR=%{buildroot}
@@ -75,4 +62,4 @@ dkms add -m u2mfn -v %{version} --rpm_safe_upgrade
 dkms remove -m u2mfn -v %{version} --all --rpm_safe_upgrade
 
 %changelog
-
+@CHANGELOG@
