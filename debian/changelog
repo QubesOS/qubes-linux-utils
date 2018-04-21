@@ -1,3 +1,21 @@
+qubes-utils (4.0.18) unstable; urgency=medium
+
+  [ Marek Marczykowski-Górecki ]
+  * udev: don't call udev-block-add-change for devices excluded by other
+    rules
+  * rpm: preparation for src.rpm building
+
+  [ Frédéric Pierret ]
+  * Makefile.builder: currently disable Mock
+  * Remove _builddir
+  * Fix debug symbols
+  * spec.in: add changelog placeholder
+
+  [ Marek Marczykowski-Górecki ]
+  * travis: update Fedora versions
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Sat, 21 Apr 2018 14:36:39 +0200
+
 qubes-utils (4.0.17) unstable; urgency=medium
 
   [ Frédéric Pierret ]
