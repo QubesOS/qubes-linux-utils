@@ -16,6 +16,8 @@ Requires:	python34-qubesimgconverter
 %else
 Requires:	python3-qubesimgconverter
 %endif
+%{?systemd_requires}
+BuildRequires:  systemd
 BuildRequires:  qubes-libvchan-devel
 BuildRequires:  python-setuptools
 %if 0%{?rhel} >= 7
@@ -96,15 +98,17 @@ rm -rf imgconverter/build
 
 %post
 # dom0
-/bin/systemctl enable qubes-meminfo-writer-dom0.service > /dev/null 2>&1
+%systemd_post qubes-meminfo-writer-dom0.service
 # VM
-/bin/systemctl enable qubes-meminfo-writer.service > /dev/null 2>&1
+%systemd_post qubes-meminfo-writer.service
+
+%preun
+%systemd_preun qubes-meminfo-writer-dom0.service
+%systemd_preun qubes-meminfo-writer.service
 
 %postun
-if [ $1 -eq 0 ]; then
-    /bin/systemctl disable qubes-meminfo-writer.service > /dev/null 2>&1
-    /bin/systemctl disable qubes-meminfo-writer.service > /dev/null 2>&1
-fi
+%systemd_postun_with_restart qubes-meminfo-writer-dom0.service
+%systemd_postun_with_restart qubes-meminfo-writer.service
 
 %post libs -p /sbin/ldconfig
 %postun libs -p /sbin/ldconfig
