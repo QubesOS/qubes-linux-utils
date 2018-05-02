@@ -1,3 +1,10 @@
+qubes-utils (4.0.19) unstable; urgency=medium
+
+  * rpm: use proper macros for systemd handling
+  * travis: add centos7
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Wed, 02 May 2018 17:55:09 +0200
+
 qubes-utils (4.0.18) unstable; urgency=medium
 
   [ Marek Marczykowski-Górecki ]
