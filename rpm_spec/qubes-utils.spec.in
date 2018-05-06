@@ -17,6 +17,7 @@ Requires:	pycairo
 BuildRequires:  qubes-libvchan-devel
 # for meminfo-writer
 BuildRequires:  xen-devel
+Provides: python2-qubesimgconverter = %{version}-%{release}
 
 %description
 Common Linux files for Qubes Dom0 and VM
