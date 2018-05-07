@@ -17,6 +17,7 @@ Requires:	pycairo
 BuildRequires:  qubes-libvchan-devel
 # for meminfo-writer
 BuildRequires:  xen-devel
+BuildRequires:  python-devel
 Provides: python2-qubesimgconverter = %{version}-%{release}
 
 %description
