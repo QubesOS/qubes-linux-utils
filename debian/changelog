@@ -1,3 +1,21 @@
+qubes-utils (3.2.8) unstable; urgency=medium
+
+  [ Marek Marczykowski-Górecki ]
+  * rpm: preparation for src.rpm building
+
+  [ Frédéric Pierret ]
+  * Makefile.builder: currently disable Mock
+  * Remove _builddir
+  * Fix debug symbols
+  * spec.in: add changelog placeholder
+  * travis: add fc27 and fc28
+
+  [ Marek Marczykowski-Górecki ]
+  * rpm: provide python2-qubesimgconverter
+  * rpm: add BR: python-devel
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Mon, 07 May 2018 04:13:00 +0200
+
 qubes-utils (3.2.7) unstable; urgency=medium
 
   * qrexec: provide common function for handling service call
