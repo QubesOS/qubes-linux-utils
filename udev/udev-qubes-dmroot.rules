@@ -1,0 +1,5 @@
+# Create /dev/mapper/dmroot symlink on TemplateVM/StandaloneVM to make
+# grub-mkconfig happy.
+# On TemplateBasedVM, it is really a device mapper device.
+
+SUBSYSTEM=="block", ENV{ID_PART_ENTRY_NAME}=="Root\x20filesystem", ATTR{ro}=="0", SYMLINK+="mapper/dmroot"
