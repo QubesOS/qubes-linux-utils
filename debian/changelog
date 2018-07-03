@@ -1,3 +1,10 @@
+qubes-utils (4.0.20) unstable; urgency=medium
+
+  * udev: create /dev/mapper/dmroot -> xvda3 symlink when its mounted
+    directly
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Tue, 03 Jul 2018 21:11:00 +0200
+
 qubes-utils (4.0.19) unstable; urgency=medium
 
   * rpm: use proper macros for systemd handling
