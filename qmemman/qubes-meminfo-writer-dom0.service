@@ -1,5 +1,6 @@
 [Unit]
 Description=Qubes memory information reporter
+Before=systemd-user-sessions.service
 After=qubes-core.service qubes-qmemman.service
 ConditionPathExists=/var/run/qubes/qmemman.sock
 
