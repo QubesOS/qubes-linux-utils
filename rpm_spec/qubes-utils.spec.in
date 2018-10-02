@@ -29,6 +29,7 @@ BuildRequires:  python2-rpm-macros
 BuildRequires:  python3-rpm-macros
 # for meminfo-writer
 BuildRequires:  xen-devel
+BuildRequires:	gcc
 
 %description
 Common Linux files for Qubes Dom0 and VM
@@ -89,6 +90,7 @@ Libraries for qubes-utils
 %setup -q
 
 %build
+export PYTHON=%{__python2}
 make all BACKEND_VMM=@BACKEND_VMM@
 
 %install
@@ -125,11 +127,11 @@ rm -rf $RPM_BUILD_ROOT
 %{_unitdir}/qubes-meminfo-writer-dom0.service
 
 %files -n python2-qubesimgconverter
-%{python_sitelib}/qubesimgconverter/__init__.py*
-%{python_sitelib}/qubesimgconverter/imggen.py*
-%{python_sitelib}/qubesimgconverter/test.py*
-%{python_sitelib}/qubesimgconverter/test_integ.py*
-%{python_sitelib}/qubesimgconverter-%{version}-py?.?.egg-info
+%{python2_sitelib}/qubesimgconverter/__init__.py*
+%{python2_sitelib}/qubesimgconverter/imggen.py*
+%{python2_sitelib}/qubesimgconverter/test.py*
+%{python2_sitelib}/qubesimgconverter/test_integ.py*
+%{python2_sitelib}/qubesimgconverter-%{version}-py?.?.egg-info
 
 %if 0%{?rhel} >= 7
 %files -n python34-qubesimgconverter
