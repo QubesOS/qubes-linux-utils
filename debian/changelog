@@ -1,3 +1,14 @@
+qubes-utils (4.0.21) unstable; urgency=medium
+
+  [ Rusty Bird ]
+  * Order qubes-meminfo-writer-dom0 before systemd-user-sessions
+
+  [ Marek Marczykowski-Górecki ]
+  * rpm: adjust for fc29
+  * travis: update Fedora and Debian versions
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Tue, 09 Oct 2018 00:25:11 +0200
+
 qubes-utils (4.0.20) unstable; urgency=medium
 
   * udev: create /dev/mapper/dmroot -> xvda3 symlink when its mounted
