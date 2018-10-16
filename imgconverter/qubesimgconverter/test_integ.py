@@ -74,6 +74,8 @@ class TC_00_ImgConverter(qubes.tests.extra.ExtraTestCase):
         p = self.vm.run('qvm-convert-img test.png trusted.png 2>&1',
             passio_popen=True)
         (stdout, _) = p.communicate()
+        if p.returncode == 127:
+            self.skipTest('qubes-img-converter not installed')
         self.assertEquals(p.returncode, 0, 'qvm-convert-img failed: {}'.format(
             stdout))
         self.assertCorrectlyTransformed('test.png', 'trusted.png')
