@@ -1,6 +1,8 @@
+usr/share/initramfs-tools/scripts/local-top/scrub_pages
 usr/share/initramfs-tools/scripts/local-top/qubes_cow_setup
 usr/share/initramfs-tools/hooks/qubes_vm
 usr/lib/dracut/modules.d/90qubes-vm/*
 usr/lib/dracut/modules.d/90qubes-vm-modules/*
 usr/lib/dracut/modules.d/90qubes-vm-simple/*
 usr/src/u2mfn-*/*
+etc/default/grub.d/30-qubes-kernel-vm-support.cfg

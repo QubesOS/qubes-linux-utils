@@ -30,11 +30,13 @@ install:
 install-fedora-kernel-support:
 	$(MAKE) -C dracut install
 	$(MAKE) -C kernel-modules install
+	$(MAKE) -C grub install-fedora
 
 install-debian-kernel-support:
 	$(MAKE) -C initramfs-tools install
 	$(MAKE) -C dracut install
 	$(MAKE) -C kernel-modules install
+	$(MAKE) -C grub install-debian
 	# expand module version
 	rm -f debian/qubes-kernel-vm-support.dkms
 	echo debian/tmp/usr/src/u2mfn-*/dkms.conf > debian/qubes-kernel-vm-support.dkms

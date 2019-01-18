@@ -6,6 +6,11 @@ mount -t proc proc /proc
 mount -t sysfs sysfs /sys
 mount -t devtmpfs devtmpfs /dev
 
+if [ -w /sys/devices/system/xen_memory/xen_memory0/scrub_pages ]; then
+    # re-enable xen-balloon pages scrubbing, after initial balloon down
+    echo 1 > /sys/devices/system/xen_memory/xen_memory0/scrub_pages
+fi
+
 if [ -e /dev/mapper/dmroot ] ; then 
     echo "Qubes: FATAL error: /dev/mapper/dmroot already exists?!"
 fi
