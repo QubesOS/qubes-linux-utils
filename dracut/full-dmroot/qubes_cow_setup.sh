@@ -53,12 +53,12 @@ fi
 modprobe xenblk || modprobe xen-blkfront || warn "Qubes: Cannot load Xen Block Frontend..."
 
 log_begin "Waiting for /dev/xvda* devices..."
-while ! [ -e /dev/xvda ]; do sleep 0.1; done
+udevadm settle --exit-if-exists=/dev/xvda
 log_end
 
 # prefer partition if exists
 if [ -b /dev/xvda1 ]; then
-    if [ -d /dev/disk/by-partlabel ]; then
+    if [ -e "/dev/disk/by-partlabel/Root\\x20filesystem" ]; then
         ROOT_DEV=$(basename $(readlink "/dev/disk/by-partlabel/Root\\x20filesystem"))
     else
         ROOT_DEV=xvda3
