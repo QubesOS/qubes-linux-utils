@@ -1,6 +1,6 @@
 #!/bin/sh
 
-if grep -q control_d /proc/xen/capabilities; then
+if grep -q '^[0-]*$' /sys/hypervisor/uuid; then
     echo "Not intended for dom0"
     exit 0
 fi
