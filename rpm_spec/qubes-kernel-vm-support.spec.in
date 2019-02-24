@@ -52,6 +52,7 @@ make install-fedora-kernel-support DESTDIR=%{buildroot}
 /usr/lib/dracut/modules.d/90qubes-vm
 /usr/lib/dracut/modules.d/90qubes-vm-modules
 /usr/lib/dracut/modules.d/90qubes-vm-simple
+/usr/lib/dracut/modules.d/80xen-scrub-pages
 /usr/src/u2mfn-%{version}/
 /usr/sbin/qubes-prepare-vm-kernel
 %config(noreplace) /etc/default/grub.qubes-kernel-vm-support
