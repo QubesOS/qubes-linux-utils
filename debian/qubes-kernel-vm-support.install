@@ -4,5 +4,6 @@ usr/share/initramfs-tools/hooks/qubes_vm
 usr/lib/dracut/modules.d/90qubes-vm/*
 usr/lib/dracut/modules.d/90qubes-vm-modules/*
 usr/lib/dracut/modules.d/90qubes-vm-simple/*
+usr/lib/dracut/modules.d/80xen-scrub-pages/*
 usr/src/u2mfn-*/*
 etc/default/grub.d/30-qubes-kernel-vm-support.cfg
