@@ -76,5 +76,22 @@ if [ $1 -eq 0 ]; then
     fi
 fi
 
+%posttrans
+
+# Rebuild all initramfs images to include updated modules
+if [ -r /usr/share/qubes/marker-vm ] && [ -x /usr/bin/dracut ]; then
+    ret=0
+    for img in /boot/initramfs-*.img; do
+        kver="${img#*initramfs-}"
+        kver="${kver%.img}"
+        dracut -f "$img" "$kver" || ret=$?
+    done
+    if [ "$ret" -eq 0 ]; then
+        # "milestone" initramfs update version:
+        # 1 - addition of xen scrub_pages enabling code
+        echo 1 > /var/lib/qubes/initramfs-updated
+    fi
+fi
+
 %changelog
 @CHANGELOG@
