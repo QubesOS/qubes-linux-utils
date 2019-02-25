@@ -1,3 +1,15 @@
+qubes-utils (4.0.23) unstable; urgency=medium
+
+  * Disable scrubbing memory pages during initial balloon down
+  * dracut: fix checking for "Root filesystem" label, improve udev sync
+  * dracut: add a flag file indicating scrub-pages option support
+  * Adjust permissions of /dev/xen/hypercall
+  * Do not use /proc/xen for detecting dom0 anymore
+  * Really install xen-scrub-pages dracut module
+  * Add xen_scrub_pages=0 kernel option only if initramfs was rebuilt
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Mon, 25 Feb 2019 21:46:52 +0100
+
 qubes-utils (4.0.22) unstable; urgency=medium
 
   * tests: skip img converter test if qubes-img-converter is not
