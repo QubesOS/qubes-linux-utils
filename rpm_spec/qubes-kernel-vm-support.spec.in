@@ -22,7 +22,7 @@
 Name:		qubes-kernel-vm-support
 Version:	@VERSION@
 Release:	1%{?dist}
-Summary:	Qubes VM kernel and initramfs modules
+Summary:	Qubes VM initramfs modules
 Source0:    qubes-utils-%{version}.tar.gz
 
 Group:		Qubes
@@ -31,16 +31,12 @@ License:	GPL v2 only
 URL:		http://www.qubes-os.org
 
 Requires:	dracut
-Requires:	dkms
 
 %description
 This package contains:
 1. Dracut module required to setup Qubes VM root filesystem. This package is
 needed in VM only when the VM uses its own kernel (via pvgrub or so). Otherwise
 initrd is provided by dom0.
-
-2. u2mfn kernel module sources (dkms) required by GUI agent and R2 version of
-libvchan library.
 
 %prep
 %setup -q -n qubes-utils-%{version}
@@ -53,7 +49,6 @@ make install-fedora-kernel-support DESTDIR=%{buildroot}
 /usr/lib/dracut/modules.d/90qubes-vm-modules
 /usr/lib/dracut/modules.d/90qubes-vm-simple
 /usr/lib/dracut/modules.d/80xen-scrub-pages
-/usr/src/u2mfn-%{version}/
 /usr/sbin/qubes-prepare-vm-kernel
 %config(noreplace) /etc/default/grub.qubes-kernel-vm-support
 
@@ -64,12 +59,7 @@ if ! grep -q '/etc/default/grub.qubes-kernel-vm-support$' /etc/default/grub 2>/d
     echo '. /etc/default/grub.qubes-kernel-vm-support' >> /etc/default/grub
 fi
 
-%post
-dkms add -m u2mfn -v %{version} --rpm_safe_upgrade
-
 %preun
-dkms remove -m u2mfn -v %{version} --all --rpm_safe_upgrade
-
 if [ $1 -eq 0 ]; then
     if grep -q '/etc/default/grub.qubes-kernel-vm-support$' /etc/default/grub 2>/dev/null; then
         sed -i -e '/grub.qubes-kernel-vm-support$/d' /etc/default/grub

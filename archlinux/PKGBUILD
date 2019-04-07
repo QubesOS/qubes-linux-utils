@@ -57,7 +57,7 @@ make -C imgconverter install DESTDIR=$pkgdir LIBDIR=/usr/lib SYSLIBDIR=/usr/lib 
 }
 
 package_qubes-vm-kernel-support() {
-depends=(mkinitcpio dkms grub)
+depends=(mkinitcpio grub)
 install=PKGBUILD-qubes-vm-kernel-support.install
 
 mkdir -p ${pkgdir}/usr/lib/initcpio/install/
@@ -68,8 +68,6 @@ mkdir -p ${pkgdir}/usr/bin/
 install -m 611 ${srcdir}/PKGBUILD-initcpio-install.sh ${pkgdir}/usr/lib/initcpio/install/qubes
 install -m 611 ${srcdir}/PKGBUILD-initcpio-hook.sh ${pkgdir}/usr/lib/initcpio/hooks/qubes
 install -m 755 ${srcdir}/dracut/full-dmroot/qubes_cow_setup.sh ${pkgdir}/usr/lib/qubes/qubes_cow_setup.sh
-make install-u2mfn DESTDIR=$pkgdir -C kernel-modules
-
 }
 
 

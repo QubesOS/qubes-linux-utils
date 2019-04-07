@@ -7,7 +7,7 @@ export DESTDIR=$(shell pwd)/debian/tmp
 #export DH_VERBOSE=1
 
 %:
-	dh $@ --with=systemd,dkms
+	dh $@ --with=systemd
 
 override_dh_auto_build:
 	make all LIBDIR=/usr/lib DEBIANBUILD=1
