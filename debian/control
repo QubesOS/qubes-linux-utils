@@ -3,7 +3,6 @@ Section: admin
 Priority: extra
 Maintainer: Davíð Steinn Geirsson <david@dsg.is>
 Build-Depends:
- libvchan-xen-dev,
  libxen-dev,
  pkg-config,
  debhelper (>= 9.0.0),
@@ -17,7 +16,7 @@ Vcs-Git: http://dsg.is/qubes/qubes-linux-utils.git
 
 Package: qubes-utils
 Architecture: any
-Depends: libvchan-xen, lsb-base, python-pil, python-numpy, python3-pil, python3-numpy, ${shlibs:Depends}, ${misc:Depends}
+Depends: lsb-base, python-pil, python-numpy, python3-pil, python3-numpy, ${shlibs:Depends}, ${misc:Depends}
 Conflicts: qubes-linux-utils
 Breaks: qubes-core-agent (<< 3.1.4)
 Recommends: python2.7
@@ -37,14 +36,6 @@ Description: Qubes VM kernel and initramfs modules
  2. u2mfn kernel module sources (dkms) required by GUI agent and R2 version of
  libvchan library.
 
-Package: libqrexec-utils2
-Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}
-Breaks: qubes-utils (<< 3.1.4)
-Replaces: qubes-utils (<< 3.1.4)
-Description: Library of common functions of qrexec agent and daemon
- This library contains common helper functions for qrexec agent and daemon.
-
 Package: libqubes-rpc-filecopy2
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
@@ -53,15 +44,6 @@ Replaces: qubes-utils (<< 3.1.4)
 Description: Qubes file copy protocol library
  This library can be used for both sending files using qfile protocol and for
  receiving them.
-
-Package: libqrexec-utils-dev
-Architecture: any
-Section: libdevel
-Depends: libqrexec-utils2 (= ${binary:Version}), ${misc:Depends}
-Breaks: qubes-utils (<< 3.1.4)
-Replaces: qubes-utils (<< 3.1.4)
-Description: Development headers for libqrexec-utils
- This package contains files required to compile qrexec-agent and qrexec-daemon.
 
 Package: libqubes-rpc-filecopy-dev
 Architecture: any

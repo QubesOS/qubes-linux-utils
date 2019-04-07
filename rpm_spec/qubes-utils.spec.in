@@ -14,7 +14,6 @@ Requires:	ImageMagick
 Requires:	python%{python3_pkgversion}-qubesimgconverter
 %{?systemd_requires}
 BuildRequires:  systemd
-BuildRequires:  qubes-libvchan-devel
 BuildRequires:  python-setuptools
 BuildRequires:  python%{python3_pkgversion}-setuptools
 BuildRequires:  python2-rpm-macros
@@ -122,15 +121,11 @@ rm -rf $RPM_BUILD_ROOT
 %{python3_sitelib}/qubesimgconverter/__pycache__
 
 %files libs
-%{_libdir}/libqrexec-utils.so.2
 %{_libdir}/libqubes-rpc-filecopy.so.2
 
 %files devel
 %defattr(-,root,root,-)
-/usr/include/libqrexec-utils.h
 /usr/include/libqubes-rpc-filecopy.h
-/usr/include/qrexec.h
-%{_libdir}/libqrexec-utils.so
 %{_libdir}/libqubes-rpc-filecopy.so
 
 %changelog

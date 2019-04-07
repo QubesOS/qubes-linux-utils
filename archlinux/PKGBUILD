@@ -13,7 +13,7 @@ arch=("x86_64")
 url="http://qubes-os.org/"
 license=('GPL')
 groups=()
-makedepends=(gcc make pkgconfig 'qubes-libvchan' 'python-setuptools' 'python2-setuptools')
+makedepends=(gcc make pkgconfig 'python-setuptools' 'python2-setuptools')
 checkdepends=()
 optdepends=()
 provides=()
@@ -45,7 +45,7 @@ make -C imgconverter all
 }
 
 package_qubes-vm-utils() {
-depends=(qubes-libvchan imagemagick python2-cairo python2-pillow python2-numpy python-pillow python-numpy)
+depends=(imagemagick python2-cairo python2-pillow python2-numpy python-pillow python-numpy)
 install=PKGBUILD-qubes-vm-utils.install
 
 # Install all for python2
@@ -57,7 +57,7 @@ make -C imgconverter install DESTDIR=$pkgdir LIBDIR=/usr/lib SYSLIBDIR=/usr/lib 
 }
 
 package_qubes-vm-kernel-support() {
-depends=(qubes-libvchan mkinitcpio dkms grub)
+depends=(mkinitcpio dkms grub)
 install=PKGBUILD-qubes-vm-kernel-support.install
 
 mkdir -p ${pkgdir}/usr/lib/initcpio/install/
