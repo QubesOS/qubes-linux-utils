@@ -11,20 +11,12 @@ URL:		http://www.qubes-os.org
 Requires:	udev
 Requires:	%{name}-libs
 Requires:	ImageMagick
-%if 0%{?rhel} >= 7
-Requires:	python34-qubesimgconverter
-%else
-Requires:	python3-qubesimgconverter
-%endif
+Requires:	python%{python3_pkgversion}-qubesimgconverter
 %{?systemd_requires}
 BuildRequires:  systemd
 BuildRequires:  qubes-libvchan-devel
 BuildRequires:  python-setuptools
-%if 0%{?rhel} >= 7
-BuildRequires:  python34-setuptools
-%else
-BuildRequires:  python3-setuptools
-%endif
+BuildRequires:  python%{python3_pkgversion}-setuptools
 BuildRequires:  python2-rpm-macros
 BuildRequires:  python3-rpm-macros
 # for meminfo-writer
@@ -49,27 +41,15 @@ Requires:   python2-numpy
 %description -n python2-qubesimgconverter
 Python package qubesimgconverter
 
-%if 0%{?rhel} >= 7
-%package -n python34-qubesimgconverter
+%package -n python%{python3_pkgversion}-qubesimgconverter
 Summary:    Python package qubesimgconverter
-Requires:   python34
-Requires:   python34-cairo
-Requires:   python34-pillow
-Requires:   python34-numpy
+Requires:   python%{python3_pkgversion}
+Requires:   python%{python3_pkgversion}-cairo
+Requires:   python%{python3_pkgversion}-pillow
+Requires:   python%{python3_pkgversion}-numpy
 
-%description -n python34-qubesimgconverter
-Python package qubesimgconverter
-%else
-%package -n python3-qubesimgconverter
-Summary:    Python package qubesimgconverter
-Requires:   python3
-Requires:   python3-cairo
-Requires:   python3-pillow
-Requires:   python3-numpy
-
-%description -n python3-qubesimgconverter
-Python package qubesimgconverter
-%endif
+%description -n python%{python3_pkgversion}-qubesimgconverter
+Python%{python3_pkgversion} package qubesimgconverter
 
 %package devel
 Summary:	Development headers for qubes-utils
@@ -133,11 +113,7 @@ rm -rf $RPM_BUILD_ROOT
 %{python2_sitelib}/qubesimgconverter/test_integ.py*
 %{python2_sitelib}/qubesimgconverter-%{version}-py?.?.egg-info
 
-%if 0%{?rhel} >= 7
-%files -n python34-qubesimgconverter
-%else
-%files -n python3-qubesimgconverter
-%endif
+%files -n python%{python3_pkgversion}-qubesimgconverter
 %{python3_sitelib}/qubesimgconverter/__init__.py
 %{python3_sitelib}/qubesimgconverter/imggen.py
 %{python3_sitelib}/qubesimgconverter/test.py
