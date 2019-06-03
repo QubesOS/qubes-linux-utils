@@ -6,3 +6,7 @@ PACKAGE_NAME="u2mfn"
 BUILT_MODULE_NAME[0]="u2mfn"
 DEST_MODULE_LOCATION[0]="/extra/"
 AUTOINSTALL=yes
+# BUILD_EXCLUSIVE_KERNEL doesn't support negation :(
+if echo "$kernelver"|grep -q qubes; then
+    BUILD_EXCLUSIVE_KERNEL=not-on-qubes-kernel
+fi

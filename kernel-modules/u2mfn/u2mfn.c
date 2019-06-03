@@ -170,3 +170,4 @@ static void u2mfn_exit(void)
 module_init(u2mfn_init);
 module_exit(u2mfn_exit);
 MODULE_LICENSE("GPL");
+MODULE_VERSION("5.0.0");
