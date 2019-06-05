@@ -94,15 +94,26 @@ if ! [ -d "$NEWROOT/lib/modules/$kver/kernel" ]; then
     echo "Waiting for /dev/xvdd device..."
     while ! [ -e /dev/xvdd ]; do sleep 0.1; done
 
-    # Mount only `uname -r` subdirectory, to leave the rest of /lib/modules writable
     mkdir -p /tmp/modules
     mount -n -t ext3 /dev/xvdd /tmp/modules
-    if ! [ -d "$NEWROOT/lib/modules/$kver" ]; then
-        mount "$NEWROOT" -o remount,rw
-        mkdir -p "$NEWROOT/lib/modules/$kver"
-        mount "$NEWROOT" -o remount,ro
+    if /sbin/modprobe overlay; then
+        # if overlayfs is supported, use that to provide fully writable /lib/modules
+        if ! [ -d "$NEWROOT/lib/.modules_work" ]; then
+            mount "$NEWROOT" -o remount,rw
+            mkdir -p "$NEWROOT/lib/.modules_work"
+            mount "$NEWROOT" -o remount,ro
+        fi
+        mount -t overlay none $NEWROOT/lib/modules -o lowerdir=/tmp/modules,upperdir=$NEWROOT/lib/modules,workdir=$NEWROOT/lib/.modules_work
+    else
+        # otherwise mount only `uname -r` subdirectory, to leave the rest of
+        # /lib/modules writable
+        if ! [ -d "$NEWROOT/lib/modules/$kver" ]; then
+            mount "$NEWROOT" -o remount,rw
+            mkdir -p "$NEWROOT/lib/modules/$kver"
+            mount "$NEWROOT" -o remount,ro
+        fi
+        mount --bind "/tmp/modules/$kver" "$NEWROOT/lib/modules/$kver"
     fi
-    mount --bind "/tmp/modules/$kver" "$NEWROOT/lib/modules/$kver"
     umount /tmp/modules
     rmdir /tmp/modules
 fi

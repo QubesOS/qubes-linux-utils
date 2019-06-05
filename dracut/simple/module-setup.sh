@@ -9,6 +9,10 @@ depends() {
     return 0
 }
 
+installkernel() {
+    hostonly='' instmods overlay
+}
+
 install() {
     inst $moddir/init.sh /init
     inst_multiple \
