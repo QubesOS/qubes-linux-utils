@@ -1,3 +1,18 @@
+qubes-utils (4.0.24) unstable; urgency=medium
+
+  [ Marek Marczykowski-Górecki ]
+  * Declare u2mfn module version, skip build for qubes kernels
+
+  [ Frédéric Pierret (fepitre) ]
+  * python3: use macro pkgversion
+  * travis: switch to xenial
+  * travis: remove older Fedora releases and add Fedora 30
+
+  [ Marek Marczykowski-Górecki ]
+  * initramfs: use overlayfs for /lib/modules, if available
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Thu, 06 Jun 2019 21:30:30 +0200
+
 qubes-utils (4.0.23) unstable; urgency=medium
 
   * Disable scrubbing memory pages during initial balloon down
