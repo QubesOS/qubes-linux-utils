@@ -1,3 +1,9 @@
+qubes-utils (4.1.1) unstable; urgency=medium
+
+  * initrd: mount / rw for the overlayfs setup time
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Mon, 10 Jun 2019 00:48:40 +0200
+
 qubes-utils (4.1.0) unstable; urgency=medium
 
   * Remove qrexec related files
