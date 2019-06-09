@@ -86,7 +86,7 @@ fi
 /sbin/modprobe ext4
 
 mkdir -p /sysroot
-mount /dev/mapper/dmroot /sysroot -o ro
+mount /dev/mapper/dmroot /sysroot -o rw
 NEWROOT=/sysroot
 
 kver="`uname -r`"
@@ -99,18 +99,14 @@ if ! [ -d "$NEWROOT/lib/modules/$kver/kernel" ]; then
     if /sbin/modprobe overlay; then
         # if overlayfs is supported, use that to provide fully writable /lib/modules
         if ! [ -d "$NEWROOT/lib/.modules_work" ]; then
-            mount "$NEWROOT" -o remount,rw
             mkdir -p "$NEWROOT/lib/.modules_work"
-            mount "$NEWROOT" -o remount,ro
         fi
         mount -t overlay none $NEWROOT/lib/modules -o lowerdir=/tmp/modules,upperdir=$NEWROOT/lib/modules,workdir=$NEWROOT/lib/.modules_work
     else
         # otherwise mount only `uname -r` subdirectory, to leave the rest of
         # /lib/modules writable
         if ! [ -d "$NEWROOT/lib/modules/$kver" ]; then
-            mount "$NEWROOT" -o remount,rw
             mkdir -p "$NEWROOT/lib/modules/$kver"
-            mount "$NEWROOT" -o remount,ro
         fi
         mount --bind "/tmp/modules/$kver" "$NEWROOT/lib/modules/$kver"
     fi
@@ -119,5 +115,6 @@ if ! [ -d "$NEWROOT/lib/modules/$kver/kernel" ]; then
 fi
 
 umount /dev /sys /proc
+mount "$NEWROOT" -o remount,ro
 
 exec /sbin/switch_root $NEWROOT /sbin/init
