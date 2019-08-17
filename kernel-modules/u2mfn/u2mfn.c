@@ -54,10 +54,17 @@ static inline unsigned long VIRT_TO_MFN(void *addr)
 }
 #endif
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(5,3,0)
+static int u2mfn_get_mfn(pte_t *pte, unsigned long addr, void *data) {
+    *((unsigned long *) data) = pfn_to_mfn(pte_pfn(*pte));
+    return 0;
+}
+#else
 static int u2mfn_get_mfn(pte_t *pte, pgtable_t token, unsigned long addr, void *data) {
     *((unsigned long *) data) = pfn_to_mfn(pte_pfn(*pte));
     return 0;
 }
+#endif
 
 /// User virtual address to mfn translator
 /**
