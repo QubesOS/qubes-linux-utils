@@ -74,6 +74,11 @@ int copy_file(int outfd, int infd, long long size, unsigned long *crc32);
 const char *copy_file_status_to_str(int status);
 void set_size_limit(unsigned long long new_bytes_limit, unsigned long long new_files_limit);
 void set_verbose(int value);
+/*
+ * Delay extracting a file if there is no enough space for it - wait for space
+ * for this file, plus a given margin.
+ */
+void set_wait_for_space(unsigned long margin);
 /* register open fd to /proc/PID/fd of this process */
 void set_procfs_fd(int value);
 int write_all(int fd, const void *buf, int size);

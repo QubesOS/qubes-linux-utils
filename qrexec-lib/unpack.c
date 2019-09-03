@@ -3,6 +3,7 @@
 #include <fcntl.h>
 #include <sys/time.h>
 #include <sys/stat.h>
+#include <sys/statvfs.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -18,6 +19,11 @@ unsigned long long files_limit = 0;
 unsigned long long total_bytes = 0;
 unsigned long long total_files = 0;
 int verbose = 0;
+/*
+ * If positive, wait for disk space before extracting a file,
+ * keeping this much extra space (in bytes).
+ */
+unsigned long opt_wait_for_space_margin;
 int use_tmpfile = 0;
 int procdir_fd = -1;
 
@@ -51,10 +57,31 @@ void set_verbose(int value)
     verbose = value;
 }
 
+void set_wait_for_space(unsigned long value)
+{
+    opt_wait_for_space_margin = value;
+}
+
 void set_procfs_fd(int value)
 {
     procdir_fd = value;
     use_tmpfile = 1;
+}
+
+int wait_for_space(int fd, unsigned long how_much) {
+    int counter = 0;
+    struct statvfs fs_space;
+    do {
+        if (fstatvfs(fd, &fs_space) == -1) {
+            perror("fstatvfs");
+            return -1;
+        }
+        // TODO: timeout?
+        if (counter > 0)
+            usleep(1000000);
+        counter++;
+    } while (fs_space.f_bsize * fs_space.f_bavail < how_much);
+    return 0;
 }
 
 unsigned long crc32_sum = 0;
@@ -129,6 +156,10 @@ void process_one_file_reg(struct file_header *untrusted_hdr,
         do_exit(EDQUOT, untrusted_name);
     if (bytes_limit && total_bytes > bytes_limit - untrusted_hdr->filelen)
         do_exit(EDQUOT, untrusted_name);
+    if (opt_wait_for_space_margin) {
+        wait_for_space(fdout,
+            untrusted_hdr->filelen + opt_wait_for_space_margin);
+    }
     total_bytes += untrusted_hdr->filelen;
     ret = copy_file(fdout, 0, untrusted_hdr->filelen, &crc32_sum);
     if (ret != COPY_FILE_OK) {
