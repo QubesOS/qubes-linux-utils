@@ -15,7 +15,7 @@ Requires:	python%{python3_pkgversion}-qubesimgconverter
 %{?systemd_requires}
 BuildRequires:  systemd
 BuildRequires:  qubes-libvchan-devel
-BuildRequires:  python-setuptools
+BuildRequires:  python2-setuptools
 BuildRequires:  python%{python3_pkgversion}-setuptools
 BuildRequires:  python2-rpm-macros
 BuildRequires:  python3-rpm-macros
@@ -28,7 +28,7 @@ Common Linux files for Qubes Dom0 and VM
 
 %package -n python2-qubesimgconverter
 Summary:    Python package qubesimgconverter
-Requires:   python
+Requires:   python2
 Requires:   pycairo
 %if 0%{?rhel} >= 7
 Requires:   python-pillow
