@@ -5,4 +5,4 @@ if [ -r /usr/share/qubes/marker-vm ] &&
         [ "$(cat /var/lib/qubes/initramfs-updated 2>/dev/null || echo 0)" -ge 1 ]; then
     GRUB_CMDLINE_LINUX="$GRUB_CMDLINE_LINUX xen_scrub_pages=0"
 fi
-
+GRUB_ENABLE_BLSCFG=false
