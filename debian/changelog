@@ -1,3 +1,14 @@
+qubes-utils (4.1.2) unstable; urgency=medium
+
+  [ xaki23 ]
+  * align volatile swap partition to 1Mb instead of 512b
+
+  [ Marek Marczykowski-Górecki ]
+  * rpm: update python2 deps
+  * Disable BLS config style in grub
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Sun, 22 Sep 2019 05:10:19 +0200
+
 qubes-utils (4.1.1) unstable; urgency=medium
 
   * initrd: mount / rw for the overlayfs setup time
