@@ -53,8 +53,8 @@ if [ `cat /sys/class/block/$ROOT_DEV/ro` = 1 ] ; then
         die "volatile.img smaller than 1GB, cannot continue"
     fi
     /sbin/sfdisk -q --unit S /dev/xvdc >/dev/null <<EOF
-2048,$SWAP_SIZE,S
-,,L
+xvdc1: type=82,start=2048,size=$SWAP_SIZE
+xvdc2: type=83
 EOF
     if [ $? -ne 0 ]; then
         echo "Qubes: failed to setup partitions on volatile device"
@@ -72,7 +72,8 @@ else
     echo "Qubes: Doing R/W setup for TemplateVM..."
     while ! [ -e /dev/xvdc ]; do sleep 0.1; done
     /sbin/sfdisk -q --unit S /dev/xvdc >/dev/null <<EOF
-2048,$SWAP_SIZE,S
+xvdc1: type=82,start=2048,size=$SWAP_SIZE
+xvdc3: type=83
 EOF
     if [ $? -ne 0 ]; then
         die "Qubes: failed to setup partitions on volatile device"
