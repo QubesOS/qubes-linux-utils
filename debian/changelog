@@ -1,3 +1,22 @@
+qubes-utils (4.0.26) unstable; urgency=medium
+
+  [ M. Vefa Bicakci ]
+  * u2mfn: Make compatible with kernel versions >= 5.3.y
+
+  [ Marek Marczykowski-Górecki ]
+  * rpm: update python2 deps
+
+  [ xaki23 ]
+  * align volatile swap partition to 1Mb instead of 512b
+
+  [ Marek Marczykowski-Górecki ]
+  * Disable BLS config style in grub
+
+  [ xaki23 ]
+  * partition full volatile for non-COW setups too
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Sat, 28 Sep 2019 12:11:44 +0200
+
 qubes-utils (4.0.25) unstable; urgency=medium
 
   * initrd: mount / rw for the overlayfs setup time
