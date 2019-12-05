@@ -1,0 +1,9 @@
+#!/bin/bash
+
+set -e
+
+mkdir --parents /boot/grub || true
+
+#DEBHELPER#
+
+exit 0
