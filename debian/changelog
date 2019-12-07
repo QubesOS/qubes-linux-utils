@@ -1,3 +1,23 @@
+qubes-utils (4.1.3) unstable; urgency=medium
+
+  [ xaki23 ]
+  * partition full volatile for non-COW setups too
+
+  [ Frédéric Pierret (fepitre) ]
+  * travis: switch to bionic
+
+  [ Marek Marczykowski-Górecki ]
+  * travis: update python versions
+
+  [ Patrick Schleizer ]
+  * qubes-kernel-vm-support.preinst create folder /boot/grub
+  * qubes-kernel-vm-support.postinst run update-grub
+
+  [ Marek Marczykowski-Górecki ]
+  * debian: fix dependencies of qubes-kernel-vm-support pkg
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Sat, 07 Dec 2019 05:50:26 +0100
+
 qubes-utils (4.1.2) unstable; urgency=medium
 
   [ xaki23 ]
