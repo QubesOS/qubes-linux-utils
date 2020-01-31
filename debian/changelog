@@ -1,3 +1,20 @@
+qubes-utils (4.0.27) unstable; urgency=medium
+
+  [ Frédéric Pierret (fepitre) ]
+  * travis: switch to bionic
+
+  [ Marek Marczykowski-Górecki ]
+  * travis: update python versions
+
+  [ Patrick Schleizer ]
+  * qubes-kernel-vm-support.preinst create folder /boot/grub
+  * qubes-kernel-vm-support.postinst run update-grub
+
+  [ Marek Marczykowski-Górecki ]
+  * debian: fix dependencies of qubes-kernel-vm-support pkg
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Fri, 31 Jan 2020 03:54:15 +0100
+
 qubes-utils (4.0.26) unstable; urgency=medium
 
   [ M. Vefa Bicakci ]
