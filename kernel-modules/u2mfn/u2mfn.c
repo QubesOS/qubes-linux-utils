@@ -149,11 +149,19 @@ static int u2mfn_release(struct inode *i, struct file *f)
 	return 0;
 }
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(5,6,0)
+static struct proc_ops u2mfn_fops = {
+	.proc_ioctl = u2mfn_ioctl,
+	.proc_mmap = u2mfn_mmap,
+	.proc_release = u2mfn_release
+};
+#else
 static struct file_operations u2mfn_fops = {
 	.unlocked_ioctl = u2mfn_ioctl,
 	.mmap = u2mfn_mmap,
 	.release = u2mfn_release
 };
+#endif
 
 /// u2mfn module registration
 /**
