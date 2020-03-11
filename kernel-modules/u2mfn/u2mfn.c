@@ -25,6 +25,7 @@
 #include <linux/fs.h>
 #include <linux/mm.h>
 #include <linux/sched.h>
+#include <linux/io.h>
 #ifndef FOREIGN_FRAME_BIT
 #include <xen/page.h>
 #endif
