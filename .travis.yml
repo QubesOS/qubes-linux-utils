@@ -11,9 +11,6 @@ jobs:
   include:
    - script: 
       - python -m unittest discover -v imgconverter -p test.py
-     python: 2.7
-   - script: 
-      - python -m unittest discover -v imgconverter -p test.py
      python: 3.5
    - script:
       - python -m unittest discover -v imgconverter -p test.py

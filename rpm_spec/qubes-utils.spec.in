@@ -15,9 +15,7 @@ Requires:	python%{python3_pkgversion}-qubesimgconverter
 %{?systemd_requires}
 BuildRequires:  systemd
 BuildRequires:  qubes-libvchan-devel
-BuildRequires:  python2-setuptools
 BuildRequires:  python%{python3_pkgversion}-setuptools
-BuildRequires:  python2-rpm-macros
 BuildRequires:  python3-rpm-macros
 # for meminfo-writer
 BuildRequires:  xen-devel
@@ -25,21 +23,6 @@ BuildRequires:	gcc
 
 %description
 Common Linux files for Qubes Dom0 and VM
-
-%package -n python2-qubesimgconverter
-Summary:    Python package qubesimgconverter
-Requires:   python2
-Requires:   pycairo
-%if 0%{?rhel} >= 7
-Requires:   python-pillow
-Requires:   numpy
-%else
-Requires:   python2-pillow
-Requires:   python2-numpy
-%endif
-
-%description -n python2-qubesimgconverter
-Python package qubesimgconverter
 
 %package -n python%{python3_pkgversion}-qubesimgconverter
 Summary:    Python package qubesimgconverter
@@ -70,13 +53,10 @@ Libraries for qubes-utils
 %setup -q
 
 %build
-export PYTHON=%{__python2}
 make all BACKEND_VMM=@BACKEND_VMM@
 
 %install
-make install DESTDIR=%{buildroot} PYTHON=%{__python2}
-rm -rf imgconverter/build
-%make_install -C imgconverter PYTHON=%{__python3}
+make install DESTDIR=%{buildroot} PYTHON=%{__python3}
 
 %post
 # dom0
@@ -105,13 +85,6 @@ rm -rf $RPM_BUILD_ROOT
 %{_sbindir}/meminfo-writer
 %{_unitdir}/qubes-meminfo-writer.service
 %{_unitdir}/qubes-meminfo-writer-dom0.service
-
-%files -n python2-qubesimgconverter
-%{python2_sitelib}/qubesimgconverter/__init__.py*
-%{python2_sitelib}/qubesimgconverter/imggen.py*
-%{python2_sitelib}/qubesimgconverter/test.py*
-%{python2_sitelib}/qubesimgconverter/test_integ.py*
-%{python2_sitelib}/qubesimgconverter-%{version}-py?.?.egg-info
 
 %files -n python%{python3_pkgversion}-qubesimgconverter
 %{python3_sitelib}/qubesimgconverter/__init__.py
