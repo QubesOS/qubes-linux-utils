@@ -7,7 +7,6 @@ Build-Depends:
  libxen-dev,
  pkg-config,
  dkms,
- python-setuptools,
  debhelper,
  python3-setuptools,
 Standards-Version: 4.4.0.1
