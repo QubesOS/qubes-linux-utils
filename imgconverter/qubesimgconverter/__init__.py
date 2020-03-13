@@ -1,5 +1,3 @@
-#!/usr/bin/python2 -O
-
 '''Qubes Image Converter
 
 Toolkit for secure transfer and conversion of images between Qubes VMs.'''
@@ -32,6 +30,7 @@ except ImportError:
 import subprocess
 import sys
 import unittest
+import asyncio
 
 import PIL.Image
 import numpy
@@ -210,6 +209,54 @@ get_from_stream(), get_from_vm(), get_xdg_icon_from_vm(), get_through_dvm()'''
 
         expected_data_len = width * height * 4    # RGBA
         untrusted_data = stream.read(expected_data_len)
+        if len(untrusted_data) != expected_data_len:
+            raise ValueError( \
+                'Image data length violation (is {0}, should be {1})'.format( \
+                len(untrusted_data), expected_data_len))
+        data = untrusted_data
+        del untrusted_data
+
+        return cls(rgba=data, size=(width, height))
+
+    @classmethod
+    async def get_from_stream_async(
+            cls, reader: asyncio.StreamReader,
+            max_width=MAX_WIDTH, max_height=MAX_HEIGHT):
+        '''Carefully parse image data from asyncio.StreamReader.
+
+        THIS METHOD IS SECURITY-SENSITIVE'''
+
+        maxhdrlen = imghdrlen(max_width, max_height)
+
+        # Unfortunately there is no readline(limit) method for StreamReader,
+        # so we rely on reader's global limit to limit memory usage, and
+        # check length in the next step (see
+        # https://docs.python.org/3/library/asyncio-stream.html).
+        untrusted_header = await reader.readline()
+
+        if len(untrusted_header) == 0:
+            raise ValueError('No icon received')
+        if len(untrusted_header) > maxhdrlen:
+            raise ValueError('Header too long ({})'.format(
+                len(untrusted_header)))
+        if not re_imghdr.match(untrusted_header):
+            raise ValueError('Image format violation')
+        header = untrusted_header
+        del untrusted_header
+
+        untrusted_width, untrusted_height = (int(i) for i in header.rstrip().split())
+        if not (0 < untrusted_width <= max_width \
+                and 0 < untrusted_height <= max_height):
+            raise ValueError('Image size constraint violation:'
+                    ' width={width} height={height}'
+                    ' max_width={max_width} max_height={max_height}'.format(
+                        width=untrusted_width, height=untrusted_height,
+                        max_width=max_width, max_height=max_height))
+        width, height = untrusted_width, untrusted_height
+        del untrusted_width, untrusted_height
+
+        expected_data_len = width * height * 4    # RGBA
+        untrusted_data = await reader.read(expected_data_len)
         if len(untrusted_data) != expected_data_len:
             raise ValueError( \
                 'Image data length violation (is {0}, should be {1})'.format( \

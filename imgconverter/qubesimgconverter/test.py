@@ -1,6 +1,6 @@
-#!/usr/bin/env python2
-
 from __future__ import absolute_import
+
+import asyncio
 
 try:
     from io import BytesIO
@@ -8,9 +8,11 @@ except ImportError:
     from cStringIO import StringIO as BytesIO
 import unittest
 
+import asynctest
+
 import qubesimgconverter
 
-class TestCaseImage(unittest.TestCase):
+class TestCaseImage(asynctest.TestCase):
     def setUp(self):
         self.rgba = \
             b'\x00\x00\x00\xff' b'\xff\x00\x00\xff' \
@@ -42,18 +44,56 @@ class TestCaseImage(unittest.TestCase):
         io = BytesIO('{0[0]} {0[1]}\n'.format(self.size).encode() +
                      self.rgba[:-1])  # one byte too short
 
-        with self.assertRaises(Exception):
+        with self.assertRaisesRegexp(ValueError, 'data length violation'):
             image = qubesimgconverter.Image.get_from_stream(io)
 
     def test_12_get_from_stream_too_big(self):
         io = BytesIO('{0[0]} {0[1]}\n'.format(self.size).encode() + self.rgba)  # 2x2
 
-        with self.assertRaises(Exception):
+        with self.assertRaisesRegexp(ValueError, 'size constraint violation'):
             image = qubesimgconverter.Image.get_from_stream(io, max_width=1)
 
         io.seek(0)
-        with self.assertRaises(Exception):
+        with self.assertRaisesRegexp(ValueError, 'size constraint violation'):
             image = qubesimgconverter.Image.get_from_stream(io, max_height=1)
+
+    async def test_20_get_from_stream_async(self):
+        reader = asyncio.StreamReader()
+        reader.feed_data('{0[0]} {0[1]}\n'.format(self.size).encode() + self.rgba)
+
+        image = await qubesimgconverter.Image.get_from_stream_async(reader)
+
+        self.assertEqual(image._rgba, self.rgba)
+        self.assertEqual(image._size, self.size)
+
+    async def test_21_get_from_stream_malformed_async(self):
+        reader = asyncio.StreamReader()
+        reader.feed_data('{0[0]} {0[1]}\n'.format(self.size).encode() +
+                         self.rgba[:-1])  # one byte too short
+
+        with self.assertRaisesRegexp(ValueError, 'data length violation'):
+            image = await qubesimgconverter.Image.get_from_stream_async(reader)
+
+    async def test_22_get_from_stream_too_big(self):
+        data = '{0[0]} {0[1]}\n'.format(self.size).encode() + self.rgba  # 2x2
+
+        reader = asyncio.StreamReader()
+        reader.feed_data(data)
+        with self.assertRaisesRegexp(ValueError, 'size constraint violation'):
+            image = await qubesimgconverter.Image.get_from_stream_async(reader, max_width=1)
+
+        reader = asyncio.StreamReader()
+        reader.feed_data(data)
+        with self.assertRaisesRegexp(ValueError, 'size constraint violation'):
+            image = await qubesimgconverter.Image.get_from_stream_async(reader, max_height=1)
+
+    async def test_23_get_from_stream_header_too_long(self):
+        data = '{0[0]} {0[1]}\n'.format(self.size).encode() + self.rgba  # 2x2
+        reader = asyncio.StreamReader()
+        reader.feed_data(b'x' * 20 + b'\n')
+        with self.assertRaisesRegexp(ValueError, 'Header too long'):
+            image = await qubesimgconverter.Image.get_from_stream_async(reader)
+
 
 class TestCaseFunctionsAndConstants(unittest.TestCase):
     def test_00_imghdrlen(self):
