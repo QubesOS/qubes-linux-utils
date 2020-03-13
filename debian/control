@@ -7,7 +7,6 @@ Build-Depends:
  libxen-dev,
  pkg-config,
  dkms,
- python-setuptools,
  debhelper,
  python3-setuptools,
 Standards-Version: 4.4.0.1
@@ -17,7 +16,7 @@ Vcs-Browser: https://github.com/QubesOS/qubes-linux-utils
 
 Package: qubes-utils
 Architecture: any
-Depends: libvchan-xen, lsb-base, python-pil, python-numpy, python3-pil, python3-numpy, ${shlibs:Depends}, ${misc:Depends}
+Depends: libvchan-xen, lsb-base, python3-pil, python3-numpy, ${shlibs:Depends}, ${misc:Depends}
 Conflicts: qubes-linux-utils
 Breaks: qubes-core-agent (<< 3.1.4)
 Recommends: python3
