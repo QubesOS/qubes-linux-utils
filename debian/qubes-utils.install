@@ -1,5 +1,5 @@
 usr/sbin/meminfo-writer
 lib/systemd/system/qubes-meminfo-writer.service
 usr/lib/qubes/*
-usr/lib/python2.7/dist-packages/qubesimgconverter*/*
+usr/lib/python3/dist-packages/qubesimgconverter*/*
 lib/udev/*

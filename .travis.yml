@@ -2,7 +2,7 @@ sudo: required
 dist: bionic
 language: python
 python:
-  - '2.7'
+  - '3.5'
 install:
  - test -z "$TESTS_ONLY" || pip install -r ci/requirements.txt
  - test -n "$TESTS_ONLY" || git clone https://github.com/QubesOS/qubes-builder ~/qubes-builder
@@ -19,8 +19,6 @@ env:
 
 jobs:
   include:
-   - env: TESTS_ONLY=1
-     python: 2.7
    - env: TESTS_ONLY=1
      python: 3.5
    - env: TESTS_ONLY=1

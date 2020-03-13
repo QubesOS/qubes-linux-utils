@@ -7,7 +7,7 @@ Build-Depends:
  pkg-config,
  debhelper (>= 9.0.0),
  dh-systemd,
- python-setuptools,
+ python3-setuptools,
 Standards-Version: 3.9.3
 Homepage: http://www.qubes-os.org
 Vcs-Git: http://dsg.is/qubes/qubes-linux-utils.git
@@ -18,7 +18,7 @@ Architecture: any
 Depends: lsb-base, python-pil, python-numpy, python3-pil, python3-numpy, ${shlibs:Depends}, ${misc:Depends}
 Conflicts: qubes-linux-utils
 Breaks: qubes-core-agent (<< 3.1.4)
-Recommends: python2.7
+Recommends: python3
 Description: Qubes Linux utilities
  This package includes the basic qubes utilities necessary for domU.
 

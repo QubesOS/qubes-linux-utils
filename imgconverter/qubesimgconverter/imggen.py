@@ -1,5 +1,3 @@
-#!/usr/bin/env python2
-
 '''Qubes Image Generation
 
 Toolkit for generating icons and images for Qubes OS.'''
