@@ -299,9 +299,9 @@ expects header+RGBA on stdin. This method is invoked from qvm-imgconverter-clien
 
         if ':' in filename:
             filetype, filename = filename.split(':', 1)
-            sys.stdout.buffer.write('{0}:-\n'.format(filetype))
+            sys.stdout.buffer.write('{0}:-\n'.format(filetype).encode())
         else:
-            sys.stdout.buffer.write('-\n')
+            sys.stdout.buffer.write(b'-\n')
 
         try:
             with open(filename, 'rb') as f:
