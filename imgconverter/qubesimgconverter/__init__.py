@@ -299,20 +299,21 @@ expects header+RGBA on stdin. This method is invoked from qvm-imgconverter-clien
 
         if ':' in filename:
             filetype, filename = filename.split(':', 1)
-            sys.stdout.write('{0}:-\n'.format(filetype))
+            sys.stdout.buffer.write('{0}:-\n'.format(filetype))
         else:
-            sys.stdout.write('-\n')
+            sys.stdout.buffer.write('-\n')
 
         try:
-            sys.stdout.write(open(filename).read())
+            with open(filename, 'rb') as f:
+                sys.stdout.buffer.write(f.read())
         except Exception as e:
             raise Exception('Something went wrong: {0!s}'.format(e))
         finally:
-            sys.stdout.close()
+            sys.stdout.buffer.close()
             # sys.stdout.close() is not enough and documentation is silent about this
             os.close(1)
 
-        return cls.get_from_stream(sys.stdin, **kwargs)
+        return cls.get_from_stream(sys.stdin.buffer, **kwargs)
 
     def __eq__(self, other):
         return self._size == other._size and self._rgba == other._rgba
