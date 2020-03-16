@@ -1,5 +1,3 @@
-#!/usr/bin/python2 -O
-
 '''Qubes Image Converter
 
 Toolkit for secure transfer and conversion of images between Qubes VMs.'''
@@ -250,22 +248,30 @@ get_from_stream(), get_from_vm(), get_xdg_icon_from_vm(), get_through_dvm()'''
         '''Master end of image filter: writes untrusted image to stdout and
 expects header+RGBA on stdin. This method is invoked from qvm-imgconverter-client.'''
 
+        if sys.version_info[0] == 2:
+            stdout = sys.stdout
+            stdin = sys.stdin
+        else:
+            stdout = sys.stdout.buffer
+            stdin = sys.stdin.buffer
+
         if ':' in filename:
             filetype, filename = filename.split(':', 1)
-            sys.stdout.write('{0}:-\n'.format(filetype))
+            stdout.write('{0}:-\n'.format(filetype).encode())
         else:
-            sys.stdout.write('-\n')
+            stdout.write(b'-\n')
 
         try:
-            sys.stdout.write(open(filename).read())
+            with open(filename, 'rb') as f:
+                stdout.write(f.read())
         except Exception as e:
             raise Exception('Something went wrong: {0!s}'.format(e))
         finally:
-            sys.stdout.close()
+            stdout.close()
             # sys.stdout.close() is not enough and documentation is silent about this
             os.close(1)
 
-        return cls.get_from_stream(sys.stdin, **kwargs)
+        return cls.get_from_stream(stdin, **kwargs)
 
     def __eq__(self, other):
         return self._size == other._size and self._rgba == other._rgba
