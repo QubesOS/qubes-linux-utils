@@ -1,3 +1,18 @@
+qubes-utils (4.1.4) unstable; urgency=medium
+
+  [ Frédéric Pierret (fepitre) ]
+  * travis: switch to dom0 Fedora 31
+
+  [ Rusty Bird ]
+  * Remove syncfs fallback for ancient glibc (Debian 7)
+
+  [ Paweł Marczewski ]
+  * Add Image.get_from_stream_async
+  * Drop Python 2 support
+  * Image.get_through_dvm: update for Python 3
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Tue, 17 Mar 2020 02:33:41 +0100
+
 qubes-utils (4.1.3) unstable; urgency=medium
 
   [ xaki23 ]
