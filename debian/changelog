@@ -1,3 +1,15 @@
+qubes-utils (4.0.28) unstable; urgency=medium
+
+  [ Ilpo Järvinen ]
+  * Use proc_ops instead of file_operations on 5.6 kernels
+  * Get virt_to_phys from header
+
+  [ Paweł Marczewski ]
+  * Image.get_through_dvm: support Python 3
+  * qubesimgconverter: include Python 3 version in Debian package
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Tue, 17 Mar 2020 02:08:38 +0100
+
 qubes-utils (4.0.27) unstable; urgency=medium
 
   [ Frédéric Pierret (fepitre) ]
