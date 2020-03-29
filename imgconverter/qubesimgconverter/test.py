@@ -70,8 +70,9 @@ class TestCaseImage(asynctest.TestCase):
         reader = asyncio.StreamReader()
         reader.feed_data('{0[0]} {0[1]}\n'.format(self.size).encode() +
                          self.rgba[:-1])  # one byte too short
+        reader.feed_eof()
 
-        with self.assertRaisesRegexp(ValueError, 'data length violation'):
+        with self.assertRaises(asyncio.streams.IncompleteReadError):
             image = await qubesimgconverter.Image.get_from_stream_async(reader)
 
     async def test_22_get_from_stream_too_big(self):

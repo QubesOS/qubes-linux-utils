@@ -256,7 +256,7 @@ get_from_stream(), get_from_vm(), get_xdg_icon_from_vm(), get_through_dvm()'''
         del untrusted_width, untrusted_height
 
         expected_data_len = width * height * 4    # RGBA
-        untrusted_data = await reader.read(expected_data_len)
+        untrusted_data = await reader.readexactly(expected_data_len)
         if len(untrusted_data) != expected_data_len:
             raise ValueError( \
                 'Image data length violation (is {0}, should be {1})'.format( \
