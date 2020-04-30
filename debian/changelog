@@ -1,3 +1,11 @@
+qubes-utils (4.1.7) unstable; urgency=medium
+
+  * makefile: specify PYTHON at build stage too
+  * qrexec-lib/unpack: option to wait for free disk space
+  * debian: bump libqubes-rpc-filecopy2 required version
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Fri, 01 May 2020 01:52:37 +0200
+
 qubes-utils (4.1.6) unstable; urgency=medium
 
   [ Paweł Marczewski ]
