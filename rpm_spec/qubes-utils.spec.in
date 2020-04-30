@@ -52,7 +52,7 @@ Libraries for qubes-utils
 %setup -q
 
 %build
-make all BACKEND_VMM=@BACKEND_VMM@
+make all BACKEND_VMM=@BACKEND_VMM@ PYTHON=%{__python3}
 
 %install
 make install DESTDIR=%{buildroot} PYTHON=%{__python3}
