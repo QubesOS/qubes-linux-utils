@@ -63,7 +63,10 @@ get_from_stream(), get_from_vm(), get_xdg_icon_from_vm(), get_through_dvm()'''
         p = subprocess.Popen(['convert',
             '-depth', '8',
             '-size', '{0[0]}x{0[1]}'.format(self._size),
-            'rgba:-', dst], stdin=subprocess.PIPE)
+            'rgba:-',
+            '+set', 'date:create',
+            '+set', 'date:modify',
+            dst], stdin=subprocess.PIPE)
         p.stdin.write(self._rgba)
         p.stdin.close()
 
