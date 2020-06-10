@@ -42,7 +42,7 @@ void notify_end_and_wait_for_result(void)
 {
     struct file_header end_hdr;
 
-    /* nofity end of transfer */
+    /* notify end of transfer */
     memset(&end_hdr, 0, sizeof(end_hdr));
     end_hdr.namelen = 0;
     end_hdr.filelen = 0;
