@@ -1,3 +1,16 @@
+qubes-utils (4.1.8) unstable; urgency=medium
+
+  [ Marek Marczykowski-Górecki ]
+  * debian: drop python2 from dependencies
+
+  [ Rusty Bird ]
+  * imgconverter: make output reproducible by omitting timestamps
+
+  [ null pointer exception ]
+  * Fix typo
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Fri, 19 Jun 2020 16:41:50 +0200
+
 qubes-utils (4.1.7) unstable; urgency=medium
 
   * makefile: specify PYTHON at build stage too
