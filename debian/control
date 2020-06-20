@@ -56,6 +56,6 @@ Description: Development headers for libqrexec-utils
 
 Package: python3-qubesimgconverter
 Architecture: any
-Depends: python3-pil, python3-numpy, ${misc:Depends}
+Depends: python3-cairo, python3-pil, python3-numpy, ${misc:Depends}
 Description: Python package qubesimgconverter
  Python package qubesimgconverter
