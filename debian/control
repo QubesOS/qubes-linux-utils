@@ -15,7 +15,7 @@ Vcs-Git: http://dsg.is/qubes/qubes-linux-utils.git
 
 Package: qubes-utils
 Architecture: any
-Depends: lsb-base, python3-pil, python3-numpy, ${shlibs:Depends}, ${misc:Depends}
+Depends: lsb-base, ${shlibs:Depends}, ${misc:Depends}
 Conflicts: qubes-linux-utils
 Breaks: qubes-core-agent (<< 3.1.4)
 Recommends: python3
@@ -53,3 +53,9 @@ Replaces: qubes-utils (<< 3.1.4)
 Description: Development headers for libqrexec-utils
  This package contains files required to compile Qubes file copy related
  utilities like qfile-agent.
+
+Package: python3-qubesimgconverter
+Architecture: any
+Depends: python3-pil, python3-numpy, ${misc:Depends}
+Description: Python package qubesimgconverter
+ Python package qubesimgconverter

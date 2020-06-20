@@ -9,13 +9,6 @@ INCLUDEDIR ?= /usr/include
 
 export LIBDIR SCRIPTSDIR SYSLIBDIR INCLUDEDIR
 
-help:
-	echo "Use rpmbuild to compile this pacakge"
-	exit 0
-
-
-rpms:
-	rpmbuild --define "_rpmdir rpm/" --define "_builddir ." -bb rpm_spec/qubes-utils.spec
 all:
 	$(MAKE) -C qrexec-lib all
 	$(MAKE) -C qmemman all
@@ -42,3 +35,5 @@ clean:
 	$(MAKE) -C qrexec-lib clean
 	$(MAKE) -C qmemman clean
 	$(MAKE) -C imgconverter clean
+	rm -rf debian/changelog.*
+	rm -rf pkgs

@@ -3,3 +3,5 @@ deb/
 *~
 *.o
 *.py[co]
+pkgs
+debian/changelog.*
