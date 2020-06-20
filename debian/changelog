@@ -1,3 +1,11 @@
+qubes-utils (4.1.9) unstable; urgency=medium
+
+  [ Frédéric Pierret (fepitre) ]
+  * debian: split python qubesimgconverter
+  * debian: add python3-cairo dependency
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Sat, 20 Jun 2020 15:14:12 +0200
+
 qubes-utils (4.1.8) unstable; urgency=medium
 
   [ Marek Marczykowski-Górecki ]
