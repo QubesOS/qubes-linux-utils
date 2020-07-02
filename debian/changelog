@@ -1,3 +1,9 @@
+qubes-utils (4.0.29) unstable; urgency=medium
+
+  * debian: add Provides: python3-qubesimgconverter
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Thu, 02 Jul 2020 04:28:57 +0200
+
 qubes-utils (4.0.28) unstable; urgency=medium
 
   [ Ilpo Järvinen ]
