@@ -1,0 +1,44 @@
+diff --git a/debian/control b/debian/control
+index 79e45ae..901a5c3 100644
+--- a/debian/control
++++ b/debian/control
+@@ -18,7 +18,7 @@ Vcs-Git: http://dsg.is/qubes/qubes-linux-utils.git
+ 
+ Package: qubes-utils
+ Architecture: any
+-Depends: libvchan-xen, lsb-base, python-pil, python-numpy, python3-pil, python3-numpy, ${shlibs:Depends}, ${misc:Depends}
++Depends: libvchan-xen, lsb-base, python3-pil, python3-numpy, ${shlibs:Depends}, ${misc:Depends}
+ Conflicts: qubes-linux-utils
+ Breaks: qubes-core-agent (<< 3.1.4)
+ Recommends: python3
+diff --git a/debian/qubes-utils.install b/debian/qubes-utils.install
+index 6760d36..d4ebed9 100644
+--- a/debian/qubes-utils.install
++++ b/debian/qubes-utils.install
+@@ -1,6 +1,5 @@
+ usr/sbin/meminfo-writer
+ lib/systemd/system/qubes-meminfo-writer.service
+ usr/lib/qubes/*
+-usr/lib/python2.7/dist-packages/qubesimgconverter*/*
+ usr/lib/python3/dist-packages/qubesimgconverter*/*
+ lib/udev/*
+diff --git a/debian/rules b/debian/rules
+index 37b158b..8ba25fb 100755
+--- a/debian/rules
++++ b/debian/rules
+@@ -13,14 +13,10 @@ override_dh_auto_build:
+ 	make all LIBDIR=/usr/lib DEBIANBUILD=1
+ 
+ override_dh_auto_install:
+-	make install LIBDIR=/usr/lib DEBIANBUILD=1 PYTHON_PREFIX_ARG=--install-layout=deb
++	make install LIBDIR=/usr/lib DEBIANBUILD=1 PYTHON_PREFIX_ARG=--install-layout=deb PYTHON=python3
+ 	make install-debian-kernel-support LIBDIR=/usr/lib DEBIANBUILD=1
+ 	# dom0-only file
+ 	rm -f $(DESTDIR)/usr/sbin/qubes-prepare-vm-kernel
+ 
+-	# qubesimgconverter for python3
+-	rm -rf imgconverter/build
+-	make -C imgconverter install LIBDIR=/usr/lib DEBIANBUILD=1 PYTHON_PREFIX_ARG=--install-layout=deb PYTHON=python3
+-
+ override_dh_install:
+ 	dh_install --fail-missing
