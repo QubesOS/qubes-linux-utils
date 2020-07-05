@@ -1,3 +1,10 @@
+qubes-utils (4.0.30) unstable; urgency=medium
+
+  * debian: drop python2 on bullseye
+  * travis: update config
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Sun, 05 Jul 2020 03:49:44 +0200
+
 qubes-utils (4.0.29) unstable; urgency=medium
 
   * debian: add Provides: python3-qubesimgconverter
