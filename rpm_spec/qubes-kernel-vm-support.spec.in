@@ -19,6 +19,8 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #
 
+%define backend_vmm @BACKEND_VMM@
+
 Name:           qubes-kernel-vm-support
 Version:        @VERSION@
 Release:        1%{?dist}
@@ -49,7 +51,9 @@ make install-fedora-kernel-support DESTDIR=%{buildroot}
 /usr/lib/dracut/modules.d/90qubes-vm
 /usr/lib/dracut/modules.d/90qubes-vm-modules
 /usr/lib/dracut/modules.d/90qubes-vm-simple
+%if x%{?backend_vmm} == xxen
 /usr/lib/dracut/modules.d/80xen-scrub-pages
+%endif
 /usr/sbin/qubes-prepare-vm-kernel
 %config(noreplace) /etc/default/grub.qubes-kernel-vm-support
 
@@ -77,11 +81,14 @@ if [ -r /usr/share/qubes/marker-vm ] && [ -x /usr/bin/dracut ]; then
         kver="${kver%.img}"
         dracut -f "$img" "$kver" || ret=$?
     done
+
+    %if x%{?backend_vmm} == xxen
     if [ "$ret" -eq 0 ]; then
         # "milestone" initramfs update version:
         # 1 - addition of xen scrub_pages enabling code
         echo 1 > /var/lib/qubes/initramfs-updated
     fi
+    %endif
 fi
 
 %changelog

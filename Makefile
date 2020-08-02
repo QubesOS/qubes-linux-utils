@@ -7,13 +7,17 @@ export LIBDIR SCRIPTSDIR SYSLIBDIR INCLUDEDIR
 
 all:
 	$(MAKE) -C qrexec-lib all
+ifeq ($(BACKEND_VMM),xen)
 	$(MAKE) -C qmemman all
+endif
 	$(MAKE) -C imgconverter all
 
 install:
 	$(MAKE) -C udev install
 	$(MAKE) -C qrexec-lib install
+ifeq ($(BACKEND_VMM),xen)
 	$(MAKE) -C qmemman install
+endif
 	$(MAKE) -C imgconverter install
 
 install-fedora-kernel-support:
@@ -29,7 +33,9 @@ install-debian-kernel-support:
 
 clean:
 	$(MAKE) -C qrexec-lib clean
+ifeq ($(BACKEND_VMM),xen)
 	$(MAKE) -C qmemman clean
+endif
 	$(MAKE) -C imgconverter clean
 	rm -rf debian/changelog.*
 	rm -rf pkgs
