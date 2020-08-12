@@ -1,3 +1,13 @@
+qubes-utils (4.1.11) unstable; urgency=medium
+
+  [ Frédéric Pierret (fepitre) ]
+  * Update travis
+
+  [ Marek Marczykowski-Górecki ]
+  * travis: restore 'language: python'
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Wed, 12 Aug 2020 03:13:57 +0200
+
 qubes-utils (4.1.10) unstable; urgency=medium
 
   * debian: adjust dependencies for split python3-qubesimgconverter
