@@ -3,6 +3,7 @@ import:
     mode: deep_merge
   - source: QubesOS/qubes-continuous-integration:R4.1/travis-dom0-r4.1.yml
   - source: QubesOS/qubes-continuous-integration:R4.1/travis-vms-r4.1.yml
+language: python
 python:
   - '3.5'
 install:
