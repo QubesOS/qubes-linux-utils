@@ -16,7 +16,6 @@ installkernel() {
 install() {
     inst $moddir/init.sh /init
     inst_multiple \
-        basename \
         readlink \
         uname \
         grep \
