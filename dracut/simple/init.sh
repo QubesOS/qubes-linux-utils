@@ -28,7 +28,8 @@ while ! [ -e /dev/xvda ]; do sleep 0.1; done
 # prefer partition if exists
 if [ -b /dev/xvda1 ]; then
     if [ -d /dev/disk/by-partlabel ]; then
-        ROOT_DEV=$(basename $(readlink "/dev/disk/by-partlabel/Root\\x20filesystem"))
+        ROOT_DEV=$(readlink "/dev/disk/by-partlabel/Root\\x20filesystem")
+        ROOT_DEV=${ROOT_DEV##*/}
     else
         ROOT_DEV=$(grep -l "PARTNAME=Root filesystem" /sys/block/xvda/xvda*/uevent |\
             grep -o "xvda[0-9]")

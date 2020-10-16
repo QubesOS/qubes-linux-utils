@@ -59,7 +59,8 @@ log_end
 # prefer partition if exists
 if [ -b /dev/xvda1 ]; then
     if [ -e "/dev/disk/by-partlabel/Root\\x20filesystem" ]; then
-        ROOT_DEV=$(basename $(readlink "/dev/disk/by-partlabel/Root\\x20filesystem"))
+        ROOT_DEV=$(readlink "/dev/disk/by-partlabel/Root\\x20filesystem")
+        ROOT_DEV=${ROOT_DEV##*/}
     else
         ROOT_DEV=xvda3
     fi
