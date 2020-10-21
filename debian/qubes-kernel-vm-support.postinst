@@ -23,7 +23,7 @@ set -e
 case "${1}" in
     configure)
         if [ -x /usr/sbin/update-initramfs ]; then
-            if update-initramfs -u; then
+            if update-initramfs -u && [ -d /var/lib/qubes ]; then
                 # "milestone" initramfs update version:
                 # 1 - addition of xen scrub_pages enabling code
                 echo 1 > /var/lib/qubes/initramfs-updated
