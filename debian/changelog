@@ -1,3 +1,18 @@
+qubes-utils (4.0.31) unstable; urgency=medium
+
+  [ Marek Marczykowski-Górecki ]
+  * dracut: remove useless use of basename
+
+  [ Rusty Bird ]
+  * imgconverter: make output reproducible by omitting timestamps
+
+  [ Marek Marczykowski-Górecki ]
+  * debian: don't fail package install on missing /var/lib/qubes
+  * makefile: use 'python2' explicitly when needed, instead of just
+    'python'
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Sun, 25 Oct 2020 03:40:39 +0100
+
 qubes-utils (4.0.30) unstable; urgency=medium
 
   * debian: drop python2 on bullseye
