@@ -88,6 +88,9 @@ EOF
     fi
     while ! [ -e /dev/xvdc1 ]; do sleep 0.1; done
     mkswap /dev/xvdc1
+    # enable swap right now, because systemd may want to run fsck in initramfs
+    # already and it require some more memory
+    swapon /dev/xvdc1
     while ! [ -e /dev/xvdc2 ]; do sleep 0.1; done
 
     echo "0 `cat /sys/class/block/$ROOT_DEV/size` snapshot /dev/$ROOT_DEV /dev/xvdc2 N 16" | \
@@ -106,6 +109,9 @@ EOF
     fi
     while ! [ -e /dev/xvdc1 ]; do sleep 0.1; done
     mkswap /dev/xvdc1
+    # enable swap right now, because systemd may want to run fsck in initramfs
+    # already and it require some more memory
+    swapon /dev/xvdc1
     mkdir -p /etc/udev/rules.d
     printf 'KERNEL=="%s", SYMLINK+="mapper/dmroot"\n' "$ROOT_DEV" >> \
         /etc/udev/rules.d/99-root.rules
