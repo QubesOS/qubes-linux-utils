@@ -4,7 +4,7 @@ else
 LIBDIR ?= /usr/lib
 endif
 SCRIPTSDIR ?= /usr/lib/qubes
-SYSLIBDIR ?= /lib
+SYSLIBDIR ?= /usr/lib
 INCLUDEDIR ?= /usr/include
 
 export LIBDIR SCRIPTSDIR SYSLIBDIR INCLUDEDIR

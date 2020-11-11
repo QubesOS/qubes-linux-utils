@@ -1,5 +1,5 @@
 usr/sbin/meminfo-writer
 lib/systemd/system/qubes-meminfo-writer.service
 usr/lib/qubes/*
-lib/udev/*
+usr/lib/udev/*
 usr/lib/tmpfiles.d/xen-devices-qubes.conf

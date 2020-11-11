@@ -79,7 +79,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root,-)
-/lib/udev/rules.d/*-qubes-*.rules
+/usr/lib/udev/rules.d/*-qubes-*.rules
 /usr/lib/tmpfiles.d/xen-devices-qubes.conf
 /usr/lib/qubes/udev-*
 %{_sbindir}/meminfo-writer
