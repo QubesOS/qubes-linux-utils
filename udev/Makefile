@@ -6,6 +6,8 @@ install:
 	cp udev-qubes-usb.rules $(DESTDIR)$(SYSLIBDIR)/udev/rules.d/99-qubes-usb.rules
 	cp udev-qubes-misc.rules $(DESTDIR)$(SYSLIBDIR)/udev/rules.d/99-qubes-misc.rules
 	cp udev-qubes-dmroot.rules $(DESTDIR)$(SYSLIBDIR)/udev/rules.d/90-qubes-dmroot.rules
+	mkdir -p $(DESTDIR)$(SYSLIBDIR)/tmpfiles.d
+	cp xen-devices-qubes.conf $(DESTDIR)$(SYSLIBDIR)/tmpfiles.d/xen-devices-qubes.conf
 
 	mkdir -p $(DESTDIR)$(SCRIPTSDIR)
 	cp udev-block-add-change $(DESTDIR)$(SCRIPTSDIR)
