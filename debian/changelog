@@ -1,3 +1,14 @@
+qubes-utils (4.1.12) unstable; urgency=medium
+
+  * dracut: remove useless use of basename
+  * debian: don't fail package install on missing /var/lib/qubes
+  * travis: fix build/install jobs
+  * dracut: enable swap as early as possible
+  * Set /dev/xen/* permissions early
+  * rpm,deb: /lib is a symlink to /usr/lib, move the files appropriately
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Fri, 13 Nov 2020 04:25:11 +0100
+
 qubes-utils (4.1.11) unstable; urgency=medium
 
   [ Frédéric Pierret (fepitre) ]
