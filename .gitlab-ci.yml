@@ -5,3 +5,16 @@ include:
     file: '/r4.1/gitlab-dom0.yml'
   - project: 'QubesOS/qubes-continuous-integration'
     file: '/r4.1/gitlab-vm.yml'
+
+checks:tests:
+  stage: checks
+  tags:
+    - short-living-job
+    - docker
+  before_script:
+    - sudo dnf install -y python3-pip
+    - pip3 install --quiet -r ci/requirements.txt
+  script:
+    - python3 -m coverage run -m unittest discover -v imgconverter -p test.py
+  after_script:
+    - codecov
