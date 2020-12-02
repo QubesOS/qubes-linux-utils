@@ -13,8 +13,10 @@ checks:tests:
     - docker
   before_script:
     - sudo dnf install -y python3-pip
+    - export PATH="$PATH:$HOME/.local/bin"
     - pip3 install --quiet -r ci/requirements.txt
   script:
     - python3 -m coverage run -m unittest discover -v imgconverter -p test.py
   after_script:
+    - export PATH="$PATH:$HOME/.local/bin"
     - codecov
