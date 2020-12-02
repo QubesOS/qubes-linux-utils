@@ -72,7 +72,7 @@ class TestCaseImage(asynctest.TestCase):
                          self.rgba[:-1])  # one byte too short
         reader.feed_eof()
 
-        with self.assertRaises(asyncio.streams.IncompleteReadError):
+        with self.assertRaises(asyncio.IncompleteReadError):
             image = await qubesimgconverter.Image.get_from_stream_async(reader)
 
     async def test_22_get_from_stream_too_big(self):
