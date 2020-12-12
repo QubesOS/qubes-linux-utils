@@ -6,12 +6,11 @@ Build-Depends:
  libvchan-xen-dev,
  libxen-dev,
  pkg-config,
- debhelper (>= 9.0.0),
- dh-systemd,
  dkms,
  python-setuptools,
+ debhelper,
  python3-setuptools,
-Standards-Version: 3.9.3
+Standards-Version: 4.4.0.1
 Homepage: http://www.qubes-os.org
 Vcs-Git: http://dsg.is/qubes/qubes-linux-utils.git
 #Vcs-Browser: http://git.debian.org/?p=collab-maint/qubes-linux-utils.git;a=summary
