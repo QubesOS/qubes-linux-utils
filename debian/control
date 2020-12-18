@@ -11,9 +11,9 @@ Build-Depends:
  debhelper,
  python3-setuptools,
 Standards-Version: 4.4.0.1
-Homepage: http://www.qubes-os.org
-Vcs-Git: http://dsg.is/qubes/qubes-linux-utils.git
-#Vcs-Browser: http://git.debian.org/?p=collab-maint/qubes-linux-utils.git;a=summary
+Homepage: https://www.qubes-os.org
+Vcs-Git: https://github.com/QubesOS/qubes-linux-utils.git
+Vcs-Browser: https://github.com/QubesOS/qubes-linux-utils
 
 Package: qubes-utils
 Architecture: any
