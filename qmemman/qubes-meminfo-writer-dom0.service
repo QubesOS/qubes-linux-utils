@@ -2,12 +2,11 @@
 Description=Qubes memory information reporter
 Before=systemd-user-sessions.service
 After=qubes-core.service qubes-qmemman.service
-ConditionPathExists=/var/run/qubes/qmemman.sock
+ConditionPathExists=/run/qubes/qmemman.sock
 
 [Service]
 Type=simple
 ExecStart=/usr/sbin/meminfo-writer 30000 100000
-StandardOutput=syslog
 RemainAfterExit=yes
 
 [Install]
