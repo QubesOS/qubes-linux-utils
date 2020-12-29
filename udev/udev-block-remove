@@ -7,10 +7,10 @@ QDB_KEY="/qubes-block-devices/$NAME"
 qubesdb-rm "$QDB_KEY/"
 qubesdb-write /qubes-block-devices ''
 
-if [ -r /var/run/qubes/block-slave-cache-$NAME ]; then
+if [ -r /run/qubes/block-slave-cache-$NAME ]; then
     # update info about underlying devices of device-mapper (if any);
-    for dev in $(cat /var/run/qubes/block-slave-cache-$NAME); do
+    for dev in $(cat /run/qubes/block-slave-cache-$NAME); do
         udevadm trigger /sys/class/block/$dev
     done
-    rm -f /var/run/qubes/block-slave-cache-$NAME
+    rm -f /run/qubes/block-slave-cache-$NAME
 fi

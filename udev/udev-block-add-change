@@ -83,7 +83,7 @@ done
 
 # cache slave devices for remove event
 if [ -n "$DM_NAME" ]; then
-    ls -1 /sys$DEVPATH/slaves/ > /var/run/qubes/block-slave-cache-$NAME
+    ls -1 /sys$DEVPATH/slaves/ > /run/qubes/block-slave-cache-$NAME
 fi
 
 # then take care of this device:
