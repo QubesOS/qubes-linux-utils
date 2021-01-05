@@ -13,7 +13,7 @@ arch=("x86_64")
 url="http://qubes-os.org/"
 license=('GPL')
 groups=()
-makedepends=(gcc make pkgconfig 'python-setuptools')
+makedepends=(gcc make pkgconfig 'python-setuptools' qubes-libvchan-xen)
 checkdepends=()
 optdepends=()
 provides=()
@@ -32,7 +32,7 @@ md5sums=(SKIP)
 build() {
 
 for source in qrexec-lib udev qmemman core kernel-modules Makefile dracut imgconverter; do
-  (ln -s $srcdir/../$source $srcdir/$source)
+  (ln -s -- "$srcdir/../$source" "$srcdir/$source")
 done
 
 make all
@@ -43,7 +43,7 @@ package_qubes-vm-utils() {
 depends=(imagemagick python-cairo python-pillow python-numpy)
 install=PKGBUILD-qubes-vm-utils.install
 
-make install DESTDIR=$pkgdir LIBDIR=/usr/lib SYSLIBDIR=/usr/lib SBINDIR=/usr/bin
+make install "DESTDIR=$pkgdir" LIBDIR=/usr/lib SYSLIBDIR=/usr/lib SBINDIR=/usr/bin
 }
 
 package_qubes-vm-kernel-support() {
