@@ -1,3 +1,32 @@
+qubes-utils (4.1.13) unstable; urgency=medium
+
+  [ Frédéric Pierret (fepitre) ]
+  * Add .gitlab-ci.yml
+
+  [ Marek Marczykowski-Górecki ]
+  * gitlab-ci: add custom jobs
+  * ci: add coverage
+  * tests: fix IncompleteReadError exception location
+
+  [ Frédéric Pierret (fepitre) ]
+  * debian: update control
+  * debian: update compat
+
+  [ Demi Marie Obenour ]
+  * Fix some links to more modern versions
+  * Validate remote filename before displaying it
+  * Meminfo writer comes before user logins
+  * Modernize systemd unit files
+
+  [ Marek Marczykowski-Górecki ]
+  * archlinux: add makedepends on qubes-vm-xen
+
+  [ Demi Marie Obenour ]
+  * Mass replace: ‘/var/run’ → ‘/run’
+  * Fix CI
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Thu, 07 Jan 2021 15:03:46 +0100
+
 qubes-utils (4.1.12) unstable; urgency=medium
 
   * dracut: remove useless use of basename
