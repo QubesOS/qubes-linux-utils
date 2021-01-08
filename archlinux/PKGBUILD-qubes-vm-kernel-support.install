@@ -10,18 +10,18 @@ help() {
 ## arg 1:  the new package version
 post_install() {
   echo "Adding qubes required hooks to mkinitcpio.conf"
-  sed 's/^HOOKS="base/HOOKS="lvm2 qubes base/' -i /etc/mkinitcpio.conf
+  sed -Ei 's/^(HOOKS=[("])base/\1lvm2 qubes base/' /etc/mkinitcpio.conf
   help
 }
 
 post_upgrade() {
   echo "Adding qubes required hooks to mkinitcpio.conf"
-  sed 's/^HOOKS="base/HOOKS="lvm2 qubes base/' -i /etc/mkinitcpio.conf
+  sed -Ei 's/^(HOOKS=[("])base/\1lvm2 qubes base/' /etc/mkinitcpio.conf
   help
 }
 
 post_remove() {
   echo "Removing qubes required hooks to mkinitcpio.conf"
-  sed 's/^HOOKS="lvm2 qubes base/HOOKS="base/' -i /etc/mkinitcpio.conf
+  sed -Ei 's/^(HOOKS=[("])lvm2 qubes base/\1base/' /etc/mkinitcpio.conf
 }
 
