@@ -1,8 +1,4 @@
-ifeq ($(shell uname -m),x86_64)
 LIBDIR ?= /usr/lib64
-else
-LIBDIR ?= /usr/lib
-endif
 SCRIPTSDIR ?= /usr/lib/qubes
 SYSLIBDIR ?= /lib
 INCLUDEDIR ?= /usr/include
