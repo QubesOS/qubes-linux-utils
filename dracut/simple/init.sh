@@ -1,50 +1,18 @@
 #!/bin/sh
 echo "Qubes initramfs script here:"
 
-# TODO: don't inline hypervisor.sh
-# BEGIN hypervisor.sh
-
-# Return hypervisor name or match result if 'name' provided
-hypervisor () {
-    local name="$1"
-    local hypervisor
-
-    if [[ $(cat /sys/hypervisor/type 2>/dev/null) == 'xen' ]]; then
-        hypervisor="xen"
-
-    elif [ -e /sys/devices/virtual/misc/kvm ]; then
-        hypervisor="kvm"
-    fi
-
-    if [ ! -z $hypervisor ]; then
-        if [ -z "$name" ]; then
-            echo "$hypervisor"
-            return 0
-        fi
-        if [ "$name" == "$hypervisor" ]; then
-            return 0
-        fi
-    fi
-    return 1
-}
-
-
-(return 0 2>/dev/null) && sourced=1 || sourced=0
-if (( ! sourced )); then
-    hypervisor "$1"
+if [ -d /sys/devices/system/xen_memory ]; then
+    HYPERVISOR=xen
+else
+    HYPERVISOR=kvm
 fi
 
-# END hypervisor.sh
-
-if hypervisor xen; then
+if [ $HYPERVISOR = "xen" ]; then
     echo "Running under xen"
     DEVPREFIX="xvd"
-elif hypervisor kvm; then
+else
     echo "Running under kvm"
     DEVPREFIX="vd"
-else
-    echo "Unknown hypervisor! Can't continue."
-    exit 1
 fi
 
 mkdir -p /proc /sys /dev
@@ -61,14 +29,18 @@ if [ -e /dev/mapper/dmroot ] ; then
     echo "Qubes: FATAL error: /dev/mapper/dmroot already exists?!"
 fi
 
-/sbin/modprobe xenblk || /sbin/modprobe xen-blkfront || echo "Qubes: Cannot load Xen Block Frontend..."
+if [ $HYPERVISOR = "xen" ]; then
+    /sbin/modprobe xenblk || /sbin/modprobe xen-blkfront || echo "Qubes: Cannot load Xen Block Frontend..."
+elif [ $HYPERVISOR = "kvm" ]; then
+    /sbin/modprobe virtio_blk || echo "Qubes: Cannot load Virtio Block Driver..."
+fi
 
 die() {
     echo "$@" >&2
     exit 1
 }
 
-echo "Waiting for /dev/*vda* devices..."
+echo "Waiting for /dev/${DEVPREFIX}a* devices..."
 while ! [ -e /dev/${DEVPREFIX}a ]; do sleep 0.1; done
 
 # prefer partition if exists
