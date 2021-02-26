@@ -10,7 +10,7 @@ ENV{ID_VENDOR}=="QEMU", GOTO="qubes_usb_end"
 ACTION=="add", ENV{ID_VENDOR_ID}=="?*", ENV{ID_MODEL_ID}=="?*", ENV{QNAME}="0x$env{ID_VENDOR_ID}_0x$env{ID_MODEL_ID}"
 
 # check if device already exist in qubesdb
-ACTION=="add", ENV{QNAME}=="?*", PROGRAM="/usr/bin/qubesdb-read -q /qubes-usb-devices/$env{QNAME}/desc", RESULT!="?*", GOTO="skip_qname_fallback"
+ACTION=="add", ENV{QNAME}=="?*", PROGRAM="/bin/sh -c '/usr/bin/qubesdb-read -q /qubes-usb-devices/$env{QNAME}/desc || echo 1'", RESULT=="1", GOTO="skip_qname_fallback"
 
 # fallback for device duplicates
 ACTION=="add", PROGRAM="sh -c 'basename $env{DEVPATH} | tr . _'", ENV{QNAME}="$result"
