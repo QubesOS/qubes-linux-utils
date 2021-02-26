@@ -22,7 +22,7 @@ KERNEL=="dm-*", ENV{DM_NAME}=="", GOTO="qubes_block_end"
 ACTION=="add", ENV{ID_SERIAL}=="?*", PROGRAM="/bin/sh -c '/usr/bin/uuidgen -s -n @oid -N $env{ID_SERIAL}$env{PARTN}|cut -d- -f5'", ENV{QNAME}="$result"
 
 # check if device already exist in qubesdb
-ACTION=="add", ENV{QNAME}=="?*", PROGRAM="/usr/bin/qubesdb-read -q /qubes-block-devices/$env{QNAME}/desc", RESULT!="?*", GOTO="skip_qname_fallback"
+ACTION=="add", ENV{QNAME}=="?*", PROGRAM="/bin/sh -c '/usr/bin/qubesdb-read -q /qubes-block-devices/$env{QNAME}/desc || echo 1'", RESULT=="1", GOTO="skip_qname_fallback"
 
 # fallback for duplicates
 ACTION=="add", PROGRAM="/usr/bin/basename $env{DEVNAME}", ENV{QNAME}="$result"
