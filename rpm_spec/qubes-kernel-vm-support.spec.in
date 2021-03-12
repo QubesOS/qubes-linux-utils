@@ -32,6 +32,7 @@ URL:		http://www.qubes-os.org
 
 Requires:	dracut
 Requires:	dkms
+BuildRequires:  make
 
 %description
 This package contains:
