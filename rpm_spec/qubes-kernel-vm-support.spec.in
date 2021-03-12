@@ -19,18 +19,18 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #
 
-Name:		qubes-kernel-vm-support
-Version:	@VERSION@
-Release:	1%{?dist}
-Summary:	Qubes VM initramfs modules
-Source0:    qubes-utils-%{version}.tar.gz
+Name:           qubes-kernel-vm-support
+Version:        @VERSION@
+Release:        1%{?dist}
+Summary:        Qubes VM initramfs modules
+Source0:        qubes-utils-%{version}.tar.gz
 
-Group:		Qubes
-Vendor:     Invisible Things Lab
-License:	GPL v2 only
-URL:		http://www.qubes-os.org
+Group:          Qubes
+Vendor:         Invisible Things Lab
+License:        GPL v2 only
+URL:            http://www.qubes-os.org
 
-Requires:	dracut
+Requires:       dracut
 BuildRequires:  make
 
 %description
