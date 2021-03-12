@@ -31,6 +31,7 @@ License:	GPL v2 only
 URL:		http://www.qubes-os.org
 
 Requires:	dracut
+BuildRequires:  make
 
 %description
 This package contains:
