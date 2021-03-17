@@ -1,3 +1,30 @@
+qubes-utils (4.0.32) unstable; urgency=medium
+
+  [ Frédéric Pierret (fepitre) ]
+  * Add .gitlab-ci.yml
+
+  [ Marek Marczykowski-Górecki ]
+  * gitlab-ci: add custom jobs
+  * ci: add coverage
+
+  [ Frédéric Pierret (fepitre) ]
+  * debian: update control
+  * debian: update compat
+
+  [ Demi Marie Obenour ]
+  * Fix some links to more modern versions
+  * Meminfo writer comes before user logins
+  * Modernize systemd unit files
+  * Validate remote filename before displaying it
+
+  [ Marek Marczykowski-Górecki ]
+  * Revert "debian: drop python2 on bullseye"
+
+  [ Paweł Marczewski ]
+  * Drop Python 2 support
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Wed, 17 Mar 2021 03:16:24 +0100
+
 qubes-utils (4.0.31) unstable; urgency=medium
 
   [ Marek Marczykowski-Górecki ]
