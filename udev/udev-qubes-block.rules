@@ -10,7 +10,10 @@ KERNEL=="xvda|xvdb|xvdc*|xvdd", ENV{UDISKS_IGNORE}="1"
 # Skip xen-blkfront devices
 ENV{MAJOR}=="202", GOTO="qubes_block_end"
 
-# skip devices excluded elsewhere
+# Do not expose raw encrypted block devices (but any sub-partitions are fair game)
+ENV{DM_UUID}=="CRYPT-PLAIN-*", ENV{UDISKS_IGNORE}="1", GOTO="qubes_block_end"
+
+# skip devices excluded elsewhere, unless explicitly marked for export anyway
 ENV{DM_UDEV_DISABLE_DISK_RULES_FLAG}=="1", GOTO="qubes_block_end"
 
 # Skip device-mapper devices
@@ -23,3 +26,5 @@ ACTION=="change", RUN+="/usr/lib/qubes/udev-block-add-change"
 ACTION=="remove", RUN+="/usr/lib/qubes/udev-block-remove"
 
 LABEL="qubes_block_end"
+
+# vim: set ft=udevrules:
