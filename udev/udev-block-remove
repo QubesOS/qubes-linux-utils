@@ -1,7 +1,7 @@
 #!/bin/sh
 
 NAME=${DEVNAME#/dev/}
-QDB_KEY="/qubes-block-devices/$NAME"
+QDB_KEY="/qubes-block-devices/$QNAME"
 # Trailing slash is intentional - it will remove the whole directory, instead of
 # a single base entry
 qubesdb-rm "$QDB_KEY/"

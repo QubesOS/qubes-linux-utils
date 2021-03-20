@@ -8,7 +8,7 @@ NAME=${DEVNAME#/dev/}
 DESC="`echo "${ID_MODEL} (${ID_FS_LABEL})" | iconv -f utf8 -t ascii//TRANSLIT`"
 SIZE=$[ $(cat /sys/$DEVPATH/size) * 512 ]
 MODE=w
-QDB_KEY="/qubes-block-devices/$NAME"
+QDB_KEY="/qubes-block-devices/$QNAME"
 
 xs_remove() {
     if is_attached /sys$DEVPATH; then

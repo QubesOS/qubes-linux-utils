@@ -12,9 +12,6 @@
 [ "`echo $TYPE | cut -f1 -d/`" = "9" ] && exit 0
 [ "$DEVTYPE" != "usb_device" ] && exit 0
 
-# qubesdb doesn't allow dot in key name
-XSNAME=`basename ${DEVPATH} | tr . _`
-
 # FIXME: For some devices (my Cherry keyboard) ID_SERIAL does not
 # contain proper human-readable name, should find better method to
 # build devide description.
@@ -29,7 +26,7 @@ if echo $DEVPATH | grep -q /vhci_hcd; then
     exit 0
 fi
 
-QDB_KEY="/qubes-usb-devices/$XSNAME"
+QDB_KEY="/qubes-usb-devices/$QNAME"
 
 qubesdb-write "$QDB_KEY/desc" "$DESC"
 qubesdb-write "$QDB_KEY/usb-ver" "$VERSION"
