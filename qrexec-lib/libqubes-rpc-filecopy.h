@@ -53,7 +53,7 @@ struct result_header {
 /* optional info about last processed file */
 struct result_header_ext {
     uint32_t last_namelen;
-    char last_name[0];
+    char last_name[];
 } __attribute__((packed));
 
 enum {
