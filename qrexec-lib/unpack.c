@@ -216,7 +216,7 @@ void process_one_file_link(struct file_header *untrusted_hdr,
 
 }
 
-void process_one_file(struct file_header *untrusted_hdr)
+void process_one_file(struct file_header *untrusted_hdr, int flags)
 {
     unsigned int namelen;
     if (untrusted_hdr->namelen > MAX_PATH_LENGTH - 1)
@@ -227,9 +227,9 @@ void process_one_file(struct file_header *untrusted_hdr)
     untrusted_namebuf[namelen] = 0;
     if (S_ISREG(untrusted_hdr->mode))
         process_one_file_reg(untrusted_hdr, untrusted_namebuf);
-    else if (S_ISLNK(untrusted_hdr->mode))
+    else if (S_ISLNK(untrusted_hdr->mode) && (flags & COPY_ALLOW_SYMLINKS))
         process_one_file_link(untrusted_hdr, untrusted_namebuf);
-    else if (S_ISDIR(untrusted_hdr->mode))
+    else if (S_ISDIR(untrusted_hdr->mode) && (flags & COPY_ALLOW_DIRECTORIES))
         process_one_file_dir(untrusted_hdr, untrusted_namebuf);
     else
         do_exit(EINVAL, untrusted_namebuf);
@@ -237,7 +237,11 @@ void process_one_file(struct file_header *untrusted_hdr)
         fprintf(stderr, "%s\n", untrusted_namebuf);
 }
 
-int do_unpack(void)
+int do_unpack(void) {
+    return do_unpack_ext(COPY_ALLOW_DIRECTORIES | COPY_ALLOW_SYMLINKS);
+}
+
+int do_unpack_ext(int flags)
 {
     struct file_header untrusted_hdr;
     int cwd_fd;
@@ -255,7 +259,7 @@ int do_unpack(void)
         total_files++;
         if (files_limit && total_files > files_limit)
             do_exit(EDQUOT, untrusted_namebuf);
-        process_one_file(&untrusted_hdr);
+        process_one_file(&untrusted_hdr, flags);
     }
 
     saved_errno = errno;

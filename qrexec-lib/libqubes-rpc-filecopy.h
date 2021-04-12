@@ -63,6 +63,12 @@ enum {
     COPY_FILE_WRITE_ERROR
 };
 
+enum copy_flags {
+    COPY_DEFAULT = 0,
+    COPY_ALLOW_SYMLINKS = (1 << 0),
+    COPY_ALLOW_DIRECTORIES = (1 << 1),
+};
+
 /* feedback handling */
 typedef void (notify_progress_t)(int, int);
 typedef void (error_handler_t)(const char *fmt, va_list args);
@@ -91,6 +97,7 @@ void set_block(int fd);
 extern unsigned long Crc32_ComputeBuf( unsigned long inCrc32, const void *buf,
         size_t bufLen );
 extern int do_unpack(void);
+extern int do_unpack_ext(int flags);
 
 /* packing */
 int single_file_processor(const char *filename, const struct stat *st);
