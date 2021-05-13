@@ -1,3 +1,13 @@
+qubes-utils (4.0.33) wheezy; urgency=medium
+
+  [ Shawn Anastasio ]
+  * Makefile: remove broken 32-bit host check
+
+  [ Frédéric Pierret (fepitre) ]
+  * kernel-vm-support: add make as BR
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Thu, 13 May 2021 06:27:53 +0200
+
 qubes-utils (4.0.32) unstable; urgency=medium
 
   [ Frédéric Pierret (fepitre) ]
