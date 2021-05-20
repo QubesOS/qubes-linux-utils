@@ -53,7 +53,7 @@ struct result_header {
 /* optional info about last processed file */
 struct result_header_ext {
     uint32_t last_namelen;
-    char last_name[0];
+    char last_name[];
 } __attribute__((packed));
 
 enum {
@@ -61,6 +61,12 @@ enum {
     COPY_FILE_READ_EOF,
     COPY_FILE_READ_ERROR,
     COPY_FILE_WRITE_ERROR
+};
+
+enum copy_flags {
+    COPY_DEFAULT = 0,
+    COPY_ALLOW_SYMLINKS = (1 << 0),
+    COPY_ALLOW_DIRECTORIES = (1 << 1),
 };
 
 /* feedback handling */
@@ -91,6 +97,7 @@ void set_block(int fd);
 extern unsigned long Crc32_ComputeBuf( unsigned long inCrc32, const void *buf,
         size_t bufLen );
 extern int do_unpack(void);
+extern int do_unpack_ext(int flags);
 
 /* packing */
 int single_file_processor(const char *filename, const struct stat *st);
