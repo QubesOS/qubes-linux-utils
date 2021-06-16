@@ -1,3 +1,9 @@
+qubes-utils (4.0.34) unstable; urgency=medium
+
+  * makefile: specify PYTHON at build stage too
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Wed, 16 Jun 2021 17:24:35 +0200
+
 qubes-utils (4.0.33) wheezy; urgency=medium
 
   [ Shawn Anastasio ]
