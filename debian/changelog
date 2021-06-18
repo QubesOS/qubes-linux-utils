@@ -1,3 +1,12 @@
+qubes-utils (4.1.15) unstable; urgency=medium
+
+  [ Demi Marie Obenour ]
+  * Use a flexable array member instead of an empty array
+  * Add do_unpack_ext to limit what can be unpacked
+  * Force exporting of loop devices
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Fri, 18 Jun 2021 04:09:49 +0200
+
 qubes-utils (4.1.14) wheezy; urgency=medium
 
   [ Shawn Anastasio ]
