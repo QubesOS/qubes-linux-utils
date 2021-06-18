@@ -90,7 +90,7 @@ fi
 
 # udev rules already excluded this device:
 
-if [ "$DM_UDEV_DISABLE_DISK_RULES_FLAG" = "1" ]; then
+if [ -z "$QUBES_EXPORT_BLOCK_DEVICE" ] && [ "$DM_UDEV_DISABLE_DISK_RULES_FLAG" = "1" ]; then
     xs_remove
     exit 0
 fi

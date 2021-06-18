@@ -11,7 +11,7 @@ KERNEL=="xvda|xvdb|xvdc*|xvdd", ENV{UDISKS_IGNORE}="1"
 ENV{MAJOR}=="202", GOTO="qubes_block_end"
 
 # skip devices excluded elsewhere
-ENV{DM_UDEV_DISABLE_DISK_RULES_FLAG}=="1", GOTO="qubes_block_end"
+ENV{DM_UDEV_DISABLE_DISK_RULES_FLAG}=="1", ENV{QUBES_EXPORT_BLOCK_DEVICE}!="1", GOTO="qubes_block_end"
 
 # Skip device-mapper devices
 KERNEL=="dm-*", ENV{DM_NAME}=="snapshot-*", GOTO="qubes_block_end"
@@ -23,3 +23,5 @@ ACTION=="change", RUN+="/usr/lib/qubes/udev-block-add-change"
 ACTION=="remove", RUN+="/usr/lib/qubes/udev-block-remove"
 
 LABEL="qubes_block_end"
+
+# vim: set ft=udevrules ff=unix fenc=UTF-8 eol:
