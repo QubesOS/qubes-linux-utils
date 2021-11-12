@@ -19,7 +19,7 @@ Requires:	python%{python3_pkgversion}-qubesimgconverter
 BuildRequires:  systemd
 BuildRequires:  python%{python3_pkgversion}-setuptools
 BuildRequires:  python3-rpm-macros
-%if x%{?backend_vmm} == xxen
+%if "%{?backend_vmm}" == "xen"
 # for meminfo-writer
 BuildRequires:  xen-devel
 %endif
@@ -62,7 +62,7 @@ make all BACKEND_VMM=@BACKEND_VMM@ PYTHON=%{__python3}
 %install
 make install DESTDIR=%{buildroot} PYTHON=%{__python3}
 
-%if x%{?backend_vmm} == xxen
+%if "%{?backend_vmm}" == "xen"
 %post
 # dom0
 %systemd_post qubes-meminfo-writer-dom0.service
@@ -89,7 +89,7 @@ rm -rf $RPM_BUILD_ROOT
 /usr/lib/udev/rules.d/*-qubes-*.rules
 /usr/lib/tmpfiles.d/xen-devices-qubes.conf
 /usr/lib/qubes/udev-*
-%if x%{?backend_vmm} == xxen
+%if "%{?backend_vmm}" == "xen"
 %{_sbindir}/meminfo-writer
 %{_unitdir}/qubes-meminfo-writer.service
 %{_unitdir}/qubes-meminfo-writer-dom0.service

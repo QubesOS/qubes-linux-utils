@@ -51,7 +51,7 @@ make install-fedora-kernel-support DESTDIR=%{buildroot}
 /usr/lib/dracut/modules.d/90qubes-vm
 /usr/lib/dracut/modules.d/90qubes-vm-modules
 /usr/lib/dracut/modules.d/90qubes-vm-simple
-%if x%{?backend_vmm} == xxen
+%if "%{?backend_vmm}" == "xen"
 /usr/lib/dracut/modules.d/80xen-scrub-pages
 %endif
 /usr/sbin/qubes-prepare-vm-kernel
@@ -82,7 +82,7 @@ if [ -r /usr/share/qubes/marker-vm ] && [ -x /usr/bin/dracut ]; then
         dracut -f "$img" "$kver" || ret=$?
     done
 
-    %if x%{?backend_vmm} == xxen
+    %if "%{?backend_vmm}" == "xen"
     if [ "$ret" -eq 0 ]; then
         # "milestone" initramfs update version:
         # 1 - addition of xen scrub_pages enabling code
