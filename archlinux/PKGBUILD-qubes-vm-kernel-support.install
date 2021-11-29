@@ -12,6 +12,9 @@ post_install() {
   local begin='### BEGIN QUBES HOOKS ###' end='### END QUBES HOOKS ###'
   local combined="\\
 $begin\\
+# Set the kernel command line to what the QubesOS initramfs hook expects.\\
+# If the kernel command line is wrong, the system will not boot.\\
+\\
 . /etc/default/grub.qubes\\
 $end"
   echo "Adding qubes required hooks to mkinitcpio.conf"
