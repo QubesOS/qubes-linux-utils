@@ -47,7 +47,7 @@ make install "DESTDIR=$pkgdir" LIBDIR=/usr/lib SYSLIBDIR=/usr/lib SBINDIR=/usr/b
 }
 
 package_qubes-vm-kernel-support() {
-depends=(mkinitcpio grub)
+depends=(mkinitcpio grub qubes-vm-core)
 install=PKGBUILD-qubes-vm-kernel-support.install
 
 mkdir -p ${pkgdir}/usr/lib/initcpio/install/
