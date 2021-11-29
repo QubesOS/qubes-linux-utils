@@ -9,19 +9,33 @@ help() {
 
 ## arg 1:  the new package version
 post_install() {
+  local begin='### BEGIN QUBES HOOKS ###' end='### END QUBES HOOKS ###'
+  local combined="\\
+$begin\\
+. /etc/default/grub.qubes\\
+$end"
   echo "Adding qubes required hooks to mkinitcpio.conf"
   sed -Ei 's/^(HOOKS=[("])base/\1lvm2 qubes base/' /etc/mkinitcpio.conf
+  echo 'Adding qubes required hooks to /etc/default/grub'
+  sed -Ei "/^$begin\$/,/^$end\$/{
+\$c$combined
+d
+}
+\$a$combined
+" /etc/default/grub
+  grub-mkconfig -o /boot/grub/grub.cfg
   help
 }
 
 post_upgrade() {
-  echo "Adding qubes required hooks to mkinitcpio.conf"
-  sed -Ei 's/^(HOOKS=[("])base/\1lvm2 qubes base/' /etc/mkinitcpio.conf
-  help
+  post_install
 }
 
 post_remove() {
-  echo "Removing qubes required hooks to mkinitcpio.conf"
+  local begin='### BEGIN QUBES HOOKS ###' end='### END QUBES HOOKS ###'
+  echo 'Removing qubes required hooks from mkinitcpio.conf'
   sed -Ei 's/^(HOOKS=[("])lvm2 qubes base/\1base/' /etc/mkinitcpio.conf
+  echo 'Removing qubes required hooks from /etc/default/grub'
+  sed -Ei "/^$begin\$/,/^$end\$/d" /etc/default/grub
+  grub-mkconfig -o /boot/grub/grub.cfg
 }
-

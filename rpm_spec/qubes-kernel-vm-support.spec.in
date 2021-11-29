@@ -54,7 +54,7 @@ make install-fedora-kernel-support DESTDIR=%{buildroot}
 %config(noreplace) /etc/default/grub.qubes-kernel-vm-support
 
 %triggerin -- grub2-tools
-if ! grep -q '/etc/default/grub.qubes-kernel-vm-support$' /etc/default/grub 2>/dev/null; then
+if ! grep -q '/etc/default/grub\.qubes-kernel-vm-support$' /etc/default/grub 2>/dev/null; then
     # do not keep Qubes-related settings directly in user-controlled config,
     # include another file
     echo '. /etc/default/grub.qubes-kernel-vm-support' >> /etc/default/grub
@@ -62,8 +62,8 @@ fi
 
 %preun
 if [ $1 -eq 0 ]; then
-    if grep -q '/etc/default/grub.qubes-kernel-vm-support$' /etc/default/grub 2>/dev/null; then
-        sed -i -e '/grub.qubes-kernel-vm-support$/d' /etc/default/grub
+    if grep -q '/etc/default/grub\.qubes-kernel-vm-support$' /etc/default/grub 2>/dev/null; then
+        sed -i -e '/grub\.qubes-kernel-vm-support$/d' /etc/default/grub
     fi
 fi
 
