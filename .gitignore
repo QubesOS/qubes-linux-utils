@@ -5,3 +5,5 @@ deb/
 *.py[co]
 pkgs
 debian/changelog.*
+/selinux/tmp/
+/selinux/*.pp

@@ -1,0 +1,23 @@
+policy_module(qubes-meminfo-writer, 0.0.1)
+
+require {
+	type local_login_t, sysfs_t, proc_t;
+}
+
+type qubes_meminfo_writer_t;
+type qubes_meminfo_writer_exec_t;
+init_daemon_domain(qubes_meminfo_writer_t, qubes_meminfo_writer_exec_t)
+qubes_meminfo_writer_signal(local_login_t)
+allow qubes_meminfo_writer_t self:process { fork signal_perms };
+allow qubes_meminfo_writer_t self:fifo_file rw_fifo_file_perms;
+allow qubes_meminfo_writer_t { sysfs_t proc_t }:file { open read };
+files_read_etc_files(qubes_meminfo_writer_t)
+miscfiles_read_localization(qubes_meminfo_writer_t)
+dev_rw_xen(qubes_meminfo_writer_t)
+
+
+type qubes_meminfo_writer_var_run_t;
+files_pid_file(qubes_meminfo_writer_var_run_t)
+allow qubes_meminfo_writer_t var_run_t:dir { add_entry_dir_perms del_entry_dir_perms };
+allow qubes_meminfo_writer_t qubes_meminfo_writer_var_run_t:file { create_file_perms write_file_perms };
+files_pid_filetrans(`qubes_meminfo_writer_t', `qubes_meminfo_writer_var_run_t', `file', `"meminfo-writer.pid"')

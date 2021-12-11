@@ -12,6 +12,7 @@ Requires:	udev
 Requires:	%{name}-libs
 Requires:	GraphicsMagick
 Requires:	python%{python3_pkgversion}-qubesimgconverter
+Requires:	(%{name}-selinux if selinux-policy)
 %{?systemd_requires}
 BuildRequires:  systemd
 BuildRequires:  python%{python3_pkgversion}-setuptools
@@ -19,6 +20,7 @@ BuildRequires:  python3-rpm-macros
 # for meminfo-writer
 BuildRequires:  xen-devel
 BuildRequires:	gcc
+BuildRequires:  selinux-policy-devel
 
 %description
 Common Linux files for Qubes Dom0 and VM
@@ -48,14 +50,42 @@ Release:	1%{?dist}
 %description libs
 Libraries for qubes-utils
 
+%package selinux
+
+BuildRequires: selinux-policy
+%{?selinux_requires}
+
+Summary: SELinux policy for meminfo-writer
+License: GPLv2+
+
+%description selinux
+SELinux policy for meminfo-writer.  You need this package to run meminfo-writer
+on a system where SELinux is in enforcing mode.
+
+%post selinux
+%selinux_modules_install %{_datadir}/selinux/packages/qubes-meminfo-writer.pp || :
+
+%postun selinux
+if [ "$1" -eq 0 ]; then
+    %selinux_modules_uninstall %{_datadir}/selinux/packages/qubes-meminfo-writer.pp
+fi || :
+
+%posttrans selinux
+%selinux_relabel_post
+exit 0
+
+%files selinux
+%{_datadir}/selinux/packages/qubes-meminfo-writer.pp
+%{_datadir}/selinux/devel/include/contrib/ipp-qubes-meminfo-writer.if
+
 %prep
 %setup -q
 
 %build
-make all BACKEND_VMM=@BACKEND_VMM@ PYTHON=%{__python3}
+make all selinux BACKEND_VMM=@BACKEND_VMM@ PYTHON=%{__python3}
 
 %install
-make install DESTDIR=%{buildroot} PYTHON=%{__python3}
+make install install-selinux DESTDIR=%{buildroot} PYTHON=%{__python3}
 
 %post
 # dom0

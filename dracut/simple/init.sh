@@ -103,7 +103,7 @@ if ! [ -d "$NEWROOT/lib/modules/$kver/kernel" ]; then
         if ! [ -d "$NEWROOT/lib/.modules_work" ]; then
             mkdir -p "$NEWROOT/lib/.modules_work"
         fi
-        mount -t overlay none $NEWROOT/lib/modules -o lowerdir=/tmp/modules,upperdir=$NEWROOT/lib/modules,workdir=$NEWROOT/lib/.modules_work
+        mount -t overlay none "$NEWROOT/lib/modules" -o "lowerdir=/tmp/modules,upperdir=$NEWROOT/lib/modules,workdir=$NEWROOT/lib/.modules_work"
     else
         # otherwise mount only `uname -r` subdirectory, to leave the rest of
         # /lib/modules writable
