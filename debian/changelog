@@ -1,3 +1,10 @@
+qubes-utils (4.0.35) unstable; urgency=medium
+
+  [ Frédéric Pierret (fepitre) ]
+  * spec: allow matching python3.10 in %files
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Mon, 10 Jan 2022 05:05:55 +0100
+
 qubes-utils (4.0.34) unstable; urgency=medium
 
   * makefile: specify PYTHON at build stage too
