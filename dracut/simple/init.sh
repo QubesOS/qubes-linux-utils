@@ -99,7 +99,7 @@ if ! [ -d "$NEWROOT/lib/modules/$kver/kernel" ]; then
     while ! [ -e /dev/xvdd ]; do sleep 0.1; done
 
     mkdir -p /tmp/modules
-    mount -n -t ext3 /dev/xvdd /tmp/modules
+    mount -r -n -t ext3 /dev/xvdd /tmp/modules
     if /sbin/modprobe overlay; then
         # if overlayfs is supported, use that to provide fully writable /lib/modules
         if ! [ -d "$NEWROOT/lib/.modules_work" ]; then
