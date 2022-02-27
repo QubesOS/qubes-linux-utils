@@ -1,6 +1,8 @@
 #!/bin/sh
 echo "Qubes initramfs script here:"
 
+PATH=/sbin:/bin
+
 mkdir -p /proc /sys /dev
 mount -t proc proc /proc
 mount -t sysfs sysfs /sys
