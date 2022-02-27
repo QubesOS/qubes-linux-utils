@@ -87,10 +87,15 @@ EOF
     echo Qubes: done.
 fi
 
-/sbin/modprobe ext4
+rootfs_type=$(blkid --output value --match-tag TYPE /dev/mapper/dmroot)
+/sbin/modprobe "$rootfs_type"
 
 mkdir -p /sysroot
-mount /dev/mapper/dmroot /sysroot -o rw
+if [ "$rootfs_type" = "btrfs" ]; then
+    mount /dev/mapper/dmroot /sysroot -o rw,subvol=root
+else
+    mount /dev/mapper/dmroot /sysroot -o rw
+fi
 NEWROOT=/sysroot
 
 kver="`uname -r`"
