@@ -1,0 +1,16 @@
+host:
+  rpm:
+    spec:
+    - rpm_spec/qubes-utils.spec
+    - rpm_spec/qubes-kernel-vm-support.spec
+vm:
+  rpm:
+    spec:
+    - rpm_spec/qubes-utils.spec
+    - rpm_spec/qubes-kernel-vm-support.spec
+  deb:
+    build:
+    - debian
+  archlinux:
+    build:
+    - archlinux

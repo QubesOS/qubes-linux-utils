@@ -1,22 +1,27 @@
-include:
-  - project: 'QubesOS/qubes-continuous-integration'
-    file: '/r4.1/gitlab-base.yml'
-  - project: 'QubesOS/qubes-continuous-integration'
-    file: '/r4.1/gitlab-dom0.yml'
-  - project: 'QubesOS/qubes-continuous-integration'
-    file: '/r4.1/gitlab-vm.yml'
-
 checks:tests:
+  after_script:
+  - export PATH="$PATH:$HOME/.local/bin"
+  - codecov
+  before_script:
+  - sudo dnf install -y python3-pip
+  - export PATH="$PATH:$HOME/.local/bin"
+  - pip3 install --quiet -r ci/requirements.txt
+  script:
+  - python3 -m coverage run -m unittest discover -v imgconverter -p test.py
   stage: checks
   tags:
-    - short-living-job
-    - docker
-  before_script:
-    - sudo dnf install -y python3-pip
-    - export PATH="$PATH:$HOME/.local/bin"
-    - pip3 install --quiet -r ci/requirements.txt
-  script:
-    - python3 -m coverage run -m unittest discover -v imgconverter -p test.py
-  after_script:
-    - export PATH="$PATH:$HOME/.local/bin"
-    - codecov
+  - short-living-job
+  - docker
+include:
+- file: /r4.1/gitlab-base.yml
+  project: QubesOS/qubes-continuous-integration
+- file: /r4.1/gitlab-dom0.yml
+  project: QubesOS/qubes-continuous-integration
+- file: /r4.1/gitlab-vm.yml
+  project: QubesOS/qubes-continuous-integration
+- file: /r4.2/gitlab-base.yml
+  project: QubesOS/qubes-continuous-integration
+- file: /r4.2/gitlab-host.yml
+  project: QubesOS/qubes-continuous-integration
+- file: /r4.2/gitlab-vm.yml
+  project: QubesOS/qubes-continuous-integration
