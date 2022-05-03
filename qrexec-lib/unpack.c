@@ -39,7 +39,7 @@ void send_status_and_crc(int code, const char *last_filename);
 #define O_TMPFILE_MASK (__O_TMPFILE | O_DIRECTORY | O_CREAT)
 #endif
 
-void do_exit(int code, const char *last_filename)
+_Noreturn void do_exit(int code, const char *last_filename)
 {
     close(0);
     send_status_and_crc(code, last_filename);
@@ -129,6 +129,42 @@ void fix_times_and_perms(struct file_header *untrusted_hdr,
 }
 
 
+static size_t validate_path(const char *const untrusted_name, size_t allowed_leading_dotdot)
+{
+    const size_t len = strlen(untrusted_name);
+    if (len == 0)
+        do_exit(ENOENT, untrusted_name);
+    size_t non_dotdot_components = 0;
+    for (size_t i = 0; i < len; ++i) {
+        if (i == 0 || untrusted_name[i - 1] == '/') {
+            switch (untrusted_name[i]) {
+            case '/':
+                do_exit(EILSEQ, untrusted_name); // repeated or initial slash
+            case '.':
+                if (untrusted_name[i + 1] == '\0' || untrusted_name[i + 1] == '/')
+                    do_exit(EILSEQ, untrusted_name); // path component is "."
+                if ((untrusted_name[i + 1] == '.') &&
+                    (untrusted_name[i + 2] == '\0' || untrusted_name[i + 2] == '/')) {
+                    if (allowed_leading_dotdot) {
+                        allowed_leading_dotdot--;
+                        break;
+                    }
+                    do_exit(EILSEQ, untrusted_name); // too many ".." components
+                }
+                __attribute__((fallthrough));
+            default:
+                allowed_leading_dotdot = 0; // do not allow further ".." components
+                non_dotdot_components++;
+                break;
+            case '\0':
+                abort();
+            }
+        }
+        if (untrusted_name[i] < 0x20 || (unsigned char)untrusted_name[i] > 0x7F)
+            do_exit(EILSEQ, untrusted_name); // path is non-ASCII or has control characters
+    }
+    return non_dotdot_components;
+}
 
 void process_one_file_reg(struct file_header *untrusted_hdr,
         const char *untrusted_name)
@@ -147,10 +183,14 @@ void process_one_file_reg(struct file_header *untrusted_hdr,
                 do_exit(errno, untrusted_name);
         }
     }
+
+    /* validate the path */
+    validate_path(untrusted_name, 0);
     if (fdout < 0)
         fdout = open(untrusted_name, O_WRONLY | O_CREAT | O_EXCL | O_NOFOLLOW, 0000); /* safe because of chroot */
     if (fdout < 0)
         do_exit(errno, untrusted_name);
+
     /* sizes are signed elsewhere */
     if (untrusted_hdr->filelen > LLONG_MAX || (bytes_limit && untrusted_hdr->filelen > bytes_limit))
         do_exit(EDQUOT, untrusted_name);
@@ -170,7 +210,7 @@ void process_one_file_reg(struct file_header *untrusted_hdr,
             do_exit(errno, untrusted_name);
     }
     if (use_tmpfile) {
-        char fd_str[7];
+        char fd_str[11];
         snprintf(fd_str, sizeof(fd_str), "%d", fdout);
         if (linkat(procdir_fd, fd_str, AT_FDCWD, untrusted_name, AT_SYMLINK_FOLLOW) < 0)
             do_exit(errno, untrusted_name);
@@ -183,6 +223,7 @@ void process_one_file_reg(struct file_header *untrusted_hdr,
 void process_one_file_dir(struct file_header *untrusted_hdr,
         const char *untrusted_name)
 {
+    validate_path(untrusted_name, 0);
     // fix perms only when the directory is sent for the second time
     // it allows to transfer r.x directory contents, as we create it rwx initially
     struct stat buf;
@@ -202,6 +243,7 @@ void process_one_file_link(struct file_header *untrusted_hdr,
 {
     char untrusted_content[MAX_PATH_LENGTH];
     unsigned int filelen;
+    size_t path_components = validate_path(untrusted_name, 0);
     if (untrusted_hdr->filelen > MAX_PATH_LENGTH - 1)
         do_exit(ENAMETOOLONG, untrusted_name);
     filelen = untrusted_hdr->filelen; /* sanitized above */
@@ -211,9 +253,11 @@ void process_one_file_link(struct file_header *untrusted_hdr,
     if (!read_all_with_crc(0, untrusted_content, filelen))
         do_exit(LEGAL_EOF, untrusted_name); // hopefully remote has produced error message
     untrusted_content[filelen] = 0;
+    if (path_components < 1)
+        abort(); // validate_path() should not have returned
+    validate_path(untrusted_content, path_components - 1);
     if (symlink(untrusted_content, untrusted_name)) /* safe because of chroot */
         do_exit(errno, untrusted_name);
-
 }
 
 void process_one_file(struct file_header *untrusted_hdr, int flags)
