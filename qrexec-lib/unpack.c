@@ -9,6 +9,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <limits.h>
+#include <assert.h>
 #include "libqubes-rpc-filecopy.h"
 #include "ioall.h"
 #include "crc32.h"
@@ -122,7 +123,7 @@ void fix_times_and_perms(struct file_header *untrusted_hdr,
         {untrusted_hdr->atime, untrusted_hdr->atime_nsec / 1000},
         {untrusted_hdr->mtime, untrusted_hdr->mtime_nsec / 1000}
     };
-    if (chmod(untrusted_name, untrusted_hdr->mode & 07777))  /* safe because of chroot */
+    if (chmod(untrusted_name, untrusted_hdr->mode & 07777))
         do_exit(errno, untrusted_name);
     if (utimes(untrusted_name, times))  /* as above */
         do_exit(errno, untrusted_name);
@@ -166,15 +167,57 @@ static size_t validate_path(const char *const untrusted_name, size_t allowed_lea
     return non_dotdot_components;
 }
 
+static int open_safe(int dirfd, const char *path, const char **last_segment)
+{
+    static char *path_dup = NULL;
+    assert(path && *path);
+    free(path_dup);
+    char *this_segment = path_dup = strdup(path), *next_segment = NULL;
+    *last_segment = NULL;
+    if (!path_dup)
+        do_exit(ENOMEM, path);
+    int cur_fd = dirfd;
+    for (;;this_segment = next_segment) {
+        assert(this_segment);
+        char *next = strchr(this_segment, '/');
+        if (next) {
+            assert(*next == '/');
+            *next = '\0';
+            next_segment = next + 1;
+        } else {
+            *last_segment = this_segment;
+            return cur_fd;
+        }
+        assert(this_segment[0]);
+        assert(strcmp(this_segment, "."));
+        assert(strcmp(this_segment, ".."));
+        assert(strchr(this_segment, '/') == NULL);
+
+        if (*path_dup) {
+            int new_fd = openat(cur_fd, this_segment, O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_NOCTTY | O_CLOEXEC);
+            if (new_fd == -1)
+                do_exit(errno, this_segment);
+            if (cur_fd != dirfd)
+                close(cur_fd);
+            cur_fd = new_fd;
+        }
+    }
+}
+
 void process_one_file_reg(struct file_header *untrusted_hdr,
         const char *untrusted_name)
 {
     int ret;
-    int fdout = -1;
+    int fdout = -1, safe_dirfd;
+    const char *last_segment;
+
+
+    validate_path(untrusted_name, 0);
+    safe_dirfd = open_safe(AT_FDCWD, untrusted_name, &last_segment);
 
     /* make the file inaccessible until fully written */
     if (use_tmpfile) {
-        fdout = open(".", O_WRONLY | O_TMPFILE, 0700);
+        fdout = openat(safe_dirfd, ".", O_WRONLY | O_TMPFILE | O_CLOEXEC | O_NOCTTY, 0700);
         if (fdout < 0) {
             if (errno==ENOENT || /* most likely, kernel too old for O_TMPFILE */
                     errno==EOPNOTSUPP) /* filesystem has no support for O_TMPFILE */
@@ -184,12 +227,11 @@ void process_one_file_reg(struct file_header *untrusted_hdr,
         }
     }
 
-    /* validate the path */
-    validate_path(untrusted_name, 0);
     if (fdout < 0)
-        fdout = open(untrusted_name, O_WRONLY | O_CREAT | O_EXCL | O_NOFOLLOW, 0000); /* safe because of chroot */
+        fdout = openat(safe_dirfd, last_segment, O_WRONLY | O_CREAT | O_EXCL | O_NOFOLLOW | O_CLOEXEC | O_NOCTTY, 0000);
     if (fdout < 0)
         do_exit(errno, untrusted_name);
+    close(safe_dirfd);
 
     /* sizes are signed elsewhere */
     if (untrusted_hdr->filelen > LLONG_MAX || (bytes_limit && untrusted_hdr->filelen > bytes_limit))
@@ -223,12 +265,19 @@ void process_one_file_reg(struct file_header *untrusted_hdr,
 void process_one_file_dir(struct file_header *untrusted_hdr,
         const char *untrusted_name)
 {
+    int safe_dirfd;
+    const char *last_segment;
+
     validate_path(untrusted_name, 0);
+    safe_dirfd = open_safe(AT_FDCWD, untrusted_name, &last_segment);
+
     // fix perms only when the directory is sent for the second time
     // it allows to transfer r.x directory contents, as we create it rwx initially
     struct stat buf;
-    if (!mkdir(untrusted_name, 0700)) /* safe because of chroot */
+    if (!mkdirat(safe_dirfd, last_segment, 0700)) {
+        close(safe_dirfd);
         return;
+    }
     if (errno != EEXIST)
         do_exit(errno, untrusted_name);
     if (stat(untrusted_name,&buf) < 0)
@@ -236,16 +285,20 @@ void process_one_file_dir(struct file_header *untrusted_hdr,
     total_bytes += buf.st_size;
     /* size accumulated after the fact, so don't check limit here */
     fix_times_and_perms(untrusted_hdr, untrusted_name);
+    close(safe_dirfd);
 }
 
 void process_one_file_link(struct file_header *untrusted_hdr,
         const char *untrusted_name)
 {
     char untrusted_content[MAX_PATH_LENGTH];
+    const char *last_segment;
     unsigned int filelen;
     size_t path_components = validate_path(untrusted_name, 0);
+    int safe_dirfd;
     if (untrusted_hdr->filelen > MAX_PATH_LENGTH - 1)
         do_exit(ENAMETOOLONG, untrusted_name);
+
     filelen = untrusted_hdr->filelen; /* sanitized above */
     total_bytes += filelen;
     if (bytes_limit && total_bytes > bytes_limit)
@@ -256,8 +309,13 @@ void process_one_file_link(struct file_header *untrusted_hdr,
     if (path_components < 1)
         abort(); // validate_path() should not have returned
     validate_path(untrusted_content, path_components - 1);
-    if (symlink(untrusted_content, untrusted_name)) /* safe because of chroot */
+
+    safe_dirfd = open_safe(AT_FDCWD, untrusted_name, &last_segment);
+
+    if (symlinkat(untrusted_content, safe_dirfd, last_segment))
         do_exit(errno, untrusted_name);
+
+    close(safe_dirfd);
 }
 
 void process_one_file(struct file_header *untrusted_hdr, int flags)
