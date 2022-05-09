@@ -1,11 +1,11 @@
 host:
   rpm:
-    spec:
+    build:
     - rpm_spec/qubes-utils.spec
     - rpm_spec/qubes-kernel-vm-support.spec
 vm:
   rpm:
-    spec:
+    build:
     - rpm_spec/qubes-utils.spec
     - rpm_spec/qubes-kernel-vm-support.spec
   deb:
