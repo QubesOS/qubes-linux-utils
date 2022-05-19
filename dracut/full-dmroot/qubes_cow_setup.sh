@@ -75,7 +75,6 @@ if [ `cat /sys/class/block/$ROOT_DEV/ro` = 1 ] ; then
 
     while ! [ -e /dev/xvdc ]; do sleep 0.1; done
     VOLATILE_SIZE=$(cat /sys/class/block/xvdc/size) # sectors
-    ROOT_SIZE=$(cat /sys/class/block/$ROOT_DEV/size) # sectors
     if [ $VOLATILE_SIZE -lt $SWAP_SIZE ]; then
         die "volatile.img smaller than 1GB, cannot continue"
     fi
