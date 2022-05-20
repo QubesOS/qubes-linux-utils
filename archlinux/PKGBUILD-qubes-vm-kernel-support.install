@@ -1,5 +1,5 @@
 
-help() {
+help () {
   echo "Before using pvgrub, the kernel you want to use needs to be regenerated with Qubes kernel modules in the TemplateVM:"
   echo "1/ Ensure that your kernel and kernel sources are installed (ex: pacman -S linux-lts linux-lts-headers)"
   echo "2/ Ensure that grub config file has been generated for your kernel (ex: grub-mkconfig > /boot/grub/grub.cfg)"
@@ -8,7 +8,7 @@ help() {
 }
 
 ## arg 1:  the new package version
-post_install() {
+post_install () {
   local begin='### BEGIN QUBES HOOKS ###' end='### END QUBES HOOKS ###'
   local combined="\\
 $begin\\
@@ -34,11 +34,11 @@ d
   help
 }
 
-post_upgrade() {
+post_upgrade () {
   post_install
 }
 
-post_remove() {
+post_remove () {
   local begin='### BEGIN QUBES HOOKS ###' end='### END QUBES HOOKS ###'
   echo 'Removing qubes required hooks from mkinitcpio.conf'
   sed -Ei 's/^(HOOKS=[("])lvm2 qubes base/\1base/' /etc/mkinitcpio.conf
