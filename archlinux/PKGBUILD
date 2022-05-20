@@ -31,7 +31,7 @@ md5sums=(SKIP)
 
 build() {
 
-for source in qrexec-lib udev qmemman core kernel-modules Makefile dracut imgconverter; do
+for source in qrexec-lib udev qmemman core kernel-modules Makefile dracut imgconverter grub; do
   (ln -s -- "$srcdir/../$source" "$srcdir/$source")
 done
 
@@ -54,10 +54,12 @@ mkdir -p ${pkgdir}/usr/lib/initcpio/install/
 mkdir -p ${pkgdir}/usr/lib/initcpio/hooks/
 mkdir -p ${pkgdir}/usr/lib/qubes/
 mkdir -p ${pkgdir}/usr/bin/
+mkdir -p ${pkgdir}/etc/default
 
 install -m 611 ${srcdir}/PKGBUILD-initcpio-install.sh ${pkgdir}/usr/lib/initcpio/install/qubes
 install -m 611 ${srcdir}/PKGBUILD-initcpio-hook.sh ${pkgdir}/usr/lib/initcpio/hooks/qubes
 install -m 755 ${srcdir}/dracut/full-dmroot/qubes_cow_setup.sh ${pkgdir}/usr/lib/qubes/qubes_cow_setup.sh
+install -m 0644 ${srcdir}/grub/grub.qubes-kernel-vm-support ${pkgdir}/etc/default/grub.qubes-kernel-vm-support
 }
 
 
