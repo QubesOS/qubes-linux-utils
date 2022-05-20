@@ -18,6 +18,9 @@ $begin\\
 . /etc/default/grub.qubes\\
 $end"
   echo "Adding qubes required hooks to mkinitcpio.conf"
+  if [[ ! -s /etc/default/grub ]]; then
+    echo >> /etc/default/grub
+  fi
   sed -Ei 's/^(HOOKS=[("])base/\1lvm2 qubes base/' /etc/mkinitcpio.conf
   echo 'Adding qubes required hooks to /etc/default/grub'
   sed -Ei "/^$begin\$/,/^$end\$/{
