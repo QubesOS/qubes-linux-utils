@@ -16,6 +16,7 @@ $begin\\
 # If the kernel command line is wrong, the system will not boot.\\
 \\
 . /etc/default/grub.qubes\\
+. /etc/default/grub.qubes-kernel-vm-support\\
 $end"
   echo "Adding qubes required hooks to mkinitcpio.conf"
   if [[ ! -s /etc/default/grub ]]; then
