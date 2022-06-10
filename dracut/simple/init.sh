@@ -1,6 +1,20 @@
 #!/bin/sh
 echo "Qubes initramfs script here:"
 
+if [ -d /sys/devices/system/xen_memory ]; then
+    HYPERVISOR=xen
+else
+    HYPERVISOR=kvm
+fi
+
+if [ $HYPERVISOR = "xen" ]; then
+    echo "Running under xen"
+    DEVPREFIX="xvd"
+else
+    echo "Running under kvm"
+    DEVPREFIX="vd"
+fi
+
 mkdir -p /proc /sys /dev
 mount -t proc proc /proc
 mount -t sysfs sysfs /sys
@@ -15,31 +29,35 @@ if [ -e /dev/mapper/dmroot ] ; then
     echo "Qubes: FATAL error: /dev/mapper/dmroot already exists?!"
 fi
 
-/sbin/modprobe xenblk || /sbin/modprobe xen-blkfront || echo "Qubes: Cannot load Xen Block Frontend..."
+if [ $HYPERVISOR = "xen" ]; then
+    /sbin/modprobe xenblk || /sbin/modprobe xen-blkfront || echo "Qubes: Cannot load Xen Block Frontend..."
+elif [ $HYPERVISOR = "kvm" ]; then
+    /sbin/modprobe virtio_blk || echo "Qubes: Cannot load Virtio Block Driver..."
+fi
 
 die() {
     echo "$@" >&2
     exit 1
 }
 
-echo "Waiting for /dev/xvda* devices..."
-while ! [ -e /dev/xvda ]; do sleep 0.1; done
+echo "Waiting for /dev/${DEVPREFIX}a* devices..."
+while ! [ -e /dev/${DEVPREFIX}a ]; do sleep 0.1; done
 
 # prefer partition if exists
-if [ -b /dev/xvda1 ]; then
+if [ -b /dev/${DEVPREFIX}a1 ]; then
     if [ -d /dev/disk/by-partlabel ]; then
         ROOT_DEV=$(readlink "/dev/disk/by-partlabel/Root\\x20filesystem")
         ROOT_DEV=${ROOT_DEV##*/}
     else
-        ROOT_DEV=$(grep -l "PARTNAME=Root filesystem" /sys/block/xvda/xvda*/uevent |\
-            grep -o "xvda[0-9]")
+        ROOT_DEV=$(grep -l "PARTNAME=Root filesystem" /sys/block/${DEVPREFIX}a/${DEVPREFIX}a*/uevent |\
+            grep -o "${DEVPREFIX}a[0-9]")
     fi
     if [ -z "$ROOT_DEV" ]; then
         # fallback to third partition
-        ROOT_DEV=xvda3
+        ROOT_DEV=${DEVPREFIX}a3
     fi
 else
-    ROOT_DEV=xvda
+    ROOT_DEV=${DEVPREFIX}a
 fi
 
 SWAP_SIZE=$(( 1024 * 1024 * 2 )) # sectors, 1GB
@@ -47,40 +65,40 @@ SWAP_SIZE=$(( 1024 * 1024 * 2 )) # sectors, 1GB
 if [ `cat /sys/class/block/$ROOT_DEV/ro` = 1 ] ; then
     echo "Qubes: Doing COW setup for AppVM..."
 
-    while ! [ -e /dev/xvdc ]; do sleep 0.1; done
-    VOLATILE_SIZE=$(cat /sys/class/block/xvdc/size) # sectors
+    while ! [ -e /dev/${DEVPREFIX}c ]; do sleep 0.1; done
+    VOLATILE_SIZE=$(cat /sys/class/block/${DEVPREFIX}c/size) # sectors
     ROOT_SIZE=$(cat /sys/class/block/$ROOT_DEV/size) # sectors
     if [ $VOLATILE_SIZE -lt $SWAP_SIZE ]; then
         die "volatile.img smaller than 1GB, cannot continue"
     fi
-    /sbin/sfdisk -q --unit S /dev/xvdc >/dev/null <<EOF
-xvdc1: type=82,start=2048,size=$SWAP_SIZE
-xvdc2: type=83
+    /sbin/sfdisk -q --unit S /dev/${DEVPREFIX}c >/dev/null <<EOF
+${DEVPREFIX}c1: type=82,start=2048,size=$SWAP_SIZE
+${DEVPREFIX}c2: type=83
 EOF
     if [ $? -ne 0 ]; then
         echo "Qubes: failed to setup partitions on volatile device"
         exit 1
     fi
-    while ! [ -e /dev/xvdc1 ]; do sleep 0.1; done
-    /sbin/mkswap /dev/xvdc1
-    while ! [ -e /dev/xvdc2 ]; do sleep 0.1; done
+    while ! [ -e /dev/${DEVPREFIX}c1 ]; do sleep 0.1; done
+    /sbin/mkswap /dev/${DEVPREFIX}c1
+    while ! [ -e /dev/${DEVPREFIX}c2 ]; do sleep 0.1; done
 
-    echo "0 `cat /sys/class/block/$ROOT_DEV/size` snapshot /dev/$ROOT_DEV /dev/xvdc2 N 16" | \
+    echo "0 `cat /sys/class/block/$ROOT_DEV/size` snapshot /dev/$ROOT_DEV /dev/${DEVPREFIX}c2 N 16" | \
         /sbin/dmsetup create dmroot || { echo "Qubes: FATAL: cannot create dmroot!"; exit 1; }
     /sbin/dmsetup mknodes dmroot
     echo Qubes: done.
 else
     echo "Qubes: Doing R/W setup for TemplateVM..."
-    while ! [ -e /dev/xvdc ]; do sleep 0.1; done
-    /sbin/sfdisk -q --unit S /dev/xvdc >/dev/null <<EOF
-xvdc1: type=82,start=2048,size=$SWAP_SIZE
-xvdc3: type=83
+    while ! [ -e /dev/${DEVPREFIX}c ]; do sleep 0.1; done
+    /sbin/sfdisk -q --unit S /dev/${DEVPREFIX}c >/dev/null <<EOF
+${DEVPREFIX}c1: type=82,start=2048,size=$SWAP_SIZE
+${DEVPREFIX}c3: type=83
 EOF
     if [ $? -ne 0 ]; then
         die "Qubes: failed to setup partitions on volatile device"
     fi
-    while ! [ -e /dev/xvdc1 ]; do sleep 0.1; done
-    /sbin/mkswap /dev/xvdc1
+    while ! [ -e /dev/${DEVPREFIX}c1 ]; do sleep 0.1; done
+    /sbin/mkswap /dev/${DEVPREFIX}c1
     ln -s ../$ROOT_DEV /dev/mapper/dmroot
     echo Qubes: done.
 fi
@@ -93,11 +111,11 @@ NEWROOT=/sysroot
 
 kver="`uname -r`"
 if ! [ -d "$NEWROOT/lib/modules/$kver/kernel" ]; then
-    echo "Waiting for /dev/xvdd device..."
-    while ! [ -e /dev/xvdd ]; do sleep 0.1; done
+    echo "Waiting for /dev/${DEVPREFIX}d device..."
+    while ! [ -e /dev/${DEVPREFIX}d ]; do sleep 0.1; done
 
     mkdir -p /tmp/modules
-    mount -n -t ext3 /dev/xvdd /tmp/modules
+    mount -n -t ext3 /dev/${DEVPREFIX}d /tmp/modules
     if /sbin/modprobe overlay; then
         # if overlayfs is supported, use that to provide fully writable /lib/modules
         if ! [ -d "$NEWROOT/lib/.modules_work" ]; then

@@ -49,7 +49,7 @@ function build_initramfs() {
     dracut --nomdadmconf --nolvmconf --force \
         --modules "kernel-modules qubes-vm-simple" \
         --conf /dev/null --confdir /var/empty \
-        -d "xenblk xen-blkfront cdrom ext4 jbd2 crc16 dm_snapshot" \
+        -d "xenblk xen-blkfront cdrom ext4 virtio virtio_blk jbd2 crc16 dm_snapshot" \
         $output_file $kver
     chmod 644 "$output_file"
 }
