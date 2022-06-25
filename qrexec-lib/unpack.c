@@ -204,26 +204,44 @@ static int validate_utf8_char(const unsigned char *untrusted_c) {
     }
 
     switch (code_point) {
-    case 0x0 ... 0x1F: // C0 controls
-    case 0x7F ... 0x9F: // C1 controls
-    case 0x202A: // U+202A LEFT-TO-RIGHT EMBEDDING
-    case 0x202B: // U+202B RIGHT-TO-LEFT EMBEDDING
-    case 0x202C: // U+202C POP DIRECTIONAL FORMATTING
-    case 0x202D: // U+202D LEFT-TO-RIGHT OVERRIDE
-    case 0x202E: // U+202E RIGHT-TO-LEFT OVERRIDE
-
-    case 0x2066: // U+2066 LEFT-TO-RIGHT ISOLATE
-    case 0x2067: // U+2067 RIGHT-TO-LEFT ISOLATE
-    case 0x2068: // U+2068 FIRST STRONG ISOLATE
-    case 0x2069: // U+2069 POP DIRECTIONAL ISOLATE
-        return 0; // Forbidden bidirectional formatting character
-
-    case 0xD800 ... 0xDFFF: // surrogates
-    case 0x110000 ... 0xFFFFFFFF: // too big
-        return 0; // Invalid codepoint; this is not UTF-8.
+    case 0x0 ... 0x1F: // category Cc
+    case 0x7F ... 0x9F: // category Cc
+    case 0xA0: // category Zs
+    case 0xAD: // category Cf
+    case 0x600 ... 0x605: // category Cf
+    case 0x61C: // category Cf
+    case 0x6DD: // category Cf
+    case 0x70F: // category Cf
+    case 0x8E2: // category Cf
+    case 0x1680: // category Zs
+    case 0x180E: // category Cf
+    case 0x2000 ... 0x200A: // category Zs
+    case 0x200B ... 0x200F: // category Cf
+    case 0x2028: // category Zl
+    case 0x2029: // category Zp
+    case 0x202A ... 0x202E: // category Cf
+    case 0x202F: // category Zs
+    case 0x205F: // category Zs
+    case 0x2060 ... 0x2064: // category Cf
+    case 0x2066 ... 0x206F: // category Cf
+    case 0x3000: // category Zs
+    case 0xD800 ... 0xDFFF: // category Cs
+    case 0xE000 ... 0xF8FF: // category Co
+    case 0xFEFF: // category Cf
+    case 0xFFF9 ... 0xFFFB: // category Cf
+    case 0x110BD: // category Cf
+    case 0x110CD: // category Cf
+    case 0x13430 ... 0x13438: // category Cf
+    case 0x1BCA0 ... 0x1BCA3: // category Cf
+    case 0x1D173 ... 0x1D17A: // category Cf
+    case 0xE0001: // category Cf
+    case 0xE0020 ... 0xE007F: // category Cf
+    case 0xF0000 ... 0xFFFFD: // category Co
+    case 0x100000 ... 0x10FFFD: // category Co
+        return 0; // Invalid UTF-8 or forbidden codepoint
 
     default:
-        return total_size;
+        return code_point > 0x10FFFF ? 0 : total_size;
     }
 }
 
