@@ -10,6 +10,7 @@
 #include <syslog.h>
 #include <string.h>
 #include <signal.h>
+#include <err.h>
 
 long prev_used_mem;
 int used_mem_change_threshold;
@@ -19,41 +20,52 @@ int usr1_received;
 const char *parse(const char *meminfo_buf, const char* dom_current_buf)
 {
 	const char *ptr = meminfo_buf;
-	static char outbuf[4096];
+	static char outbuf[21];
 	long long val;
 	int len;
 	int ret;
 	long long MemTotal = 0, MemFree = 0, Buffers = 0, Cached = 0, SwapTotal =
 	    0, SwapFree = 0;
-	unsigned long long key;
 	long long used_mem, used_mem_diff;
 	int nitems = 0;
 
-	while (nitems != (1<<6)-1 || !*ptr) {
-		ret = sscanf(ptr, "%*s %lld kB\n%n", &val, &len);
-		if (ret < 1 || len < (int)sizeof (unsigned long long)) {
+	while (nitems != (1<<6)-1 && *ptr) {
+		ret = sscanf(ptr, "%*[A-Za-z]: %lld kB\n%n", &val, &len);
+		if (ret < 1 || len < 10) {
 			ptr += len;
 			continue;
 		}
-		key = *(unsigned long long *) ptr;
-		if (key == *(unsigned long long *) "MemTotal:") {
-			MemTotal = val;
-			nitems |= 1;
-		} else if (key == *(unsigned long long *) "MemFree:") {
-			MemFree = val;
-			nitems |= 2;
-		} else if (key == *(unsigned long long *) "Buffers:") {
-			Buffers = val;
-			nitems |= 4;
-		} else if (key == *(unsigned long long *) "Cached:  ") {
-			Cached = val;
-			nitems |= 8;
-		} else if (key == *(unsigned long long *) "SwapTotal:") {
-			SwapTotal = val;
-			nitems |= 16;
-		} else if (key == *(unsigned long long *) "SwapFree:") {
-			SwapFree = val;
-			nitems |= 32;
+		switch (*ptr) {
+		case 'M':
+			if (!memcmp(ptr + 1, "MemTotal:", 9)) {
+				MemTotal = val;
+				nitems |= 1;
+			} else if (!memcmp(ptr, "MemFree:", 8)) {
+				MemFree = val;
+				nitems |= 2;
+			}
+			break;
+		case 'B':
+			if (!memcmp(ptr, "Buffers:", 8)) {
+				Buffers = val;
+				nitems |= 4;
+			}
+			break;
+		case 'C':
+			if (!memcmp(ptr, "Cached: ", 8)) {
+				Buffers = val;
+				nitems |= 4;
+			}
+			break;
+		case 'S':
+			if (!memcmp(ptr, "SwapTotal:", 10)) {
+				SwapTotal = val;
+				nitems |= 16;
+			} else if (!memcmp(ptr, "SwapFree:", 9)) {
+				SwapFree = val;
+				nitems |= 32;
+			}
+			break;
 		}
 
 		ptr += len;
@@ -78,7 +90,11 @@ const char *parse(const char *meminfo_buf, const char* dom_current_buf)
 	    || (used_mem > prev_used_mem && used_mem / 10 > (MemTotal+12) / 13
 		&& used_mem_diff > used_mem_change_threshold/2)) {
 		prev_used_mem = used_mem;
-		sprintf(outbuf, "%lld", used_mem);
+		if ((unsigned int)snprintf(outbuf, sizeof outbuf, "%lld", used_mem) >=
+			sizeof outbuf) {
+			perror("snprintf");
+			exit(1);
+		}
 		return outbuf;
 	}
 	return NULL;
@@ -145,6 +161,22 @@ static void update(struct xs_handle *xs, int meminfo_fd, int dom_current_fd)
 		send_to_qmemman(xs, meminfo_data);
 }
 
+int strict_atoi(const char *arg)
+{
+	char *endptr;
+	unsigned long res;
+
+	if (!arg || *arg < '0' || *arg > '9' ||
+	    (*arg == '0' && arg[1] && arg[1] != 'x' && arg[1] != 'X'))
+		errx(1, "Invalid number %s (octal or leading zeros?)", arg);
+	res = strtoul(arg, &endptr, 0);
+	if (*endptr)
+		errx(1, "Trailing junk after \"%.*s\"", (int)(endptr - arg), arg);
+	if (res == 0 || res > INT_MAX)
+		errx(1, "%s is not between 1 and %d inclusive", arg, INT_MAX);
+	return (int)res;
+}
+
 int main(int argc, char **argv)
 {
 	int meminfo_fd, dom_current_fd;
@@ -153,11 +185,8 @@ int main(int argc, char **argv)
 
 	if (argc != 3 && argc != 4)
 		usage();
-	used_mem_change_threshold = atoi(argv[1]);
-	delay = atoi(argv[2]);
-	if (used_mem_change_threshold <= 0 || delay <= 0)
-		usage();
-
+	used_mem_change_threshold = strict_atoi(argv[1]);
+	delay = strict_atoi(argv[2]);
 	if (argc == 4) {
 		pid_t pid;
 		sigset_t mask, oldmask;
@@ -222,7 +251,7 @@ int main(int argc, char **argv)
 			exit(1);
 		}
 		if (n > 0)
-			exit(0);
+			_exit(0);
 		usleep(delay);
 	}
 
