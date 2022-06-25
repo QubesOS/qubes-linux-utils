@@ -150,6 +150,8 @@ static int validate_utf8_char(const unsigned char *untrusted_c) {
      *   UTF8-tail   = %x80-BF
      *
      *   This code explicitly excludes control characters from UTF8-1.
+     *   It deliberately allows surrogates and characters above 0x10FFFF;
+     *   these are rejected later as forbidden code points.
      */
 
     if (*untrusted_c >= 0x20 && *untrusted_c < 0x7F) {
@@ -171,21 +173,10 @@ static int validate_utf8_char(const unsigned char *untrusted_c) {
         case 0xE1: case 0xE2: case 0xE3: case 0xE4:
         case 0xE5: case 0xE6: case 0xE7: case 0xE8:
         case 0xE9: case 0xEA: case 0xEB: case 0xEC:
-            /* 0xED */
-        case 0xEE:
-        case 0xEF:
+        case 0xED: case 0xEE: case 0xEF:
             total_size = 3;
             tails_count = 2;
             code_point = *untrusted_c - 0xE0;
-            break;
-        case 0xED:
-            untrusted_c++;
-            total_size = 3;
-            if (*untrusted_c >= 0x80 && *untrusted_c <= 0x9F)
-                tails_count = 1;
-            else
-                return 0;
-            code_point = 0xD << 6 | (*untrusted_c & 0x3F);
             break;
         case 0xF0:
             untrusted_c++;
@@ -196,20 +187,10 @@ static int validate_utf8_char(const unsigned char *untrusted_c) {
                 return 0;
             code_point = *untrusted_c & 0x3F;
             break;
-        case 0xF1:
-        case 0xF2:
-        case 0xF3:
+        case 0xF1: case 0xF2: case 0xF3: case 0xF4:
             total_size = 4;
             tails_count = 3;
             code_point = *untrusted_c & 0xF;
-            break;
-        case 0xF4:
-            untrusted_c++;
-            if (*untrusted_c >= 0x80 && *untrusted_c <= 0x8F)
-                tails_count = 2;
-            else
-                return 0;
-            code_point = 0x4 << 6 | (*untrusted_c & 0x3F);
             break;
         default:
             return 0; // control ASCII or invalid UTF-8
@@ -236,6 +217,11 @@ static int validate_utf8_char(const unsigned char *untrusted_c) {
     case 0x2068: // U+2068 FIRST STRONG ISOLATE
     case 0x2069: // U+2069 POP DIRECTIONAL ISOLATE
         return 0; // Forbidden bidirectional formatting character
+
+    case 0xD800 ... 0xDFFF: // surrogates
+    case 0x110000 ... 0xFFFFFFFF: // too big
+        return 0; // Invalid codepoint; this is not UTF-8.
+
     default:
         return total_size;
     }
