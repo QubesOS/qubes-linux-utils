@@ -134,9 +134,9 @@ void fix_times_and_perms(struct file_header *untrusted_hdr,
 static int validate_utf8_char(const unsigned char *untrusted_c) {
     int tails_count = 0;
     int total_size = 0;
-    /* it is safe to access byte pointed by the parameter and the next one
-     * (which can be terminating NULL), but every next byte can access only if
-     * neither of previous bytes was NULL
+    uint32_t code_point;
+    /* it is safe to access byte pointed by the parameter,
+     * but every next byte can access only if previous byte was not NUL.
      */
 
     /* According to http://www.ietf.org/rfc/rfc3629.txt:
@@ -148,13 +148,16 @@ static int validate_utf8_char(const unsigned char *untrusted_c) {
      *   UTF8-4      = %xF0 %x90-BF 2( UTF8-tail ) / %xF1-F3 3( UTF8-tail ) /
      *                 %xF4 %x80-8F 2( UTF8-tail )
      *   UTF8-tail   = %x80-BF
+     *
+     *   This code explicitly excludes control characters from UTF8-1.
      */
 
-    if (*untrusted_c <= 0x7F) {
-        return 1;
+    if (*untrusted_c >= 0x20 && *untrusted_c < 0x7F) {
+        return 1; // non-control ASCII
     } else if (*untrusted_c >= 0xC2 && *untrusted_c <= 0xDF) {
         total_size = 2;
         tails_count = 1;
+        code_point = *untrusted_c - 0xC0;
     } else switch (*untrusted_c) {
         case 0xE0:
             untrusted_c++;
@@ -163,6 +166,7 @@ static int validate_utf8_char(const unsigned char *untrusted_c) {
                 tails_count = 1;
             else
                 return 0;
+            code_point = *untrusted_c & 0x3F;
             break;
         case 0xE1: case 0xE2: case 0xE3: case 0xE4:
         case 0xE5: case 0xE6: case 0xE7: case 0xE8:
@@ -172,6 +176,7 @@ static int validate_utf8_char(const unsigned char *untrusted_c) {
         case 0xEF:
             total_size = 3;
             tails_count = 2;
+            code_point = *untrusted_c - 0xE0;
             break;
         case 0xED:
             untrusted_c++;
@@ -180,6 +185,7 @@ static int validate_utf8_char(const unsigned char *untrusted_c) {
                 tails_count = 1;
             else
                 return 0;
+            code_point = 0xD << 6 | (*untrusted_c & 0x3F);
             break;
         case 0xF0:
             untrusted_c++;
@@ -188,12 +194,14 @@ static int validate_utf8_char(const unsigned char *untrusted_c) {
                 tails_count = 2;
             else
                 return 0;
+            code_point = *untrusted_c & 0x3F;
             break;
         case 0xF1:
         case 0xF2:
         case 0xF3:
             total_size = 4;
             tails_count = 3;
+            code_point = *untrusted_c & 0xF;
             break;
         case 0xF4:
             untrusted_c++;
@@ -201,17 +209,36 @@ static int validate_utf8_char(const unsigned char *untrusted_c) {
                 tails_count = 2;
             else
                 return 0;
+            code_point = 0x4 << 6 | (*untrusted_c & 0x3F);
             break;
         default:
-            return 0;
+            return 0; // control ASCII or invalid UTF-8
     }
 
     while (tails_count-- > 0) {
         untrusted_c++;
         if (!(*untrusted_c >= 0x80 && *untrusted_c <= 0xBF))
             return 0;
+        code_point = code_point << 6 | (*untrusted_c & 0x3F);
     }
-    return total_size;
+
+    switch (code_point) {
+    case 0x0 ... 0x1F: // C0 controls
+    case 0x7F ... 0x9F: // C1 controls
+    case 0x202A: // U+202A LEFT-TO-RIGHT EMBEDDING
+    case 0x202B: // U+202B RIGHT-TO-LEFT EMBEDDING
+    case 0x202C: // U+202C POP DIRECTIONAL FORMATTING
+    case 0x202D: // U+202D LEFT-TO-RIGHT OVERRIDE
+    case 0x202E: // U+202E RIGHT-TO-LEFT OVERRIDE
+
+    case 0x2066: // U+2066 LEFT-TO-RIGHT ISOLATE
+    case 0x2067: // U+2067 RIGHT-TO-LEFT ISOLATE
+    case 0x2068: // U+2068 FIRST STRONG ISOLATE
+    case 0x2069: // U+2069 POP DIRECTIONAL ISOLATE
+        return 0; // Forbidden bidirectional formatting character
+    default:
+        return total_size;
+    }
 }
 
 static size_t validate_path(const char *const untrusted_name, size_t allowed_leading_dotdot)
@@ -245,8 +272,6 @@ static size_t validate_path(const char *const untrusted_name, size_t allowed_lea
                 abort();
             }
         }
-        if (untrusted_name[i] < 0x20 || (unsigned char)untrusted_name[i] == 0x7F)
-            do_exit(EILSEQ, untrusted_name); // path has control characters
         int utf8_ret = validate_utf8_char((const unsigned char *)(untrusted_name + i));
         if (utf8_ret > 0) {
             /* loop will do one additional increment */
