@@ -10,6 +10,8 @@
 #include <stdio.h>
 #include <limits.h>
 #include <assert.h>
+#include <err.h>
+#include <inttypes.h>
 #include "libqubes-rpc-filecopy.h"
 #include "ioall.h"
 #include "crc32.h"
@@ -115,18 +117,49 @@ void send_status_and_crc(int code, const char *last_filename) {
     errno = saved_errno;
 }
 
-void fix_times_and_perms(struct file_header *untrusted_hdr,
-        const char *untrusted_name)
+static long validate_utime_nsec(uint32_t untrusted_nsec)
 {
-    struct timeval times[2] =
+    enum { MAX_NSEC = 999999999L };
+    _Static_assert(UTIME_NOW > MAX_NSEC && UTIME_NOW <= UINT32_MAX, "bad UTIME_NOW");
+    _Static_assert(UTIME_OMIT > MAX_NSEC && UTIME_OMIT <= UINT32_MAX, "bad UTIME_OMIT");
+    if (untrusted_nsec != UTIME_NOW &&
+        untrusted_nsec != UTIME_OMIT &&
+        untrusted_nsec > MAX_NSEC)
+        errx(1, "Invalid nanoseconds value %" PRIu32, untrusted_nsec);
+    return (long)untrusted_nsec;
+}
+
+static void fix_times_and_perms(const int fd,
+        const struct file_header *const untrusted_hdr,
+        const char *const last_segment,
+        const char *const untrusted_name)
+{
+    const struct timespec times[2] =
     { 
-        {untrusted_hdr->atime, untrusted_hdr->atime_nsec / 1000},
-        {untrusted_hdr->mtime, untrusted_hdr->mtime_nsec / 1000}
+        {
+            .tv_sec = untrusted_hdr->atime,
+            .tv_nsec = validate_utime_nsec(untrusted_hdr->atime_nsec)
+        },
+        {
+            .tv_sec = untrusted_hdr->mtime,
+            .tv_nsec = validate_utime_nsec(untrusted_hdr->mtime_nsec)
+        },
     };
-    if (chmod(untrusted_name, untrusted_hdr->mode & 07777))
-        do_exit(errno, untrusted_name);
-    if (utimes(untrusted_name, times))  /* as above */
-        do_exit(errno, untrusted_name);
+    if (last_segment == NULL) {
+        /* Do not change the mode of symbolic links */
+        if (!S_ISLNK(untrusted_hdr->mode) &&
+            fchmod(fd, untrusted_hdr->mode & 07777))
+            do_exit(errno, untrusted_name);
+        if (futimens(fd, times))  /* as above */
+            do_exit(errno, untrusted_name);
+    } else {
+        /* Do not change the mode of what a symbolic link points to */
+        if (!S_ISLNK(untrusted_hdr->mode) &&
+            fchmodat(fd, last_segment, untrusted_hdr->mode & 07777, 0))
+            do_exit(errno, untrusted_name);
+        if (utimensat(fd, last_segment, times, AT_SYMLINK_NOFOLLOW))  /* as above */
+            do_exit(errno, untrusted_name);
+    }
 }
 
 /* validate single UTF-8 character
@@ -378,8 +411,8 @@ void process_one_file_reg(struct file_header *untrusted_hdr,
         if (linkat(procdir_fd, fd_str, AT_FDCWD, untrusted_name, AT_SYMLINK_FOLLOW) < 0)
             do_exit(errno, untrusted_name);
     }
+    fix_times_and_perms(fdout, untrusted_hdr, NULL, untrusted_name);
     close(fdout);
-    fix_times_and_perms(untrusted_hdr, untrusted_name);
 }
 
 
@@ -405,7 +438,7 @@ void process_one_file_dir(struct file_header *untrusted_hdr,
         do_exit(errno, untrusted_name);
     total_bytes += buf.st_size;
     /* size accumulated after the fact, so don't check limit here */
-    fix_times_and_perms(untrusted_hdr, untrusted_name);
+    fix_times_and_perms(safe_dirfd, untrusted_hdr, last_segment, untrusted_name);
     close(safe_dirfd);
 }
 
