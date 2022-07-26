@@ -4,7 +4,8 @@ def main():
         if last_cat == 'Cn':
             return
         if interval[0] != interval[1]:
-            print(f'    case 0x{interval[0]:X} ... 0x{interval[1]:X}: // category {last_cat}')
+            print(f'    case 0x{interval[0]:X} ... 0x{interval[1]:X}: // category {last_cat}'
+                  .replace('category Cs', 'surrogates'))
         else:
             print(f'    case 0x{interval[0]:X}: // category {last_cat}')
     import sys

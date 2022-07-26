@@ -263,7 +263,7 @@ static int validate_utf8_char(const unsigned char *untrusted_c) {
     case 0x2060 ... 0x2064: // category Cf
     case 0x2066 ... 0x206F: // category Cf
     case 0x3000: // category Zs
-    case 0xD800 ... 0xDFFF: // category Cs
+    case 0xD800 ... 0xDFFF: // surrogates
     case 0xE000 ... 0xF8FF: // category Co
     case 0xFEFF: // category Cf
     case 0xFFF9 ... 0xFFFB: // category Cf
