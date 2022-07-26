@@ -188,7 +188,7 @@ static int validate_utf8_char(const unsigned char *untrusted_c) {
     } else if (*untrusted_c >= 0xC2 && *untrusted_c <= 0xDF) {
         total_size = 2;
         tails_count = 1;
-        code_point = *untrusted_c - 0xC0;
+        code_point = *untrusted_c & 0x1F;
     } else switch (*untrusted_c) {
         case 0xE0:
             untrusted_c++;
@@ -205,7 +205,7 @@ static int validate_utf8_char(const unsigned char *untrusted_c) {
         case 0xED: case 0xEE: case 0xEF:
             total_size = 3;
             tails_count = 2;
-            code_point = *untrusted_c - 0xE0;
+            code_point = *untrusted_c & 0xF;
             break;
         case 0xF0:
             untrusted_c++;
@@ -219,7 +219,7 @@ static int validate_utf8_char(const unsigned char *untrusted_c) {
         case 0xF1: case 0xF2: case 0xF3: case 0xF4:
             total_size = 4;
             tails_count = 3;
-            code_point = *untrusted_c & 0xF;
+            code_point = *untrusted_c & 0x7;
             break;
         default:
             return 0; // control ASCII or invalid UTF-8
