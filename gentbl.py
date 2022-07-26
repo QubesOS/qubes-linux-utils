@@ -17,7 +17,9 @@ def main():
         if cat == last_cat:
             interval[1] = i
         else:
-            if last_cat[0] in ('C', 'Z') and i != 0x21:
+            # Allow the interval consisting only of 0x20, to allow spaces in
+            # file names
+            if last_cat[0] in ('C', 'Z') and interval != [0x20, 0x20]:
                 print_interval(interval, last_cat)
             interval = [i, i]
     print_interval(interval, last_cat)
