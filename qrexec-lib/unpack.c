@@ -327,7 +327,9 @@ static size_t validate_path(const char *const untrusted_name, size_t allowed_lea
     return non_dotdot_components;
 }
 
-static int open_safe(int dirfd, const char *path, const char **last_segment)
+// Open a directory, enforcing O_NOFOLLOW for every path component.
+// *last_segment will be set to the last segment of the path.
+static int opendir_safe(int dirfd, const char *path, const char **last_segment)
 {
     static char *path_dup = NULL;
     assert(path && *path);
@@ -373,7 +375,7 @@ void process_one_file_reg(struct file_header *untrusted_hdr,
 
 
     validate_path(untrusted_name, 0);
-    safe_dirfd = open_safe(AT_FDCWD, untrusted_name, &last_segment);
+    safe_dirfd = opendir_safe(AT_FDCWD, untrusted_name, &last_segment);
 
     /* make the file inaccessible until fully written */
     if (use_tmpfile) {
@@ -429,7 +431,7 @@ void process_one_file_dir(struct file_header *untrusted_hdr,
     const char *last_segment;
 
     validate_path(untrusted_name, 0);
-    safe_dirfd = open_safe(AT_FDCWD, untrusted_name, &last_segment);
+    safe_dirfd = opendir_safe(AT_FDCWD, untrusted_name, &last_segment);
 
     // fix perms only when the directory is sent for the second time
     // it allows to transfer r.x directory contents, as we create it rwx initially
@@ -470,7 +472,7 @@ void process_one_file_link(struct file_header *untrusted_hdr,
         abort(); // validate_path() should not have returned
     validate_path(untrusted_content, path_components - 1);
 
-    safe_dirfd = open_safe(AT_FDCWD, untrusted_name, &last_segment);
+    safe_dirfd = opendir_safe(AT_FDCWD, untrusted_name, &last_segment);
 
     if (symlinkat(untrusted_content, safe_dirfd, last_segment))
         do_exit(errno, untrusted_name);
