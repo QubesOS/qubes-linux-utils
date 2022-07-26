@@ -343,7 +343,6 @@ static int opendir_safe(int dirfd, char *path, const char **last_segment)
         assert(this_segment);
         char *next = strchr(this_segment, '/');
         if (next) {
-            assert(*next == '/');
             *next = '\0';
             next_segment = next + 1;
         } else {
