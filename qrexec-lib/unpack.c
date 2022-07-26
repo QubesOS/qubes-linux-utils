@@ -178,9 +178,21 @@ static int validate_utf8_char(const unsigned char *untrusted_c) {
      *                 %xF4 %x80-8F 2( UTF8-tail )
      *   UTF8-tail   = %x80-BF
      *
-     *   This code explicitly excludes control characters from UTF8-1.
-     *   It deliberately allows surrogates and characters above 0x10FFFF;
-     *   these are rejected later as forbidden code points.
+     * This code uses a slightly different grammar:
+     *
+     *   UTF8-char   = UTF8-1 / UTF8-2 / UTF8-3 / UTF8-4
+     *   UTF8-1      = %x20-7F
+     *   UTF8-2      = %xC2-DF UTF8-tail
+     *   UTF8-3      = %xE0 %xA0-BF UTF8-tail / %xE1-EF 2( UTF8-tail )
+     *   UTF8-4      = %xF0 %x90-BF 2( UTF8-tail ) / %xF1-F4 3( UTF8-tail ) /
+     *   UTF8-tail   = %x80-BF
+     *
+     * The differences are:
+     *
+     * - ASCII control characters are rejected, allowing a fast path for other
+     *   ASCII characters.
+     * - Surrogates and some values above 0x10FFFF are accepted here, but are
+     *   rejected as forbidden code points later.
      */
 
     if (*untrusted_c >= 0x20 && *untrusted_c < 0x7F) {
