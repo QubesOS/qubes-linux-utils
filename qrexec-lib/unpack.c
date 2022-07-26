@@ -120,11 +120,7 @@ void send_status_and_crc(int code, const char *last_filename) {
 static long validate_utime_nsec(uint32_t untrusted_nsec)
 {
     enum { MAX_NSEC = 999999999L };
-    _Static_assert(UTIME_NOW > MAX_NSEC && UTIME_NOW <= UINT32_MAX, "bad UTIME_NOW");
-    _Static_assert(UTIME_OMIT > MAX_NSEC && UTIME_OMIT <= UINT32_MAX, "bad UTIME_OMIT");
-    if (untrusted_nsec != UTIME_NOW &&
-        untrusted_nsec != UTIME_OMIT &&
-        untrusted_nsec > MAX_NSEC)
+    if (untrusted_nsec > MAX_NSEC)
         errx(1, "Invalid nanoseconds value %" PRIu32, untrusted_nsec);
     return (long)untrusted_nsec;
 }
