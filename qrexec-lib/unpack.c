@@ -211,10 +211,7 @@ static int validate_utf8_char(const unsigned char *untrusted_c) {
                 return 0;
             code_point = *untrusted_c & 0x3F;
             break;
-        case 0xE1: case 0xE2: case 0xE3: case 0xE4:
-        case 0xE5: case 0xE6: case 0xE7: case 0xE8:
-        case 0xE9: case 0xEA: case 0xEB: case 0xEC:
-        case 0xED: case 0xEE: case 0xEF:
+        case 0xE1 ... 0xEF:
             total_size = 3;
             tails_count = 2;
             code_point = *untrusted_c & 0xF;
@@ -228,7 +225,7 @@ static int validate_utf8_char(const unsigned char *untrusted_c) {
                 return 0;
             code_point = *untrusted_c & 0x3F;
             break;
-        case 0xF1: case 0xF2: case 0xF3: case 0xF4:
+        case 0xF1 ... 0xF4:
             total_size = 4;
             tails_count = 3;
             code_point = *untrusted_c & 0x7;
