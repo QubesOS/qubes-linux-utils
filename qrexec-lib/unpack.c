@@ -289,6 +289,8 @@ static size_t validate_path(const char *const untrusted_name, size_t allowed_lea
     const size_t len = strlen(untrusted_name);
     if (len == 0)
         do_exit(ENOENT, untrusted_name);
+    if (untrusted_name[len - 1] == '/')
+        do_exit(EILSEQ, untrusted_name); // trailing slash
     size_t non_dotdot_components = 0;
     for (size_t i = 0; i < len; ++i) {
         if (i == 0 || untrusted_name[i - 1] == '/') {
