@@ -328,16 +328,14 @@ static size_t validate_path(const char *const untrusted_name, size_t allowed_lea
 }
 
 // Open a directory, enforcing O_NOFOLLOW for every path component.
-// *last_segment will be set to the last segment of the path.
-static int opendir_safe(int dirfd, const char *path, const char **last_segment)
+// *last_segment will be set to the last segment of the path, and points
+// into the original path.  The original path is modified in-place, so one
+// should probably pass a copy.
+static int opendir_safe(int dirfd, char *path, const char **last_segment)
 {
-    static char *path_dup = NULL;
-    assert(path && *path);
-    free(path_dup);
-    char *this_segment = path_dup = strdup(path), *next_segment = NULL;
+    assert(path && *path); // empty paths rejected earlier
+    char *this_segment = path, *next_segment = NULL;
     *last_segment = NULL;
-    if (!path_dup)
-        do_exit(ENOMEM, path);
     int cur_fd = dirfd;
     for (;;this_segment = next_segment) {
         assert(this_segment);
@@ -355,14 +353,12 @@ static int opendir_safe(int dirfd, const char *path, const char **last_segment)
         assert(strcmp(this_segment, ".."));
         assert(strchr(this_segment, '/') == NULL);
 
-        if (*path_dup) {
-            int new_fd = openat(cur_fd, this_segment, O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_NOCTTY | O_CLOEXEC);
-            if (new_fd == -1)
-                do_exit(errno, this_segment);
-            if (cur_fd != dirfd)
-                close(cur_fd);
-            cur_fd = new_fd;
-        }
+        int new_fd = openat(cur_fd, this_segment, O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_NOCTTY | O_CLOEXEC);
+        if (new_fd == -1)
+            do_exit(errno, this_segment);
+        if (cur_fd != dirfd)
+            close(cur_fd);
+        cur_fd = new_fd;
     }
 }
 
@@ -372,10 +368,13 @@ void process_one_file_reg(struct file_header *untrusted_hdr,
     int ret;
     int fdout = -1, safe_dirfd;
     const char *last_segment;
+    char *path_dup;
 
 
     validate_path(untrusted_name, 0);
-    safe_dirfd = opendir_safe(AT_FDCWD, untrusted_name, &last_segment);
+    if ((path_dup = strdup(untrusted_name)) == NULL)
+        do_exit(ENOMEM, untrusted_name);
+    safe_dirfd = opendir_safe(AT_FDCWD, path_dup, &last_segment);
 
     /* make the file inaccessible until fully written */
     if (use_tmpfile) {
@@ -421,6 +420,7 @@ void process_one_file_reg(struct file_header *untrusted_hdr,
     }
     fix_times_and_perms(fdout, untrusted_hdr, NULL, untrusted_name);
     close(fdout);
+    free(path_dup);
 }
 
 
@@ -429,9 +429,11 @@ void process_one_file_dir(struct file_header *untrusted_hdr,
 {
     int safe_dirfd;
     const char *last_segment;
-
+    char *path_dup;
     validate_path(untrusted_name, 0);
-    safe_dirfd = opendir_safe(AT_FDCWD, untrusted_name, &last_segment);
+    if ((path_dup = strdup(untrusted_name)) == NULL)
+        do_exit(ENOMEM, untrusted_name);
+    safe_dirfd = opendir_safe(AT_FDCWD, path_dup, &last_segment);
 
     // fix perms only when the directory is sent for the second time
     // it allows to transfer r.x directory contents, as we create it rwx initially
@@ -448,6 +450,7 @@ void process_one_file_dir(struct file_header *untrusted_hdr,
     /* size accumulated after the fact, so don't check limit here */
     fix_times_and_perms(safe_dirfd, untrusted_hdr, last_segment, untrusted_name);
     close(safe_dirfd);
+    free(path_dup);
 }
 
 void process_one_file_link(struct file_header *untrusted_hdr,
@@ -455,6 +458,7 @@ void process_one_file_link(struct file_header *untrusted_hdr,
 {
     char untrusted_content[MAX_PATH_LENGTH];
     const char *last_segment;
+    char *path_dup;
     unsigned int filelen;
     size_t path_components = validate_path(untrusted_name, 0);
     int safe_dirfd;
@@ -472,12 +476,15 @@ void process_one_file_link(struct file_header *untrusted_hdr,
         abort(); // validate_path() should not have returned
     validate_path(untrusted_content, path_components - 1);
 
-    safe_dirfd = opendir_safe(AT_FDCWD, untrusted_name, &last_segment);
+    if ((path_dup = strdup(untrusted_name)) == NULL)
+        do_exit(ENOMEM, untrusted_name);
+    safe_dirfd = opendir_safe(AT_FDCWD, path_dup, &last_segment);
 
     if (symlinkat(untrusted_content, safe_dirfd, last_segment))
         do_exit(errno, untrusted_name);
 
     close(safe_dirfd);
+    free(path_dup);
 }
 
 void process_one_file(struct file_header *untrusted_hdr, int flags)
