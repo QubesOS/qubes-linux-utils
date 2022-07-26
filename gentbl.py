@@ -23,5 +23,6 @@ def main():
                 print_interval(interval, last_cat)
             interval = [i, i]
     print_interval(interval, last_cat)
+    print('    case 0x10FFFF ... UINT32_MAX: // too large')
 if __name__ == '__main__':
     main()

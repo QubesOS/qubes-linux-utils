@@ -276,10 +276,11 @@ static int validate_utf8_char(const unsigned char *untrusted_c) {
     case 0xE0020 ... 0xE007F: // category Cf
     case 0xF0000 ... 0xFFFFD: // category Co
     case 0x100000 ... 0x10FFFD: // category Co
+    case 0x110000 ... UINT32_MAX: // too large
         return 0; // Invalid UTF-8 or forbidden codepoint
 
     default:
-        return code_point > 0x10FFFF ? 0 : total_size;
+        return total_size;
     }
 }
 
