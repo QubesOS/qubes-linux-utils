@@ -1,4 +1,5 @@
 #!/usr/bin/python3 --
+import sys
 def main():
     def print_interval(interval, last_cat):
         if last_cat == 'Cn':
@@ -25,5 +26,6 @@ def main():
             interval = [i, i]
     print_interval(interval, last_cat)
     print('    case 0x10FFFF ... UINT32_MAX: // too large')
+    sys.stdout.flush()
 if __name__ == '__main__':
     main()
