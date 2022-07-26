@@ -8,12 +8,6 @@ def main():
         else:
             print(f'    case 0x{interval[0]:X}: // category {last_cat}')
     import sys
-    try:
-        assert False
-    except AssertionError:
-        pass
-    else:
-        sys.exit(1)
     interval = [0, 0]
     from unicodedata import category, name
     cat = last_cat = 'Cc'
