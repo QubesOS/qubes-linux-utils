@@ -327,10 +327,12 @@ static size_t validate_path(const char *const untrusted_name, size_t allowed_lea
     return non_dotdot_components;
 }
 
-// Open a directory, enforcing O_NOFOLLOW for every path component.
-// *last_segment will be set to the last segment of the path, and points
-// into the original path.  The original path is modified in-place, so one
-// should probably pass a copy.
+// Open the second-to-last component of a path, enforcing O_NOFOLLOW for every
+// path component.  *last_segment will be set to the last segment of the path,
+// and points into the original path.  The original path is modified in-place,
+// so one should probably pass a copy.  The return value is either dirfd (if the
+// path has no / in it) or a newly opened file descriptor that must be closed by
+// the caller.  dirfd can be AT_FDCWD to indicate the current_directory.
 static int opendir_safe(int dirfd, char *path, const char **last_segment)
 {
     assert(path && *path); // empty paths rejected earlier
@@ -392,7 +394,8 @@ void process_one_file_reg(struct file_header *untrusted_hdr,
         fdout = openat(safe_dirfd, last_segment, O_WRONLY | O_CREAT | O_EXCL | O_NOFOLLOW | O_CLOEXEC | O_NOCTTY, 0000);
     if (fdout < 0)
         do_exit(errno, untrusted_name);
-    close(safe_dirfd);
+    if (safe_dirfd != AT_FDCWD)
+        close(safe_dirfd);
 
     /* sizes are signed elsewhere */
     if (untrusted_hdr->filelen > LLONG_MAX || (bytes_limit && untrusted_hdr->filelen > bytes_limit))
@@ -449,7 +452,8 @@ void process_one_file_dir(struct file_header *untrusted_hdr,
     total_bytes += buf.st_size;
     /* size accumulated after the fact, so don't check limit here */
     fix_times_and_perms(safe_dirfd, untrusted_hdr, last_segment, untrusted_name);
-    close(safe_dirfd);
+    if (safe_dirfd != AT_FDCWD)
+        close(safe_dirfd);
     free(path_dup);
 }
 
@@ -483,7 +487,8 @@ void process_one_file_link(struct file_header *untrusted_hdr,
     if (symlinkat(untrusted_content, safe_dirfd, last_segment))
         do_exit(errno, untrusted_name);
 
-    close(safe_dirfd);
+    if (safe_dirfd != AT_FDCWD)
+        close(safe_dirfd);
     free(path_dup);
 }
 
