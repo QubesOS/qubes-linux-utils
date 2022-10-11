@@ -13,19 +13,19 @@
 #include "ioall.h"
 #include "crc32.h"
 
-char untrusted_namebuf[MAX_PATH_LENGTH];
-unsigned long long bytes_limit = 0;
-unsigned long long files_limit = 0;
-unsigned long long total_bytes = 0;
-unsigned long long total_files = 0;
-int verbose = 0;
+static char untrusted_namebuf[MAX_PATH_LENGTH];
+static unsigned long long bytes_limit = 0;
+static unsigned long long files_limit = 0;
+static unsigned long long total_bytes = 0;
+static unsigned long long total_files = 0;
+static int verbose = 0;
 /*
  * If positive, wait for disk space before extracting a file,
  * keeping this much extra space (in bytes).
  */
-unsigned long opt_wait_for_space_margin;
-int use_tmpfile = 0;
-int procdir_fd = -1;
+static unsigned long opt_wait_for_space_margin;
+static int use_tmpfile = 0;
+static int procdir_fd = -1;
 
 void send_status_and_crc(int code, const char *last_filename);
 
@@ -84,7 +84,7 @@ int wait_for_space(int fd, unsigned long how_much) {
     return 0;
 }
 
-unsigned long crc32_sum = 0;
+static unsigned long crc32_sum = 0;
 int read_all_with_crc(int fd, void *buf, int size) {
     int ret;
     ret = read_all(fd, buf, size);
