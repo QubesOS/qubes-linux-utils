@@ -1,3 +1,15 @@
+qubes-utils (4.2.0) unstable; urgency=medium
+
+  [ Frédéric Pierret (fepitre) ]
+  * Drop Travis CI
+  * Add Qubes Builder v2 integration
+  * .qubesbuilder: replace 'spec' by 'build'
+
+  [ Gaurav ]
+  * Make use of static variables
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Tue, 11 Oct 2022 23:22:06 +0200
+
 qubes-utils (4.1.16) unstable; urgency=medium
 
   [ Frédéric Pierret (fepitre) ]
