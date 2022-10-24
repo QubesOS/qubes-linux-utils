@@ -1,5 +1,5 @@
 
-help() {
+help () {
   echo "Before using pvgrub, the kernel you want to use needs to be regenerated with Qubes kernel modules in the TemplateVM:"
   echo "1/ Ensure that your kernel and kernel sources are installed (ex: pacman -S linux-lts linux-lts-headers)"
   echo "2/ Ensure that grub config file has been generated for your kernel (ex: grub-mkconfig > /boot/grub/grub.cfg)"
@@ -8,20 +8,41 @@ help() {
 }
 
 ## arg 1:  the new package version
-post_install() {
+post_install () {
+  local begin='### BEGIN QUBES HOOKS ###' end='### END QUBES HOOKS ###'
+  local combined="\\
+$begin\\
+# Set the kernel command line to what the QubesOS initramfs hook expects.\\
+# If the kernel command line is wrong, the system will not boot.\\
+\\
+. /etc/default/grub.qubes\\
+. /etc/default/grub.qubes-kernel-vm-support\\
+$end"
   echo "Adding qubes required hooks to mkinitcpio.conf"
-  sed 's/^HOOKS="base/HOOKS="lvm2 qubes base/' -i /etc/mkinitcpio.conf
+  if [[ ! -s /etc/default/grub ]]; then
+    echo >> /etc/default/grub
+  fi
+  sed -Ei 's/^(HOOKS=[("])base/\1lvm2 qubes base/' /etc/mkinitcpio.conf
+  echo 'Adding qubes required hooks to /etc/default/grub'
+  sed -Ei "/^$begin\$/,/^$end\$/{
+\$c$combined
+d
+}
+\$a$combined
+" /etc/default/grub
+  grub-mkconfig -o /boot/grub/grub.cfg
   help
 }
 
-post_upgrade() {
-  echo "Adding qubes required hooks to mkinitcpio.conf"
-  sed 's/^HOOKS="base/HOOKS="lvm2 qubes base/' -i /etc/mkinitcpio.conf
-  help
+post_upgrade () {
+  post_install
 }
 
-post_remove() {
-  echo "Removing qubes required hooks to mkinitcpio.conf"
-  sed 's/^HOOKS="lvm2 qubes base/HOOKS="base/' -i /etc/mkinitcpio.conf
+post_remove () {
+  local begin='### BEGIN QUBES HOOKS ###' end='### END QUBES HOOKS ###'
+  echo 'Removing qubes required hooks from mkinitcpio.conf'
+  sed -Ei 's/^(HOOKS=[("])lvm2 qubes base/\1base/' /etc/mkinitcpio.conf
+  echo 'Removing qubes required hooks from /etc/default/grub'
+  sed -Ei "/^$begin\$/,/^$end\$/d" /etc/default/grub
+  grub-mkconfig -o /boot/grub/grub.cfg
 }
-
