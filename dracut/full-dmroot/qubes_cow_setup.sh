@@ -68,19 +68,19 @@ else
     ROOT_DEV=xvda
 fi
 
-SWAP_SIZE=$(( 1024 * 1024 * 2 )) # sectors, 1GB
+SWAP_SIZE_GiB=1
+SWAP_SIZE_512B=$(( SWAP_SIZE_GiB * 1024 * 1024 * 2 ))
 
 if [ `cat /sys/class/block/$ROOT_DEV/ro` = 1 ] ; then
     log_begin "Qubes: Doing COW setup for AppVM..."
 
     while ! [ -e /dev/xvdc ]; do sleep 0.1; done
-    VOLATILE_SIZE=$(cat /sys/class/block/xvdc/size) # sectors
-    ROOT_SIZE=$(cat /sys/class/block/$ROOT_DEV/size) # sectors
-    if [ $VOLATILE_SIZE -lt $SWAP_SIZE ]; then
-        die "volatile.img smaller than 1GB, cannot continue"
+    VOLATILE_SIZE_512B=$(cat /sys/class/block/xvdc/size)
+    if [ $VOLATILE_SIZE_512B -lt $SWAP_SIZE_512B ]; then
+        die "volatile.img smaller than $SWAP_SIZE_GiB GiB, cannot continue"
     fi
-    sfdisk -q --unit S /dev/xvdc >/dev/null <<EOF
-xvdc1: type=82,start=2048,size=$SWAP_SIZE
+    sfdisk -q /dev/xvdc >/dev/null <<EOF
+xvdc1: type=82,start=1MiB,size=${SWAP_SIZE_GiB}GiB
 xvdc2: type=83
 EOF
     if [ $? -ne 0 ]; then
@@ -100,8 +100,8 @@ EOF
 else
     log_begin "Qubes: Doing R/W setup for TemplateVM..."
     while ! [ -e /dev/xvdc ]; do sleep 0.1; done
-    sfdisk -q --unit S /dev/xvdc >/dev/null <<EOF
-xvdc1: type=82,start=2048,size=$SWAP_SIZE
+    sfdisk -q /dev/xvdc >/dev/null <<EOF
+xvdc1: type=82,start=1MiB,size=${SWAP_SIZE_GiB}GiB
 xvdc3: type=83
 EOF
     if [ $? -ne 0 ]; then
