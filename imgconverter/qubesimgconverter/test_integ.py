@@ -47,7 +47,7 @@ class TC_00_ImgConverter(qubes.tests.extra.ExtraTestCase):
         :param filename: output filename
         '''
         p = self.vm.run(
-            'convert -size {}x{} -depth 8 rgba:- "{}" 2>&1'.format(
+            'gm convert -size {}x{} -depth 8 rgba:- "{}" 2>&1'.format(
                 self.image_size, self.image_size, filename),
             passio_popen=True)
         bytes_data = bytes(bytearray(itertools.chain(*self.image_data)))
@@ -61,10 +61,10 @@ class TC_00_ImgConverter(qubes.tests.extra.ExtraTestCase):
         self.assertEquals(
             self.vm.run('test -r "{}"'.format(orig_filename), wait=True), 0)
         # retrieve original image too, to compensate for compression
-        p = self.vm.run('convert "{}" rgb:-'.format(orig_filename),
+        p = self.vm.run('gm convert "{}" rgb:-'.format(orig_filename),
             passio_popen=True)
         orig_image_data, _ = p.communicate()
-        p = self.vm.run('convert "{}" rgb:-'.format(trusted_filename),
+        p = self.vm.run('gm convert "{}" rgb:-'.format(trusted_filename),
             passio_popen=True)
         trusted_image_data, _ = p.communicate()
         self.assertEquals(orig_image_data, trusted_image_data)
