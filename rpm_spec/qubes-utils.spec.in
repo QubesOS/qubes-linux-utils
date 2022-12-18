@@ -10,7 +10,7 @@ URL:		http://www.qubes-os.org
 
 Requires:	udev
 Requires:	%{name}-libs
-Requires:	ImageMagick
+Requires:	GraphicsMagick
 Requires:	python%{python3_pkgversion}-qubesimgconverter
 %{?systemd_requires}
 BuildRequires:  systemd

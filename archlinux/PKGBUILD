@@ -40,7 +40,7 @@ make all
 }
 
 package_qubes-vm-utils() {
-depends=(imagemagick python-cairo python-pillow python-numpy)
+depends=(graphicsmagick python-cairo python-pillow python-numpy)
 install=PKGBUILD-qubes-vm-utils.install
 
 make install "DESTDIR=$pkgdir" LIBDIR=/usr/lib SYSLIBDIR=/usr/lib SBINDIR=/usr/bin

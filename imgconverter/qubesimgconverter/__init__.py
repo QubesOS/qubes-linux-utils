@@ -61,7 +61,8 @@ get_from_stream(), get_from_vm(), get_xdg_icon_from_vm(), get_through_dvm()'''
     def save(self, dst):
         'Save image to disk. dst may specify format, like png:aqq.gif'
 
-        p = subprocess.Popen(['convert',
+        p = subprocess.Popen(['gm',
+            'convert',
             '-depth', '8',
             '-size', '{0[0]}x{0[1]}'.format(self._size),
             'rgba:-',
@@ -162,13 +163,13 @@ get_from_stream(), get_from_vm(), get_xdg_icon_from_vm(), get_through_dvm()'''
 
         WARNING: always load trusted images.'''
 
-        p = subprocess.Popen(['identify', '-format', '%w %h', filename],
+        p = subprocess.Popen(['gm', 'identify', '-format', '%w %h', filename],
             stdout=subprocess.PIPE)
         size = tuple(int(i) for i in p.stdout.read().strip().split())
         p.stdout.close()
         p.wait()
 
-        p = subprocess.Popen(['convert', filename, '-depth', '8', 'rgba:-'],
+        p = subprocess.Popen(['gm', 'convert', filename, '-depth', '8', 'rgba:-'],
             stdout=subprocess.PIPE)
         rgba = p.stdout.read()
         p.stdout.close()
@@ -338,7 +339,7 @@ def hex_to_int(colour, channels=3, depth=1):
 def tint(src, dst, colour):
     '''Tint image to reflect vm label.
 
-    src and dst may NOT specify ImageMagick format'''
+    src and dst may NOT specify GraphicsMagick format'''
 
     Image.load_from_file_pil(src).tint(colour).save_pil(dst)
 
