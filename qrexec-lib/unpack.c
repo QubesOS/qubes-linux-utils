@@ -257,17 +257,18 @@ static size_t validate_path(const char *const untrusted_name, size_t allowed_lea
     do {
         if (i == 0 || untrusted_name[i - 1] == '/') {
             switch (untrusted_name[i]) {
-            case '/':
-            case '\0':
-                do_exit(EILSEQ, untrusted_name); // repeated, initial, or trailing slash
+            case '/': // repeated or initial slash
+            case '\0': // trailing slash
+                do_exit(EILSEQ, untrusted_name);
             case '.':
                 if (untrusted_name[i + 1] == '\0' || untrusted_name[i + 1] == '/')
                     do_exit(EILSEQ, untrusted_name); // path component is "."
                 if ((untrusted_name[i + 1] == '.') &&
                     (untrusted_name[i + 2] == '\0' || untrusted_name[i + 2] == '/')) {
-                    if (allowed_leading_dotdot) {
+                    if (allowed_leading_dotdot > 0) {
                         allowed_leading_dotdot--;
-                        break;
+                        i += 2; // advance past ".."
+                        continue;
                     }
                     do_exit(EILSEQ, untrusted_name); // too many ".." components
                 }
@@ -303,18 +304,17 @@ static int opendir_safe(int dirfd, char *path, const char **last_segment)
     for (;;this_segment = next_segment) {
         assert(this_segment);
         char *next = strchr(this_segment, '/');
-        if (next) {
-            *next = '\0';
-            next_segment = next + 1;
-        } else {
+        if (next == NULL) {
             *last_segment = this_segment;
             return cur_fd;
         }
-        assert(this_segment[0]);
-        assert(strcmp(this_segment, "."));
-        assert(strcmp(this_segment, ".."));
-        assert(strchr(this_segment, '/') == NULL);
-
+        *next = '\0';
+        next_segment = next + 1;
+        if ((next - this_segment <= 2) &&
+            (memcmp(this_segment, "..", (size_t)(next - this_segment)) == 0)) {
+            fprintf(stderr, "BUG: path component '%s' not rejected earlier!\n", this_segment);
+            abort();
+        }
         int new_fd = openat(cur_fd, this_segment, O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_NOCTTY | O_CLOEXEC);
         if (new_fd == -1)
             do_exit(errno, this_segment);
@@ -331,7 +331,6 @@ void process_one_file_reg(struct file_header *untrusted_hdr,
     int fdout = -1, safe_dirfd;
     const char *last_segment;
     char *path_dup;
-
 
     validate_path(untrusted_name, 0);
     if ((path_dup = strdup(untrusted_name)) == NULL)
@@ -377,7 +376,8 @@ void process_one_file_reg(struct file_header *untrusted_hdr,
     }
     if (use_tmpfile) {
         char fd_str[11];
-        snprintf(fd_str, sizeof(fd_str), "%d", fdout);
+        if ((unsigned)snprintf(fd_str, sizeof(fd_str), "%d", fdout) >= sizeof(fd_str))
+            abort();
         if (linkat(procdir_fd, fd_str, AT_FDCWD, untrusted_name, AT_SYMLINK_FOLLOW) < 0)
             do_exit(errno, untrusted_name);
     }
