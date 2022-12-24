@@ -286,11 +286,10 @@ static int validate_utf8_char(const unsigned char *untrusted_c) {
 
 static size_t validate_path(const char *const untrusted_name, size_t allowed_leading_dotdot)
 {
-    const size_t len = strlen(untrusted_name);
-    if (len == 0)
+    if (untrusted_name[0] == 0)
         do_exit(ENOENT, untrusted_name);
     size_t non_dotdot_components = 0;
-    for (size_t i = 0; i < len; ++i) {
+    for (size_t i = 0; untrusted_name[i]; ++i) {
         if (i == 0 || untrusted_name[i - 1] == '/') {
             switch (untrusted_name[i]) {
             case '/':
