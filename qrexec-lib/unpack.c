@@ -287,14 +287,14 @@ static int validate_utf8_char(const unsigned char *untrusted_c) {
 static size_t validate_path(const char *const untrusted_name, size_t allowed_leading_dotdot)
 {
     if (untrusted_name[0] == 0)
-        do_exit(ENOENT, untrusted_name);
-    size_t non_dotdot_components = 0;
-    for (size_t i = 0; untrusted_name[i]; ++i) {
+        do_exit(ENOENT, untrusted_name); // same error as Linux
+    size_t non_dotdot_components = 0, i = 0;
+    do {
         if (i == 0 || untrusted_name[i - 1] == '/') {
             switch (untrusted_name[i]) {
             case '/':
             case '\0':
-                do_exit(EILSEQ, untrusted_name); // repeated or initial slash
+                do_exit(EILSEQ, untrusted_name); // repeated, initial, or trailing slash
             case '.':
                 if (untrusted_name[i + 1] == '\0' || untrusted_name[i + 1] == '/')
                     do_exit(EILSEQ, untrusted_name); // path component is "."
@@ -315,13 +315,11 @@ static size_t validate_path(const char *const untrusted_name, size_t allowed_lea
         }
         int utf8_ret = validate_utf8_char((const unsigned char *)(untrusted_name + i));
         if (utf8_ret > 0) {
-            /* loop will do one additional increment */
-            i += utf8_ret - 1;
-            continue;
+            i += utf8_ret;
         } else {
             do_exit(EILSEQ, untrusted_name); // not valid UTF-8
         }
-    }
+    } while (untrusted_name[i]);
     return non_dotdot_components;
 }
 
