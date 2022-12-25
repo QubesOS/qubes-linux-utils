@@ -2,8 +2,6 @@
 import sys
 def main():
     def print_interval(interval, last_cat):
-        if last_cat == 'Cn':
-            return
         if interval[0] != interval[1]:
             print(f'    case 0x{interval[0]:X} ... 0x{interval[1]:X}: // category {last_cat}'
                   .replace('category Cs', 'surrogates'))
@@ -25,7 +23,7 @@ def main():
                 print_interval(interval, last_cat)
             interval = [i, i]
     print_interval(interval, last_cat)
-    print('    case 0x10FFFF ... UINT32_MAX: // too large')
+    print('    case 0x110000 ... UINT32_MAX: // too large')
     sys.stdout.flush()
 if __name__ == '__main__':
     main()
