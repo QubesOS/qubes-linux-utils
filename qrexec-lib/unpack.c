@@ -194,14 +194,12 @@ static int validate_utf8_char(const unsigned char *untrusted_c) {
      * - Surrogates and some values above 0x10FFFF are accepted here, but are
      *   rejected as forbidden code points later.
      */
-
-    if (*untrusted_c >= 0x20 && *untrusted_c < 0x7F) {
-        return 1; // non-control ASCII
-    } else if (*untrusted_c >= 0xC2 && *untrusted_c <= 0xDF) {
-        total_size = 2;
-        tails_count = 1;
-        code_point = *untrusted_c & 0x1F;
-    } else switch (*untrusted_c) {
+    switch (*untrusted_c) {
+        case 0xC2 ... 0xDF:
+            total_size = 2;
+            tails_count = 1;
+            code_point = *untrusted_c & 0x1F;
+            break;
         case 0xE0:
             untrusted_c++;
             total_size = 3;
@@ -279,11 +277,15 @@ static size_t validate_path(const char *const untrusted_name, size_t allowed_lea
                 break;
             }
         }
-        int utf8_ret = validate_utf8_char((const unsigned char *)(untrusted_name + i));
-        if (utf8_ret > 0) {
-            i += utf8_ret;
+        if (untrusted_name[i] >= 0x20 && untrusted_name[i] <= 0x7E) {
+            i++;
         } else {
-            do_exit(EILSEQ, untrusted_name); // not valid UTF-8
+            int utf8_ret = validate_utf8_char((const unsigned char *)(untrusted_name + i));
+            if (utf8_ret > 0) {
+                i += utf8_ret;
+            } else {
+                do_exit(EILSEQ, untrusted_name); // not valid UTF-8
+            }
         }
     } while (untrusted_name[i]);
     return non_dotdot_components;
