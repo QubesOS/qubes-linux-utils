@@ -1,4 +1,5 @@
 #define _GNU_SOURCE /* For O_NOFOLLOW. */
+#define U_HIDE_DEPRECATED_API U_HIDE_DEPRECATED_API
 #include <errno.h>
 #include <fcntl.h>
 #include <sys/time.h>
@@ -12,6 +13,11 @@
 #include <assert.h>
 #include <err.h>
 #include <inttypes.h>
+
+#include <unicode/uchar.h>
+#include <unicode/uscript.h>
+#include <unicode/utf.h>
+
 #include "libqubes-rpc-filecopy.h"
 #include "ioall.h"
 #include "crc32.h"
@@ -184,7 +190,7 @@ static int validate_utf8_char(const unsigned char *untrusted_c) {
      *   UTF8-1      = %x20-7F
      *   UTF8-2      = %xC2-DF UTF8-tail
      *   UTF8-3      = %xE0 %xA0-BF UTF8-tail / %xE1-EF 2( UTF8-tail )
-     *   UTF8-4      = %xF0 %x90-BF 2( UTF8-tail ) / %xF1-F4 3( UTF8-tail ) /
+     *   UTF8-4      = %xF0 %x90-BF 2( UTF8-tail ) / %xF1-F4 3( UTF8-tail )
      *   UTF8-tail   = %x80-BF
      *
      * The differences are:
@@ -239,12 +245,36 @@ static int validate_utf8_char(const unsigned char *untrusted_c) {
         code_point = code_point << 6 | (*untrusted_c & 0x3F);
     }
 
+    /*
+     * Validate that this is a Unicode codepoint that can be assigned a
+     * character.  This catches surrogates, code points beyond 0x10FFFF, and
+     * various noncharacters.
+     */
+    if (!(U_IS_UNICODE_CHAR(code_point)))
+        return 0;
+
     switch (code_point) {
 #include "unpack-table.c"
         return 0; // Invalid UTF-8 or forbidden codepoint
     default:
-        return total_size;
+        break;
     }
+
+    uint32_t s = u_charDirection(code_point);
+    switch (s) {
+    case U_WHITE_SPACE_NEUTRAL:
+    case U_OTHER_NEUTRAL:
+    case U_EUROPEAN_NUMBER_TERMINATOR:
+    case U_EUROPEAN_NUMBER_SEPARATOR:
+    case U_COMMON_NUMBER_SEPARATOR:
+    case U_EUROPEAN_NUMBER:
+    case U_LEFT_TO_RIGHT:
+        break;
+    default:
+        /* Not safe */
+        return 0;
+    }
+    return total_size;
 }
 
 static size_t validate_path(const char *const untrusted_name, size_t allowed_leading_dotdot)

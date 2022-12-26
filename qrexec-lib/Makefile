@@ -1,7 +1,8 @@
 CC=gcc
-CFLAGS+=-I. -g -O2 -Wall -Wextra -Werror -pie -fPIC
+CFLAGS+=-I. -g -O2 -Wall -Wextra -Werror -pie -fPIC $(shell pkg-config --cflags icu-uc)
 SO_VER=2
 LDFLAGS+=-shared
+LDLIBS += $(shell pkg-config --libs icu-uc)
 .PHONY: all clean install
 objs := ioall.o copy-file.o crc32.o unpack.o pack.o
 

@@ -46,6 +46,7 @@ Development header and files for qubes-utils
 %package libs
 Summary: Qubes utils libraries
 Release:	1%{?dist}
+BuildRequires:	pkgconfig(icu-uc)
 
 %description libs
 Libraries for qubes-utils
