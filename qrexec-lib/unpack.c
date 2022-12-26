@@ -274,7 +274,162 @@ static int validate_utf8_char(const unsigned char *untrusted_c) {
         /* Not safe */
         return 0;
     }
-    return total_size;
+    UErrorCode errcode = 0;
+    int script = uscript_getScript(code_point, &errcode);
+    if (errcode) {
+        fprintf(stderr, "BUG: uscript_getScript failed on codepoint 0x%" PRIX32 " with with code %d\n", code_point, errcode);
+        abort();
+    }
+    switch (script) {
+    case USCRIPT_INHERITED:
+    case USCRIPT_CYRILLIC:
+    case USCRIPT_GREEK:
+    case USCRIPT_LATIN:
+    case USCRIPT_BRAILLE:
+    case USCRIPT_SIMPLIFIED_HAN:
+    case USCRIPT_TRADITIONAL_HAN:
+    case USCRIPT_HAN:
+    case USCRIPT_HAN_WITH_BOPOMOFO:
+    case USCRIPT_JAMO:
+    case USCRIPT_HANGUL:
+    case USCRIPT_BOPOMOFO:
+    case USCRIPT_KATAKANA_OR_HIRAGANA:
+    case USCRIPT_HIRAGANA:
+    case USCRIPT_KATAKANA:
+    case USCRIPT_JAPANESE:
+    case USCRIPT_KOREAN:
+    case USCRIPT_COMMON:
+        return total_size;
+    case USCRIPT_DESERET:
+    case USCRIPT_COPTIC:
+    case USCRIPT_LINEAR_B:
+    case USCRIPT_ETHIOPIC:
+    case USCRIPT_GOTHIC:
+    case USCRIPT_OGHAM:
+    case USCRIPT_OLD_ITALIC:
+    case USCRIPT_UGARITIC:
+    case USCRIPT_GLAGOLITIC:
+    case USCRIPT_KHAROSHTHI:
+    case USCRIPT_OLD_PERSIAN:
+    case USCRIPT_HIERATIC_EGYPTIAN:
+    case USCRIPT_EGYPTIAN_HIEROGLYPHS:
+    case USCRIPT_LINEAR_A:
+    case USCRIPT_DEMOTIC_EGYPTIAN:
+    case USCRIPT_BRAHMI:
+    case USCRIPT_KHUTSURI:
+    case USCRIPT_OLD_HUNGARIAN:
+    case USCRIPT_HARAPPAN_INDUS:
+    case USCRIPT_MAYAN_HIEROGLYPHS:
+    case USCRIPT_MEROITIC_HIEROGLYPHS:
+    case USCRIPT_OLD_PERMIC:
+    case USCRIPT_PHOENICIAN:
+    case USCRIPT_ORKHON:
+    case USCRIPT_RONGORONGO:
+    case USCRIPT_CUNEIFORM:
+    case USCRIPT_CARIAN:
+    case USCRIPT_LYCIAN:
+    case USCRIPT_LYDIAN:
+    case USCRIPT_REJANG:
+    case USCRIPT_IMPERIAL_ARAMAIC:
+    case USCRIPT_AVESTAN:
+    case USCRIPT_KAITHI:
+    case USCRIPT_INSCRIPTIONAL_PAHLAVI:
+    case USCRIPT_PSALTER_PAHLAVI:
+    case USCRIPT_BOOK_PAHLAVI:
+    case USCRIPT_SAMARITAN:
+    case USCRIPT_INSCRIPTIONAL_PARTHIAN:
+    case USCRIPT_ELBASAN:
+    case USCRIPT_CAUCASIAN_ALBANIAN:
+    case USCRIPT_PALMYRENE:
+    case USCRIPT_NABATAEAN:
+    case USCRIPT_HATRAN:
+    case USCRIPT_MEROITIC_CURSIVE:
+    case USCRIPT_OLD_SOUTH_ARABIAN:
+    case USCRIPT_OLD_NORTH_ARABIAN:
+    case USCRIPT_OLD_CHURCH_SLAVONIC_CYRILLIC:
+    case USCRIPT_OLD_SOGDIAN:
+    case USCRIPT_SOGDIAN:
+#ifdef USCRIPT_CHORASMIAN
+    case USCRIPT_CHORASMIAN:
+#endif
+    case USCRIPT_ELYMAIC:
+    case USCRIPT_MAHAJANI:
+    case USCRIPT_JURCHEN:
+    case USCRIPT_TANGUT:
+    case USCRIPT_WOLEAI:
+    case USCRIPT_ANATOLIAN_HIEROGLYPHS:
+    case USCRIPT_KHOJKI:
+    case USCRIPT_MULTANI:
+    case USCRIPT_MODI:
+    case USCRIPT_AHOM:
+    case USCRIPT_DOGRA:
+    case USCRIPT_BHAIKSUKI:
+    case USCRIPT_MARCHEN:
+    case USCRIPT_ZANABAZAR_SQUARE:
+#ifdef USCRIPT_DIVES_AKURU
+    case USCRIPT_DIVES_AKURU:
+#endif
+    case USCRIPT_MAKASAR:
+    case USCRIPT_NANDINAGARI:
+#ifdef USCRIPT_KHITAN_SMALL_SCRIPT
+    case USCRIPT_KHITAN_SMALL_SCRIPT:
+#endif
+        return 0; // dead languages or scripts
+    case USCRIPT_MENDE:
+    case USCRIPT_MANDAIC:
+    case USCRIPT_ARABIC:
+    case USCRIPT_HEBREW:
+    case USCRIPT_NKO:
+    case USCRIPT_HANIFI_ROHINGYA:
+    case USCRIPT_NUSHU:
+    case USCRIPT_ADLAM:
+        return 0; // right-to-left
+    case USCRIPT_DEVANAGARI:
+    case USCRIPT_SYRIAC:
+    case USCRIPT_BENGALI:
+    case USCRIPT_BALINESE:
+    case USCRIPT_ESTRANGELO_SYRIAC:
+    case USCRIPT_WESTERN_SYRIAC:
+    case USCRIPT_EASTERN_SYRIAC:
+    case USCRIPT_GUJARATI:
+    case USCRIPT_GURMUKHI:
+    case USCRIPT_KANNADA:
+    case USCRIPT_KHMER:
+    case USCRIPT_MALAYALAM:
+    case USCRIPT_MONGOLIAN:
+    case USCRIPT_MYANMAR:
+    case USCRIPT_THAI:
+    case USCRIPT_SINHALA:
+    case USCRIPT_TAMIL:
+    case USCRIPT_TELUGU:
+    case USCRIPT_THAANA:
+    case USCRIPT_TIBETAN:
+    case USCRIPT_ORIYA:
+    case USCRIPT_PHAGS_PA:
+    case USCRIPT_LIMBU:
+    case USCRIPT_LAO:
+    case USCRIPT_TAGALOG:
+    case USCRIPT_BUHID:
+    case USCRIPT_TAI_LE:
+    case USCRIPT_BUGINESE:
+    case USCRIPT_BATAK:
+    case USCRIPT_CHAM:
+    case USCRIPT_JAVANESE:
+    case USCRIPT_LEPCHA:
+    case USCRIPT_MIAO:
+    case USCRIPT_LANNA:
+    case USCRIPT_SAURASHTRA:
+    case USCRIPT_CHAKMA:
+    case USCRIPT_TAI_VIET:
+    case USCRIPT_KHUDAWADI:
+    case USCRIPT_TAKRI:
+    case USCRIPT_NEWA:
+    case USCRIPT_SOYOMBO:
+    case USCRIPT_SIGN_WRITING:
+        return 0; // require complex rendering
+    default:
+        return 0; // not sure
+    }
 }
 
 static size_t validate_path(const char *const untrusted_name, size_t allowed_leading_dotdot)
