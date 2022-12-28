@@ -284,6 +284,22 @@ static int validate_utf8_char(const unsigned char *untrusted_c) {
         fprintf(stderr, "BUG: uscript_getScript failed on codepoint 0x%" PRIX32 " with with code %d\n", code_point, errcode);
         abort();
     }
+
+    int v = uscript_getUsage(script) ;
+    switch (v) {
+    case USCRIPT_USAGE_UNKNOWN:
+    case USCRIPT_USAGE_RECOMMENDED:
+        break;
+    case USCRIPT_USAGE_NOT_ENCODED:
+    case USCRIPT_USAGE_EXCLUDED:
+    case USCRIPT_USAGE_ASPIRATIONAL:
+    case USCRIPT_USAGE_LIMITED_USE:
+        return 0;
+    default:
+        fprintf(stderr, "BUG: uscript_getUsage returned unexpected value %d codepoint 0x%" PRIX32 "\n", v, code_point);
+        abort();
+    }
+
     switch (script) {
     case USCRIPT_INHERITED:
     case USCRIPT_CYRILLIC:
