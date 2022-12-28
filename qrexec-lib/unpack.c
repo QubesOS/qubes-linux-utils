@@ -253,6 +253,10 @@ static int validate_utf8_char(const unsigned char *untrusted_c) {
     if (!(U_IS_UNICODE_CHAR(code_point)))
         return 0;
 
+    /*
+     * Validate that the codepoint is a valid scalar value and is not a symbol,
+     * space, unassigned character, or control character.
+     */
     switch (code_point) {
 #include "unpack-table.c"
         return 0; // Invalid UTF-8 or forbidden codepoint
