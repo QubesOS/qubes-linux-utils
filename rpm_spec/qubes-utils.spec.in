@@ -47,6 +47,7 @@ Development header and files for qubes-utils
 Summary: Qubes utils libraries
 Release:	1%{?dist}
 BuildRequires:	pkgconfig(icu-uc)
+BuildRequires:	python3
 
 %description libs
 Libraries for qubes-utils
@@ -110,9 +111,9 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root,-)
-/usr/lib/udev/rules.d/*-qubes-*.rules
-/usr/lib/tmpfiles.d/xen-devices-qubes.conf
-/usr/lib/qubes/udev-*
+%_udevrulesdir/*-qubes-*.rules
+%_tmpfilesdir/xen-devices-qubes.conf
+%{_prefix}/lib/qubes/udev-*
 %{_sbindir}/meminfo-writer
 %{_unitdir}/qubes-meminfo-writer.service
 %{_unitdir}/qubes-meminfo-writer-dom0.service
@@ -127,11 +128,14 @@ rm -rf $RPM_BUILD_ROOT
 
 %files libs
 %{_libdir}/libqubes-rpc-filecopy.so.2
+%{_libdir}/libqubes-pure.so.0
 
 %files devel
 %defattr(-,root,root,-)
-/usr/include/libqubes-rpc-filecopy.h
+%_includedir/libqubes-rpc-filecopy.h
+%_includedir/qubes/pure.h
 %{_libdir}/libqubes-rpc-filecopy.so
+%{_libdir}/libqubes-pure.so
 
 %changelog
 @CHANGELOG@
