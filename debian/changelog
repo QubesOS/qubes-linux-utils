@@ -1,3 +1,13 @@
+qubes-utils (4.2.2) unstable; urgency=medium
+
+  [ Mateusz Piórkowski ]
+  * Replace ImageMagick with GraphicsMagick
+
+  [ Demi Marie Obenour ]
+  * SELinux policy for meminfo-writer
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Sun, 01 Jan 2023 15:15:32 +0100
+
 qubes-utils (4.2.1) unstable; urgency=medium
 
   [ Rusty Bird ]
