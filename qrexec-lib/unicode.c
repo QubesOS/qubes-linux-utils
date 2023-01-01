@@ -214,12 +214,18 @@ static int validate_utf8_char(const unsigned char *untrusted_c) {
     case USCRIPT_OLD_SOUTH_ARABIAN:
     case USCRIPT_OLD_NORTH_ARABIAN:
     case USCRIPT_OLD_CHURCH_SLAVONIC_CYRILLIC:
+#ifdef USCRIPT_OLD_SOGDIAN
     case USCRIPT_OLD_SOGDIAN:
+#endif
+#ifdef USCRIPT_SOGDIAN
     case USCRIPT_SOGDIAN:
+#endif
 #ifdef USCRIPT_CHORASMIAN
     case USCRIPT_CHORASMIAN:
 #endif
+#ifdef USCRIPT_ELYMAIC
     case USCRIPT_ELYMAIC:
+#endif
     case USCRIPT_MAHAJANI:
     case USCRIPT_JURCHEN:
     case USCRIPT_TANGUT:
@@ -229,15 +235,21 @@ static int validate_utf8_char(const unsigned char *untrusted_c) {
     case USCRIPT_MULTANI:
     case USCRIPT_MODI:
     case USCRIPT_AHOM:
+#ifdef USCRIPT_DOGRA
     case USCRIPT_DOGRA:
+#endif
     case USCRIPT_BHAIKSUKI:
     case USCRIPT_MARCHEN:
     case USCRIPT_ZANABAZAR_SQUARE:
 #ifdef USCRIPT_DIVES_AKURU
     case USCRIPT_DIVES_AKURU:
 #endif
+#ifdef USCRIPT_MAKASAR
     case USCRIPT_MAKASAR:
+#endif
+#ifdef USCRIPT_NANDINAGARI
     case USCRIPT_NANDINAGARI:
+#endif
 #ifdef USCRIPT_KHITAN_SMALL_SCRIPT
     case USCRIPT_KHITAN_SMALL_SCRIPT:
 #endif
@@ -247,7 +259,9 @@ static int validate_utf8_char(const unsigned char *untrusted_c) {
     case USCRIPT_ARABIC:
     case USCRIPT_HEBREW:
     case USCRIPT_NKO:
+#ifdef USCRIPT_HANIFI_ROHINGYA
     case USCRIPT_HANIFI_ROHINGYA:
+#endif
     case USCRIPT_NUSHU:
     case USCRIPT_ADLAM:
         return 0; // right-to-left
