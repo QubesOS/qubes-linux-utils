@@ -31,7 +31,6 @@ install-fedora-kernel-support:
 install-debian-kernel-support:
 	$(MAKE) -C initramfs-tools install
 	$(MAKE) -C dracut install
-	$(MAKE) -C kernel-modules install
 	$(MAKE) -C grub install-debian
 
 clean:
