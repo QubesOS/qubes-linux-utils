@@ -32,6 +32,8 @@ URL:            http://www.qubes-os.org
 
 Requires:       dracut
 BuildRequires:  make
+BuildRequires:  gcc
+BuildRequires:  e2fsprogs-devel
 
 %description
 This package contains:
@@ -42,6 +44,9 @@ initrd is provided by dom0.
 %prep
 %setup -q -n qubes-utils-%{version}
 
+%build
+make -C kernel-modules all
+
 %install
 make install-fedora-kernel-support DESTDIR=%{buildroot}
 
@@ -50,6 +55,7 @@ make install-fedora-kernel-support DESTDIR=%{buildroot}
 /usr/lib/dracut/modules.d/90qubes-vm-modules
 /usr/lib/dracut/modules.d/90qubes-vm-simple
 /usr/lib/dracut/modules.d/80xen-scrub-pages
+/usr/lib/qubes/vm-modules-genfs
 /usr/sbin/qubes-prepare-vm-kernel
 %config(noreplace) /etc/default/grub.qubes-kernel-vm-support
 
