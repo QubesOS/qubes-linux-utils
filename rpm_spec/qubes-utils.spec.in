@@ -123,6 +123,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_sbindir}/meminfo-writer
 %{_unitdir}/qubes-meminfo-writer.service
 %{_unitdir}/qubes-meminfo-writer-dom0.service
+/etc/xen/scripts/qubes-block
 
 %files -n python%{python3_pkgversion}-qubesimgconverter
 %{python3_sitelib}/qubesimgconverter/__init__.py

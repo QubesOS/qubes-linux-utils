@@ -10,6 +10,7 @@ all:
 	$(MAKE) -C qrexec-lib all
 	$(MAKE) -C qmemman all
 	$(MAKE) -C imgconverter all
+	$(MAKE) -C not-script all
 selinux:
 	$(MAKE) -f /usr/share/selinux/devel/Makefile -C selinux qubes-meminfo-writer.pp
 
@@ -18,6 +19,7 @@ install:
 	$(MAKE) -C qrexec-lib install
 	$(MAKE) -C qmemman install
 	$(MAKE) -C imgconverter install
+	$(MAKE) -C not-script install
 
 install-selinux:
 	install -m 0644 -D -t $(DESTDIR)/usr/share/selinux/packages selinux/qubes-meminfo-writer.pp
@@ -37,6 +39,7 @@ clean:
 	$(MAKE) -C qrexec-lib clean
 	$(MAKE) -C qmemman clean
 	$(MAKE) -C imgconverter clean
+	$(MAKE) -C not-script clean
 	rm -rf selinux/*.pp selinux/tmp/
 	rm -rf debian/changelog.*
 	rm -rf pkgs

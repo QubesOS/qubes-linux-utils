@@ -31,8 +31,8 @@ md5sums=(SKIP)
 
 build() {
 
-for source in qrexec-lib udev qmemman core kernel-modules Makefile dracut imgconverter grub; do
-  (ln -s -- "$srcdir/../$source" "$srcdir/$source")
+for source in qrexec-lib udev qmemman core kernel-modules Makefile dracut imgconverter grub not-script; do
+  ln -s -- "$srcdir/../$source" "$srcdir/$source"
 done
 
 make all
