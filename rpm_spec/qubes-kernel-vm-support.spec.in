@@ -30,6 +30,8 @@ Vendor:         Invisible Things Lab
 License:        GPL v2 only
 URL:            http://www.qubes-os.org
 
+# qubes-prepare-vm-kernel interface version - to use in kernel.spec
+Provides:       qubes-prepare-vm-kernel = 2
 Requires:       dracut
 Requires:       busybox
 BuildRequires:  make
