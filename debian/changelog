@@ -1,3 +1,32 @@
+qubes-utils (4.1.17) unstable; urgency=medium
+
+  [ Gaurav ]
+  * Make use of static variables
+
+  [ Frédéric Pierret (fepitre) ]
+  * Drop Travis CI
+
+  [ Rusty Bird ]
+  * initramfs: remove unused variable
+  * initramfs: sector-size agnostic partitioning of volatile volume
+
+  [ Demi Marie Obenour ]
+  * Fix sed regex for mkinitcpio.conf
+  * Fix up /etc/default/grub in postinstall script
+  * Add comments to /etc/default/grub
+  * Ensure that /etc/default/grub is not empty
+  * Install and source grub.qubes-kernel-vm-support
+  * Add spaces after function names
+
+  [ Marek Marczykowski-Górecki ]
+  * debian: do not install qubes-prepare-vm-kernel
+  * Build and install vm-modules-genfs
+  * qubes-prepare-vm-kernel: sync with pre-built package features
+  * qubes-prepare-vm-kernel: make initramfs smaller
+  * rpm: provide virtual qubes-prepare-vm-kernel capability
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Mon, 09 Jan 2023 13:17:35 +0100
+
 qubes-utils (4.1.16) unstable; urgency=medium
 
   [ Frédéric Pierret (fepitre) ]
