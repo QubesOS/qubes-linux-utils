@@ -290,9 +290,11 @@ int main(int argc, char **argv)
             switch (rw[0]) {
             case 'r':
                 writable = false;
+                warn("XenStore key %s specifies read-only", xenstore_path_buffer);
                 break;
             case 'w':
                 writable = true;
+                warn("XenStore key %s specifies writable", xenstore_path_buffer);
                 break;
             default:
                 len = 0;
