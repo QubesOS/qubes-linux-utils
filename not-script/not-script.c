@@ -38,8 +38,9 @@ static int setup_loop(struct loop_context *ctx,
                       uint64_t sizelimit,
                       bool writable,
                       const char *path) {
-    warn("Setting up path %s (via FD %" PRIu32 ") with offset 0x%" PRIx64 " and size limit 0x%" PRIx64 " as %s",
+    fprintf(stderr, "Setting up path %s (via FD %" PRIu32 ") with offset 0x%" PRIx64 " and size limit 0x%" PRIx64 " as %s\n",
          path, fd, offset, sizelimit, writable ? "writable" : "read-only");
+    fflush(NULL);
     struct loop_config config = {
         .fd = fd,
         .block_size = 0, /* FIXME! */
@@ -293,11 +294,13 @@ int main(int argc, char **argv)
             switch (rw[0]) {
             case 'r':
                 writable = false;
-                warn("XenStore key %s specifies read-only", xenstore_path_buffer);
+                fprintf(stderr, "XenStore key %s specifies read-only\n", xenstore_path_buffer);
+                fflush(NULL);
                 break;
             case 'w':
                 writable = true;
-                warn("XenStore key %s specifies writable", xenstore_path_buffer);
+                fprintf(stderr, "XenStore key %s specifies writable\n", xenstore_path_buffer);
+                fflush(NULL);
                 break;
             default:
                 len = 0;
