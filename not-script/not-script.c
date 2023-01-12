@@ -36,7 +36,10 @@ static int setup_loop(struct loop_context *ctx,
                       uint32_t fd,
                       uint64_t offset,
                       uint64_t sizelimit,
-                      bool writable) {
+                      bool writable,
+                      const char *path) {
+    warn("Setting up path %s (via FD %" PRIu32 ") with offset 0x%" PRIx64 " and size limit 0x%" PRIx64 " as %s",
+         path, fd, offset, sizelimit, writable ? "writable" : "read-only");
     struct loop_config config = {
         .fd = fd,
         .block_size = 0, /* FIXME! */
@@ -138,7 +141,7 @@ process_blk_dev(int fd, const char *path, bool writable, dev_t *dev,
         if (ctrl_fd < 0)
             err(1, "open(/dev/loop-control)");
         struct loop_context ctx = { .fd = ctrl_fd };
-        int loop_fd = setup_loop(&ctx, fd, 0, (uint64_t)statbuf.st_size, writable);
+        int loop_fd = setup_loop(&ctx, fd, 0, (uint64_t)statbuf.st_size, writable, path);
         if (loop_fd < 0)
             err(1, "loop device setup failed");
         if (dup3(loop_fd, fd, O_CLOEXEC) != fd)
@@ -150,7 +153,7 @@ process_blk_dev(int fd, const char *path, bool writable, dev_t *dev,
         if (fstat(fd, &statbuf))
             err(1, "fstat");
     } else {
-        errx(1, "Path %s is neither a directory nor regular file", path);
+        errx(1, "Path %s is neither a block device nor regular file", path);
     }
 skip:
     *dev = statbuf.st_rdev;
