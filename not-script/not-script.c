@@ -32,6 +32,16 @@ struct loop_context {
     uint32_t fd;
 };
 
+static int open_loop_dev(uint32_t devnum, bool writable)
+{
+    char buf[sizeof("/dev/loop") + 10];
+    if ((unsigned)snprintf(buf, sizeof buf, "/dev/loop%u", (unsigned)devnum) >= sizeof buf)
+        abort();
+    int res = open(buf, (writable ? O_RDWR : O_RDONLY) |
+                   O_EXCL | O_CLOEXEC | O_NOCTTY | O_NOFOLLOW);
+    return res == -1 ? -errno : res;
+}
+
 static int setup_loop(struct loop_context *ctx,
                       uint32_t fd,
                       uint64_t offset,
@@ -47,21 +57,15 @@ static int setup_loop(struct loop_context *ctx,
         .info = {
             .lo_offset = offset,
             .lo_sizelimit = sizelimit,
-            .lo_flags = LO_FLAGS_AUTOCLEAR | LO_FLAGS_DIRECT_IO |
-                (writable ? 0 : LO_FLAGS_READ_ONLY),
+            .lo_flags = LO_FLAGS_DIRECT_IO | (writable ? 0 : LO_FLAGS_READ_ONLY),
         },
     };
-
-    char buf[sizeof("/dev/loop") + 10];
 
     int dev_file = -1, status;
     for (int retry_count = 0; retry_count < 5 /* arbitrary */; retry_count++) {
         if ((status = ioctl(ctx->fd, LOOP_CTL_GET_FREE)) == -1)
             return -errno;
-        if ((unsigned)snprintf(buf, sizeof buf, "/dev/loop%u", (unsigned)status) >= sizeof buf)
-            abort();
-        dev_file = open(buf, (writable ? O_RDWR : O_RDONLY) |
-                              O_EXCL | O_CLOEXEC | O_NOCTTY | O_NOFOLLOW);
+        dev_file = open_loop_dev(status, writable);
         if (dev_file > 0) {
             switch (ioctl(dev_file, LOOP_CONFIGURE, &config)) {
             case 0:
@@ -74,7 +78,7 @@ static int setup_loop(struct loop_context *ctx,
                 abort();
             }
         }
-        if (errno != EBUSY)
+        if (errno != EBUSY && errno != ENXIO)
             break;
     }
     return -1;
@@ -198,9 +202,95 @@ static void redirect_stderr(void)
         err(1, "close(%d)", redirect_fd);
 }
 
+static void remove_device(struct xs_handle *const h, char *xenstore_path_buffer,
+                          char *extra_path)
+{
+    char *physdev, *end_path, *diskseq_str;
+    unsigned int path_len, diskseq_len;
+    int loop_control_fd, loop_fd;
+    uint64_t actual_diskseq;
+
+    strcpy(extra_path, "physical-device");
+    physdev = xs_read(h, 0, xenstore_path_buffer, &path_len);
+    if (physdev == NULL) {
+        err(1, "Cannot obtain physical device from XenStore path %s", xenstore_path_buffer);
+    }
+
+    strcpy(extra_path, "diskseq");
+    diskseq_str = xs_read(h, 0, xenstore_path_buffer, &diskseq_len);
+    if (diskseq_str == NULL) {
+        err(1, "Cannot obtain diskseq from XenStore path %s", xenstore_path_buffer);
+    }
+
+    if ((*physdev < '1' || *physdev > '9') && (*physdev < 'a' || *physdev > 'f'))
+        goto bad_physdev;
+
+    errno = 0;
+    unsigned long const _major = strtoul(physdev, &end_path, 16);
+    if (_major > UINT32_MAX || errno || *end_path != ':')
+        goto bad_physdev;
+
+    end_path++;
+
+    if ((*end_path < '1' || *end_path > '9') && (*end_path < 'a' || *end_path > 'f'))
+        goto bad_physdev;
+
+    unsigned long const _minor = strtoul(end_path, &end_path, 16);
+    if (_minor > UINT32_MAX || errno || end_path != physdev + path_len)
+        goto bad_physdev;
+
+    if (diskseq_str[0] < '1' || diskseq_str[0] > '9')
+        goto bad_diskseq;
+
+    unsigned long long const diskseq = strtoull(diskseq_str, &end_path, 10);
+    if (errno || end_path != diskseq_str + diskseq_len)
+        goto bad_diskseq;
+
+    if ((loop_control_fd = open_file("/dev/loop-control")) < 0)
+        err(1, "open(/dev/loop-control)");
+
+    if ((loop_fd = open_loop_dev(_minor, false)) < 0)
+        err(1, "open(/dev/loop%lu)", _minor);
+
+    struct stat statbuf;
+    if (fstat(loop_fd, &statbuf))
+        err(1, "fstat(\"/dev/loop%lu\")", _minor);
+
+    if (statbuf.st_rdev != makedev(_major, _minor)) {
+        errx(1, "Opened wrong loop device: expected (%lu, %lu) but got (%u, %u)!",
+             _major, _minor, major(statbuf.st_rdev), minor(statbuf.st_rdev));
+    }
+
+    if (ioctl(loop_fd, BLKGETDISKSEQ, &actual_diskseq))
+        err(1, "ioctl(%d, BLKGETDISKSEQ, %p)", loop_fd, &actual_diskseq);
+
+    if (diskseq != actual_diskseq)
+        errx(1, "Loop device diskseq mismatch!");
+
+    if ((unsigned long)ioctl(loop_control_fd, LOOP_CTL_REMOVE, (long)_minor) != _minor)
+        err(1, "ioctl(%d, %d, %ld)", loop_control_fd, LOOP_CTL_REMOVE, (long)_minor);
+
+    if (close(loop_fd))
+        err(1, "close(\"/dev/loop%lu\")", _minor);
+
+    if (close(loop_control_fd))
+        err(1, "close(\"/dev/loop-control\")");
+
+    return;
+bad_physdev:
+    errx(1, "Bad physical device value %s", physdev);
+bad_diskseq:
+    errx(1, "Bad idiskseq %s", diskseq_str);
+}
+
+
 int main(int argc, char **argv)
 {
-    bool permissive = false;
+    enum {
+        ADD,
+        REMOVE,
+    } action;
+    bool permissive;
     redirect_stderr();
 #define XENBUS_PATH_PREFIX "XENBUS_PATH="
 #define BACKEND_VBD "backend/vbd/"
@@ -214,29 +304,31 @@ int main(int argc, char **argv)
     const char *last_slash = strrchr(argv[0], '/');
     last_slash = last_slash ? last_slash + 1 : argv[0];
 
-    if (strcmp(last_slash, "block") == 0)
-        permissive = true;
+    permissive = strcmp(last_slash, "block") == 0;
+
+    if (argc >= 3) {
+        if (strncmp(argv[2], ARGV2_PREFIX, sizeof(ARGV2_PREFIX) - 1))
+            errx(1, "Second argument must begin with XENBUS_PATH=backend/vbd/");
+        const char *const new_path = argv[2] + (sizeof(XENBUS_PATH_PREFIX) - 1);
+
+        if ((xs_path_raw != NULL) && (strcmp(xs_path_raw, new_path) != 0))
+            errx(1, "XENBUS_PATH was passed both on the command line and in"
+                    " the environment, but the values were different");
+
+        xs_path_raw = new_path;
+    } else if (xs_path_raw == NULL) {
+        errx(1, "Xenstore path required");
+    } else if (strncmp(xs_path_raw, BACKEND_VBD, sizeof(BACKEND_VBD) - 1)) {
+        errx(1, "Bad Xenstore path %s", xs_path_raw);
+    }
 
     if (strcmp(argv[1], "add") == 0) {
-        if (argc >= 3) {
-            if (strncmp(argv[2], ARGV2_PREFIX, sizeof(ARGV2_PREFIX) - 1))
-                errx(1, "Second argument must begin with XENBUS_PATH=backend/vbd/");
-            const char *const new_path = argv[2] + (sizeof(XENBUS_PATH_PREFIX) - 1);
-
-            if ((xs_path_raw != NULL) && (strcmp(xs_path_raw, new_path) != 0))
-                errx(1, "XENBUS_PATH was passed both on the command line and in"
-                        " the environment, but the values were different");
-
-            xs_path_raw = new_path;
-        } else if (xs_path_raw == NULL) {
-            errx(1, "Xenstore path required when adding");
-        } else if (strncmp(xs_path_raw, BACKEND_VBD, sizeof(BACKEND_VBD) - 1)) {
-            errx(1, "Bad Xenstore path %s", xs_path_raw);
-        }
-    } else if (strcmp(argv[1], "remove") == 0)
-        exit(0);
-    else
+        action = ADD;
+    } else if (strcmp(argv[1], "remove") == 0) {
+        action = REMOVE;
+    } else {
         errx(1, "Bad command (expected \"add\" or \"remove\")");
+    }
 
     const char *const xs_path = xs_path_raw;
     size_t xs_path_len;
@@ -269,6 +361,11 @@ int main(int argc, char **argv)
     /* Buffer to copy extra data into */
     char *const extra_path = xenstore_path_buffer + xs_path_len + 1;
     unsigned int len, path_len;
+
+    if (action == REMOVE) {
+        remove_device(h, xenstore_path_buffer, extra_path);
+        return 0;
+    }
 
     strcpy(extra_path, "params");
     char *data = xs_read(h, 0, xenstore_path_buffer, &path_len);
