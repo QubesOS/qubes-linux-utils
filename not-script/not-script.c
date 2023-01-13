@@ -316,7 +316,7 @@ int main(int argc, char **argv)
     dev_t dev;
     uint64_t diskseq;
 
-    if ((fd = open(data, O_RDONLY | O_NOCTTY | O_CLOEXEC | O_NONBLOCK)) < 0)
+    if ((fd = open(data, (writable ? O_RDWR : O_RDONLY) | O_NOCTTY | O_CLOEXEC | O_NONBLOCK)) < 0)
         err(1, "open(%s)", data);
     char phys_dev[18], hex_diskseq[17];
 
