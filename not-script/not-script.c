@@ -17,6 +17,7 @@
 
 #include <err.h>
 
+#include <linux/major.h>
 #include <linux/loop.h>
 #include <linux/fs.h>
 
@@ -46,11 +47,7 @@ static int setup_loop(struct loop_context *ctx,
                       uint32_t fd,
                       uint64_t offset,
                       uint64_t sizelimit,
-                      bool writable,
-                      const char *path) {
-    fprintf(stderr, "Setting up path %s (via FD %" PRIu32 ") with offset 0x%" PRIx64 " and size limit 0x%" PRIx64 " as %s\n",
-         path, fd, offset, sizelimit, writable ? "writable" : "read-only");
-    fflush(NULL);
+                      bool writable) {
     struct loop_config config = {
         .fd = fd,
         .block_size = 0, /* FIXME! */
@@ -146,7 +143,7 @@ process_blk_dev(int fd, const char *path, bool writable, dev_t *dev,
         if (ctrl_fd < 0)
             err(1, "open(/dev/loop-control)");
         struct loop_context ctx = { .fd = ctrl_fd };
-        int loop_fd = setup_loop(&ctx, fd, 0, (uint64_t)statbuf.st_size, writable, path);
+        int loop_fd = setup_loop(&ctx, fd, 0, (uint64_t)statbuf.st_size, writable);
         if (loop_fd < 0)
             err(1, "loop device setup failed");
         if (dup3(loop_fd, fd, O_CLOEXEC) != fd)
@@ -202,6 +199,24 @@ static void redirect_stderr(void)
         err(1, "close(%d)", redirect_fd);
 }
 
+static bool strict_strtoul_hex(char *p, char **endp, char expected, unsigned long *res)
+{
+    if (*p == '0') {
+        *res = 0;
+        *endp = p + 1;
+    } else if ((*p < '1' || *p > '9') && (*p < 'a' && *p > 'f')) {
+        return false;
+    } else {
+        errno = 0;
+        *res = strtoul(p, endp, 16);
+        if (*res > UINT32_MAX || errno)
+            return false;
+    }
+
+    return **endp == expected;
+}
+
+
 static void remove_device(struct xs_handle *const h, char *xenstore_path_buffer,
                           char *extra_path)
 {
@@ -209,12 +224,20 @@ static void remove_device(struct xs_handle *const h, char *xenstore_path_buffer,
     unsigned int path_len, diskseq_len;
     int loop_control_fd, loop_fd;
     uint64_t actual_diskseq;
+    unsigned long _major, _minor;
 
+    /*
+     * Order matters here: the kernel only cares about "physical-device" for
+     * now, so ensure that it gets removed first.
+     */
     strcpy(extra_path, "physical-device");
     physdev = xs_read(h, 0, xenstore_path_buffer, &path_len);
     if (physdev == NULL) {
         err(1, "Cannot obtain physical device from XenStore path %s", xenstore_path_buffer);
     }
+
+    if (!xs_rm(h, 0, xenstore_path_buffer))
+        err(1, "xs_rm(\"%s\")", xenstore_path_buffer);
 
     strcpy(extra_path, "diskseq");
     diskseq_str = xs_read(h, 0, xenstore_path_buffer, &diskseq_len);
@@ -222,30 +245,33 @@ static void remove_device(struct xs_handle *const h, char *xenstore_path_buffer,
         err(1, "Cannot obtain diskseq from XenStore path %s", xenstore_path_buffer);
     }
 
-    if ((*physdev < '1' || *physdev > '9') && (*physdev < 'a' || *physdev > 'f'))
-        goto bad_physdev;
+    if (!xs_rm(h, 0, xenstore_path_buffer))
+        err(1, "xs_rm(\"%s\")", xenstore_path_buffer);
 
     errno = 0;
-    unsigned long const _major = strtoul(physdev, &end_path, 16);
-    if (_major > UINT32_MAX || errno || *end_path != ':')
+
+    if ((!strict_strtoul_hex(physdev, &end_path, ':', &_major)) ||
+        (!strict_strtoul_hex(end_path + 1, &end_path, '\0', &_minor)) ||
+        (end_path != physdev + path_len)) {
         goto bad_physdev;
+    }
 
-    end_path++;
+    if (_major != LOOP_MAJOR)
+        return; /* Not a loop device */
 
-    if ((*end_path < '1' || *end_path > '9') && (*end_path < 'a' || *end_path > 'f'))
-        goto bad_physdev;
-
-    unsigned long const _minor = strtoul(end_path, &end_path, 16);
-    if (_minor > UINT32_MAX || errno || end_path != physdev + path_len)
-        goto bad_physdev;
-
-    if (diskseq_str[0] < '1' || diskseq_str[0] > '9')
+    if (diskseq_len != 16)
         goto bad_diskseq;
 
-    unsigned long long const diskseq = strtoull(diskseq_str, &end_path, 10);
+    for (unsigned i = 0; i < diskseq_len; ++i) {
+        if ((diskseq_str[i] < '0' || diskseq_str[i] > '9') &&
+            (diskseq_str[i] < 'a' || diskseq_str[i] > 'f')) {
+            goto bad_diskseq;
+        }
+    }
+
+    unsigned long long const diskseq = strtoull(diskseq_str, &end_path, 16);
     if (errno || end_path != diskseq_str + diskseq_len)
-        goto bad_diskseq;
-
+        abort(); /* cannot happen due to above check */
     if ((loop_control_fd = open_file("/dev/loop-control")) < 0)
         err(1, "open(/dev/loop-control)");
 
@@ -267,8 +293,12 @@ static void remove_device(struct xs_handle *const h, char *xenstore_path_buffer,
     if (diskseq != actual_diskseq)
         errx(1, "Loop device diskseq mismatch!");
 
-    if ((unsigned long)ioctl(loop_control_fd, LOOP_CTL_REMOVE, (long)_minor) != _minor)
-        err(1, "ioctl(%d, %d, %ld)", loop_control_fd, LOOP_CTL_REMOVE, (long)_minor);
+    if (ioctl(loop_fd, LOOP_CLR_FD))
+        err(1, "ioctl(\"/dev/loop%lu\", LOOP_CLR_FD)", _minor);
+
+    int res = ioctl(loop_control_fd, LOOP_CTL_REMOVE, (long)_minor);
+    if (res != 0 && !(res == -1 && errno == EBUSY))
+        err(1, "ioctl(%d, LOOP_CONTROL_REMOVE, %ld)", loop_control_fd, (long)_minor);
 
     if (close(loop_fd))
         err(1, "close(\"/dev/loop%lu\")", _minor);
@@ -280,7 +310,7 @@ static void remove_device(struct xs_handle *const h, char *xenstore_path_buffer,
 bad_physdev:
     errx(1, "Bad physical device value %s", physdev);
 bad_diskseq:
-    errx(1, "Bad idiskseq %s", diskseq_str);
+    errx(1, "Bad diskseq %s", diskseq_str);
 }
 
 
@@ -391,13 +421,9 @@ int main(int argc, char **argv)
             switch (rw[0]) {
             case 'r':
                 writable = false;
-                fprintf(stderr, "XenStore key %s specifies read-only\n", xenstore_path_buffer);
-                fflush(NULL);
                 break;
             case 'w':
                 writable = true;
-                fprintf(stderr, "XenStore key %s specifies writable\n", xenstore_path_buffer);
-                fflush(NULL);
                 break;
             default:
                 len = 0;
