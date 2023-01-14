@@ -1,7 +1,7 @@
 #!/bin/bash
 
 check() {
-    if xenstore-read qubes-vm-type &>/dev/null || qubesdb-read /qubes-vm-type &>/dev/null; then
+    if qubesdb-read /qubes-vm-type &>/dev/null; then
         return 0
     else
         return 255
