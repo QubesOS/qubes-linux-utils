@@ -1,7 +1,7 @@
 #!/bin/bash
 
 check() {
-    if qubesdb-read /qubes-vm-type &>/dev/null; then
+    if [ -f /usr/share/qubes/marker-vm ]; then
         return 0
     else
         return 255
