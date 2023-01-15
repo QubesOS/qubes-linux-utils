@@ -22,6 +22,7 @@
 #include <linux/fs.h>
 
 #include <xen/xen.h>
+#include <xen/io/xenbus.h>
 #include <xenstore.h>
 
 static int open_file(const char *path) {
@@ -43,22 +44,30 @@ static int open_loop_dev(uint32_t devnum, bool writable)
     return res == -1 ? -errno : res;
 }
 
+static bool use_autoclear(void) {
+    int const status = access("/etc/use-autoclear", F_OK);
+    if (!(status == 0 || (status == -1 && errno == ENOENT)))
+        err(1, "access(\"/etc/use-autoclear\")");
+    return status == 0;
+}
+
 static int setup_loop(struct loop_context *ctx,
                       uint32_t fd,
                       uint64_t offset,
                       uint64_t sizelimit,
-                      bool writable) {
+                      bool writable, bool autoclear) {
+    int dev_file = -1, status;
+
     struct loop_config config = {
         .fd = fd,
         .block_size = 0, /* FIXME! */
         .info = {
             .lo_offset = offset,
             .lo_sizelimit = sizelimit,
-            .lo_flags = LO_FLAGS_DIRECT_IO | (writable ? 0 : LO_FLAGS_READ_ONLY),
+            .lo_flags = LO_FLAGS_DIRECT_IO | (autoclear ? LO_FLAGS_AUTOCLEAR : 0) | (writable ? 0 : LO_FLAGS_READ_ONLY),
         },
     };
 
-    int dev_file = -1, status;
     for (int retry_count = 0; retry_count < 5 /* arbitrary */; retry_count++) {
         if ((status = ioctl(ctx->fd, LOOP_CTL_GET_FREE)) == -1)
             return -errno;
@@ -86,7 +95,7 @@ static int setup_loop(struct loop_context *ctx,
 
 static void
 process_blk_dev(int fd, const char *path, bool writable, dev_t *dev,
-                uint64_t *diskseq, bool permissive)
+                uint64_t *diskseq, bool permissive, bool autoclear)
 {
     struct stat statbuf;
     char buf[45];
@@ -143,7 +152,7 @@ process_blk_dev(int fd, const char *path, bool writable, dev_t *dev,
         if (ctrl_fd < 0)
             err(1, "open(/dev/loop-control)");
         struct loop_context ctx = { .fd = ctrl_fd };
-        int loop_fd = setup_loop(&ctx, fd, 0, (uint64_t)statbuf.st_size, writable);
+        int loop_fd = setup_loop(&ctx, fd, 0, (uint64_t)statbuf.st_size, writable, autoclear);
         if (loop_fd < 0)
             err(1, "loop device setup failed");
         if (dup3(loop_fd, fd, O_CLOEXEC) != fd)
@@ -169,7 +178,7 @@ skip:
         err(1, "ioctl(%d, BLKGETDISKSEQ, %p)", fd, diskseq);
 }
 
-static void validate_int_start(char **p, unsigned long *out)
+static void validate_int_start(char **p, unsigned long *out, bool path)
 {
     char const s = **p;
     if (s == '0') {
@@ -180,8 +189,10 @@ static void validate_int_start(char **p, unsigned long *out)
         *out = strtoul(*p, p, 10);
         if (errno)
             err(1, "strtoul()");
+    } else if (path) {
+        errx(1, "Bad byte %d in XenStore path %s", s, *p);
     } else {
-        errx(1, "Bad char '%c' in XenStore path %s", s, *p);
+        errx(1, "Bad byte %d at start of Xenbus state", s);
     }
 }
 
@@ -225,6 +236,9 @@ static void remove_device(struct xs_handle *const h, char *xenstore_path_buffer,
     int loop_control_fd, loop_fd;
     uint64_t actual_diskseq;
     unsigned long _major, _minor;
+
+    if (use_autoclear())
+        return;
 
     /*
      * Order matters here: the kernel only cares about "physical-device" for
@@ -367,10 +381,10 @@ int main(int argc, char **argv)
         /* strtoul() is not const-correct, sorry... */
         char *xs_path_extra = (char *)(xs_path + (sizeof(BACKEND_VBD) - 1));
         unsigned long peer_domid, tmp;
-        validate_int_start(&xs_path_extra, &peer_domid);
+        validate_int_start(&xs_path_extra, &peer_domid, true);
         if (*xs_path_extra++ != '/')
             errx(1, "Peer domain ID %lu not followed by '/'", peer_domid);
-        validate_int_start(&xs_path_extra, &tmp);
+        validate_int_start(&xs_path_extra, &tmp, true);
         if (*xs_path_extra)
             errx(1, "Junk after XenStore device ID %lu", tmp);
         if (peer_domid >= DOMID_FIRST_RESERVED)
@@ -442,8 +456,9 @@ int main(int argc, char **argv)
     if ((fd = open(data, (writable ? O_RDWR : O_RDONLY) | O_NOCTTY | O_CLOEXEC | O_NONBLOCK)) < 0)
         err(1, "open(%s)", data);
     char phys_dev[18], hex_diskseq[17];
+    bool const autoclear = use_autoclear();
 
-    process_blk_dev(fd, data, writable, &dev, &diskseq, permissive);
+    process_blk_dev(fd, data, writable, &dev, &diskseq, permissive, autoclear);
     unsigned const int l =
         (unsigned)snprintf(phys_dev, sizeof phys_dev, "%lx:%lx",
                            (unsigned long)major(dev), (unsigned long)minor(dev));
@@ -453,11 +468,12 @@ int main(int argc, char **argv)
     if (snprintf(hex_diskseq, sizeof(hex_diskseq), "%016llx", (unsigned long long)diskseq) != 16)
         err(1, "snprintf");
 
-    const char *watch_token = "state";
-    strcpy(extra_path, watch_token);
-
-    if (!xs_watch(h, xenstore_path_buffer, watch_token))
-        err(1, "Cannot setup XenStore watch on %s", xenstore_path_buffer);
+    if (autoclear) {
+        const char *watch_token = "state";
+        strcpy(extra_path, watch_token);
+        if (!xs_watch(h, xenstore_path_buffer, watch_token))
+            err(1, "Cannot setup XenStore watch on %s", xenstore_path_buffer);
+    }
 
     for (;;) {
         xs_transaction_t t = xs_transaction_start(h);
@@ -483,11 +499,32 @@ int main(int argc, char **argv)
             err(1, "xs_transaction_end");
     }
 
-    unsigned int num;
-    char **watch_res = xs_read_watch(h, &num);
-    if (!watch_res)
-        err(1, "xs_read_watch");
-
-    free(watch_res);
+    if (autoclear) {
+        strcpy(extra_path, "state");
+        for (;;) {
+            unsigned int num;
+            char **watch_res = xs_read_watch(h, &num);
+            if (!watch_res)
+                err(1, "xs_read_watch");
+            warnx("Xenstore watch for %s triggered", watch_res[0]);
+            free(watch_res);
+            unsigned int state_len = 0;
+            char *value = xs_read(h, 0, xenstore_path_buffer, &state_len);
+            if (!value) {
+                if (errno == ENOENT)
+                    break;
+                err(1, "xs_read(\"%s\")", xenstore_path_buffer);
+            }
+            char *endptr = value;
+            unsigned long _xenbus_state;
+            validate_int_start(&endptr, &_xenbus_state, false);
+            if (endptr != value + state_len)
+                errx(1, "Invalid Xenbus state");
+            free(value);
+            warnx("Got Xenbus state %lu", _xenbus_state);
+            if (_xenbus_state > XenbusStateInitWait)
+                break;
+        }
+    }
     xs_close(h);
 }
