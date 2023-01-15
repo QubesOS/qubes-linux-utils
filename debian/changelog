@@ -1,3 +1,12 @@
+qubes-utils (4.1.18) unstable; urgency=medium
+
+  * rpm: add e2fsprogs as qubes-prepare-vm-kernel dependency
+  * dracut: drop legacy xenstore-read qubes-vm-type
+  * dracut: detect VM based on file presence, no runtime query to
+    qubesdb
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Sun, 15 Jan 2023 03:44:11 +0100
+
 qubes-utils (4.1.17) unstable; urgency=medium
 
   [ Gaurav ]
