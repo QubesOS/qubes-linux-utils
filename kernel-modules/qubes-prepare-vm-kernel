@@ -50,7 +50,7 @@ function build_modules_img() {
         -d "$tmpdir/modules" "$tmpdir/modules.img" 768M
     /usr/lib/qubes/vm-modules-genfs "$tmpdir/modules.img" "$kver" immutable=yes
     e2fsck -pDfE optimize_extents -- "$tmpdir/modules.img" >/dev/null
-    resize2fs -M -- "$tmpdir/modules.img" >/dev/null
+    resize2fs -fM -- "$tmpdir/modules.img" >/dev/null
     e2fsck -pDfE optimize_extents -- "$tmpdir/modules.img" >/dev/null
     /usr/lib/qubes/vm-modules-genfs "$tmpdir/modules.img"
 
