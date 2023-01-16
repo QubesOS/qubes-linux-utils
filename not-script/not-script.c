@@ -468,10 +468,10 @@ int main(int argc, char **argv)
     if (snprintf(hex_diskseq, sizeof(hex_diskseq), "%016llx", (unsigned long long)diskseq) != 16)
         err(1, "snprintf");
 
+    const char *const entry_to_watch = "opened";
     if (autoclear) {
-        const char *watch_token = "state";
-        strcpy(extra_path, watch_token);
-        if (!xs_watch(h, xenstore_path_buffer, watch_token))
+        strcpy(extra_path, entry_to_watch);
+        if (!xs_watch(h, xenstore_path_buffer, entry_to_watch))
             err(1, "Cannot setup XenStore watch on %s", xenstore_path_buffer);
     }
 
@@ -500,30 +500,23 @@ int main(int argc, char **argv)
     }
 
     if (autoclear) {
-        strcpy(extra_path, "state");
+        strcpy(extra_path, entry_to_watch);
         for (;;) {
-            unsigned int num;
-            char **watch_res = xs_read_watch(h, &num);
+            unsigned int num, state_len;
+            char *value, **watch_res = xs_read_watch(h, &num);
             if (!watch_res)
                 err(1, "xs_read_watch");
             warnx("Xenstore watch for %s triggered", watch_res[0]);
             free(watch_res);
-            unsigned int state_len = 0;
-            char *value = xs_read(h, 0, xenstore_path_buffer, &state_len);
-            if (!value) {
-                if (errno == ENOENT)
-                    break;
-                err(1, "xs_read(\"%s\")", xenstore_path_buffer);
-            }
-            char *endptr = value;
-            unsigned long _xenbus_state;
-            validate_int_start(&endptr, &_xenbus_state, false);
-            if (endptr != value + state_len)
-                errx(1, "Invalid Xenbus state");
-            free(value);
-            warnx("Got Xenbus state %lu", _xenbus_state);
-            if (_xenbus_state > XenbusStateInitWait)
+            value = xs_read(h, 0, xenstore_path_buffer, &state_len);
+            if (value) {
+                if (state_len != 1 || value[0] != '1')
+                    errx(1, "bad value in Xenstore entry %s", xenstore_path_buffer);
                 break;
+            } else {
+                if (errno != ENOENT)
+                    err(1, "xs_read(\"%s\")", xenstore_path_buffer);
+            }
         }
     }
     xs_close(h);
