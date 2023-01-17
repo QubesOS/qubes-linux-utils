@@ -44,13 +44,6 @@ static int open_loop_dev(uint32_t devnum, bool writable)
     return res == -1 ? -errno : res;
 }
 
-static bool use_autoclear(void) {
-    int const status = access("/etc/use-autoclear", F_OK);
-    if (!(status == 0 || (status == -1 && errno == ENOENT)))
-        err(1, "access(\"/etc/use-autoclear\")");
-    return status == 0;
-}
-
 static int setup_loop(struct loop_context *ctx,
                       uint32_t fd,
                       uint64_t offset,
@@ -227,6 +220,27 @@ static bool strict_strtoul_hex(char *p, char **endp, char expected, unsigned lon
     return **endp == expected;
 }
 
+static const char *const opened_key = "opened";
+
+static bool get_opened(struct xs_handle *const h, char *const extra_path,
+                       const char *const xenstore_path_buffer, char expected)
+{
+    strcpy(extra_path, opened_key);
+    unsigned int value_len;
+    char *value = xs_read(h, 0, xenstore_path_buffer, &value_len);
+    if (value) {
+        if ((value_len != 1) || (*value != expected))
+            err(1, "Expected \"opened\" entry to be missing or contain \"%c\", but it contained %s",
+                expected, value);
+        free(value);
+        return true;
+    } else {
+        if (errno != ENOENT) {
+            err(1, "Error reading Xenstore key %s", xenstore_path_buffer);
+        }
+        return false;
+    }
+}
 
 static void remove_device(struct xs_handle *const h, char *xenstore_path_buffer,
                           char *extra_path)
@@ -236,9 +250,6 @@ static void remove_device(struct xs_handle *const h, char *xenstore_path_buffer,
     int loop_control_fd, loop_fd;
     uint64_t actual_diskseq;
     unsigned long _major, _minor;
-
-    if (use_autoclear())
-        return;
 
     /*
      * Order matters here: the kernel only cares about "physical-device" for
@@ -405,9 +416,12 @@ int main(int argc, char **argv)
     /* Buffer to copy extra data into */
     char *const extra_path = xenstore_path_buffer + xs_path_len + 1;
     unsigned int len, path_len;
+    bool const autoclear = get_opened(h, extra_path, xenstore_path_buffer,
+                                      action == REMOVE ? '1' : '0');
 
     if (action == REMOVE) {
-        remove_device(h, xenstore_path_buffer, extra_path);
+        if (!autoclear)
+            remove_device(h, xenstore_path_buffer, extra_path);
         return 0;
     }
 
@@ -456,7 +470,6 @@ int main(int argc, char **argv)
     if ((fd = open(data, (writable ? O_RDWR : O_RDONLY) | O_NOCTTY | O_CLOEXEC | O_NONBLOCK)) < 0)
         err(1, "open(%s)", data);
     char phys_dev[18], hex_diskseq[17];
-    bool const autoclear = use_autoclear();
 
     process_blk_dev(fd, data, writable, &dev, &diskseq, permissive, autoclear);
     unsigned const int l =
@@ -468,10 +481,9 @@ int main(int argc, char **argv)
     if (snprintf(hex_diskseq, sizeof(hex_diskseq), "%016llx", (unsigned long long)diskseq) != 16)
         err(1, "snprintf");
 
-    const char *const entry_to_watch = "opened";
     if (autoclear) {
-        strcpy(extra_path, entry_to_watch);
-        if (!xs_watch(h, xenstore_path_buffer, entry_to_watch))
+        strcpy(extra_path, opened_key);
+        if (!xs_watch(h, xenstore_path_buffer, opened_key))
             err(1, "Cannot setup XenStore watch on %s", xenstore_path_buffer);
     }
 
@@ -500,7 +512,7 @@ int main(int argc, char **argv)
     }
 
     if (autoclear) {
-        strcpy(extra_path, entry_to_watch);
+        strcpy(extra_path, opened_key);
         for (;;) {
             unsigned int num, state_len;
             char *value, **watch_res = xs_read_watch(h, &num);
