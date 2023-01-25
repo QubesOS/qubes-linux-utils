@@ -469,16 +469,18 @@ int main(int argc, char **argv)
 
     if ((fd = open(data, (writable ? O_RDWR : O_RDONLY) | O_NOCTTY | O_CLOEXEC | O_NONBLOCK)) < 0)
         err(1, "open(%s)", data);
-    char phys_dev[18], hex_diskseq[17];
+    char phys_dev[16 + 8 + 8 + 2 + 1];
 
     process_blk_dev(fd, data, writable, &dev, &diskseq, permissive, autoclear);
     unsigned const int l =
-        (unsigned)snprintf(phys_dev, sizeof phys_dev, "%lx:%lx",
-                           (unsigned long)major(dev), (unsigned long)minor(dev));
+        (unsigned)(autoclear ?
+                   snprintf(phys_dev, sizeof phys_dev, "%" PRIx64 "@%lx:%lx",
+                            diskseq, (unsigned long)major(dev), (unsigned long)minor(dev)) :
+                   snprintf(phys_dev, sizeof phys_dev, "%lx:%lx",
+                            (unsigned long)major(dev), (unsigned long)minor(dev)));
+
 
     if (l >= sizeof(phys_dev))
-        err(1, "snprintf");
-    if (snprintf(hex_diskseq, sizeof(hex_diskseq), "%016llx", (unsigned long long)diskseq) != 16)
         err(1, "snprintf");
 
     if (autoclear) {
@@ -500,9 +502,14 @@ int main(int argc, char **argv)
         if (!xs_write(h, t, xenstore_path_buffer, data, path_len))
             err(1, "xs_write(\"%s\", \"%s\")", xenstore_path_buffer, data);
 
-        strcpy(extra_path, "diskseq");
-        if (!xs_write(h, t, xenstore_path_buffer, hex_diskseq, 16))
-            err(1, "xs_write(\"%s\", \"%s\")", xenstore_path_buffer, hex_diskseq);
+        if (!autoclear) {
+            char hex_diskseq[17];
+            if (snprintf(hex_diskseq, sizeof(hex_diskseq), "%016llx", (unsigned long long)diskseq) != 16)
+                err(1, "snprintf");
+            strcpy(extra_path, "diskseq");
+            if (!xs_write(h, t, xenstore_path_buffer, hex_diskseq, 16))
+                err(1, "xs_write(\"%s\", \"%s\")", xenstore_path_buffer, hex_diskseq);
+        }
 
         if (xs_transaction_end(h, t, false))
             break;
@@ -522,12 +529,12 @@ int main(int argc, char **argv)
             free(watch_res);
             value = xs_read(h, 0, xenstore_path_buffer, &state_len);
             if (value) {
-                if (state_len != 1 || value[0] != '1')
+                if (state_len != 1 || (value[0] != '1' && value[0] != '0'))
                     errx(1, "bad value in Xenstore entry %s", xenstore_path_buffer);
-                break;
+                if (value[0] == '1')
+                    break;
             } else {
-                if (errno != ENOENT)
-                    err(1, "xs_read(\"%s\")", xenstore_path_buffer);
+                err(1, "xs_read(\"%s\")", xenstore_path_buffer);
             }
         }
     }
