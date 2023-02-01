@@ -86,6 +86,9 @@ exit 0
 %build
 make all selinux BACKEND_VMM=@BACKEND_VMM@ PYTHON=%{__python3}
 
+%check
+make -C qrexec-lib check
+
 %install
 make install install-selinux DESTDIR=%{buildroot} PYTHON=%{__python3}
 
