@@ -11,7 +11,7 @@
 
 static void character_must_be_allowed(uint32_t c)
 {
-    char buf[5];
+    uint8_t buf[5];
     int32_t off = 0;
     UBool e = false;
     U8_APPEND(buf, off, 4, c, e);
@@ -25,7 +25,7 @@ static void character_must_be_allowed(uint32_t c)
 
 static void character_must_be_forbidden(uint32_t c)
 {
-    char buf[5];
+    uint8_t buf[5];
     int32_t off = 0;
     UBool e = false;
     U8_APPEND(buf, off, 4, c, e);
@@ -103,7 +103,7 @@ int main(int argc, char **argv)
     assert(!qubes_pure_validate_file_name(u8"\U00012000"));
     // Surrogates are forbidden
     for (uint32_t i = 0xD800; i <= 0xDFFF; ++i) {
-        char buf[4] = { 0, 0, 0, 0 };
+        uint8_t buf[4] = { 0, 0, 0, 0 };
         int32_t off = 0;
         U8_APPEND_UNSAFE(buf, off, i);
         assert(off == 3);
