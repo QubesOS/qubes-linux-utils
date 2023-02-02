@@ -51,7 +51,7 @@ int main(int argc, char **argv)
     assert(qubes_pure_validate_file_name(u8"\u201c"));
     // And CJK ideographs
     uint32_t cjk_ranges[] = {
-        0x03400, 0x04DB5,
+        0x03400, 0x04DBF,
         0x04E00, 0x09FFC,
         0x20000, 0x2A6DD,
         0x2A700, 0x2B734,

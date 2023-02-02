@@ -84,13 +84,16 @@ exit 0
 %setup -q
 
 %build
-make all selinux BACKEND_VMM=@BACKEND_VMM@ PYTHON=%{__python3}
+make all selinux BACKEND_VMM=@BACKEND_VMM@ PYTHON=%{__python3} NO_REBUILD_TABLE=1
 
 %check
-make -C qrexec-lib check
+make -C qrexec-lib check NO_REBUILD_TABLE=1
+%if 0%{?fedora} == 36
+make -C qrexec-lib check-table-up-to-date NO_REBUILD_TABLE=1
+%endif
 
 %install
-make install install-selinux DESTDIR=%{buildroot} PYTHON=%{__python3}
+make install install-selinux DESTDIR=%{buildroot} PYTHON=%{__python3} NO_REBUILD_TABLE=1
 
 %post
 # dom0
