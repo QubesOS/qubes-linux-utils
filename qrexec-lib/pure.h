@@ -70,7 +70,7 @@ struct QubesMutableSlice {
  * Returns true on success and false on failure.
  */
 QUBES_PURE_PUBLIC bool
-qubes_pure_validate_file_name(const char *untrusted_filename);
+qubes_pure_validate_file_name(const uint8_t *untrusted_filename);
 
 /**
  * Validate that `untrusted_name` is a valid symbolic link name
@@ -83,8 +83,8 @@ qubes_pure_validate_file_name(const char *untrusted_filename);
  * Returns true on success and false on failure.
  */
 QUBES_PURE_PUBLIC bool
-qubes_pure_validate_symbolic_link(const char *untrusted_name,
-                                  const char *untrusted_target);
+qubes_pure_validate_symbolic_link(const uint8_t *untrusted_name,
+                                  const uint8_t *untrusted_target);
 
 /**
  * Validate that `untrusted_str` is safe to display.  To be considered safe to

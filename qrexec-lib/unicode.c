@@ -9,7 +9,7 @@
 
 /* validate single UTF-8 character
  * return bytes count of this character, or 0 if the character is invalid */
-static int validate_utf8_char(const unsigned char *untrusted_c) {
+static int validate_utf8_char(const uint8_t *untrusted_c) {
     int tails_count = 0;
     int total_size = 0;
     uint32_t code_point;
@@ -96,7 +96,7 @@ static int validate_utf8_char(const unsigned char *untrusted_c) {
     }
 }
 
-static size_t validate_path(const char *const untrusted_name, size_t allowed_leading_dotdot)
+static size_t validate_path(const uint8_t *const untrusted_name, size_t allowed_leading_dotdot)
 {
     size_t non_dotdot_components = 0, i = 0;
     do {
@@ -139,21 +139,21 @@ static size_t validate_path(const char *const untrusted_name, size_t allowed_lea
 }
 
 QUBES_PURE_PUBLIC bool
-qubes_pure_validate_file_name(const char *untrusted_filename)
+qubes_pure_validate_file_name(const uint8_t *untrusted_filename)
 {
     return validate_path(untrusted_filename, 0) > 0;
 }
 
 QUBES_PURE_PUBLIC bool
-qubes_pure_validate_symbolic_link(const char *untrusted_name,
-                                  const char *untrusted_target)
+qubes_pure_validate_symbolic_link(const uint8_t *untrusted_name,
+                                  const uint8_t *untrusted_target)
 {
     size_t depth = validate_path(untrusted_name, 0);
     return depth > 0 && validate_path(untrusted_target, depth) > 0;
 }
 
 QUBES_PURE_PUBLIC bool
-qubes_pure_string_safe_for_display(const char *untrusted_str __attribute__((unused)), size_t line_length __attribute__((unused)))
+qubes_pure_string_safe_for_display(const uint8_t *untrusted_str __attribute__((unused)), size_t line_length __attribute__((unused)))
 {
     assert(line_length == 0 && "Not yet implemented: nonzero line length");
     size_t i = 0;
@@ -161,7 +161,7 @@ qubes_pure_string_safe_for_display(const char *untrusted_str __attribute__((unus
         if (untrusted_str[i] >= 0x20 && untrusted_str[i] <= 0x7E) {
             i++;
         } else {
-            int utf8_ret = validate_utf8_char((const unsigned char *)(untrusted_str + i));
+            int utf8_ret = validate_utf8_char(untrusted_str + i);
             if (utf8_ret > 0) {
                 i += utf8_ret;
             } else {

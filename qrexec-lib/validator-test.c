@@ -41,14 +41,14 @@ int main(int argc, char **argv)
 {
     (void)argc;
     (void)argv;
-    assert(qubes_pure_validate_file_name(u8"simple_safe_filename.txt"));
+    assert(qubes_pure_validate_file_name((uint8_t *)u8"simple_safe_filename.txt"));
     // Greek letters are safe
-    assert(qubes_pure_validate_file_name(u8"\u03b2.txt"));
-    assert(qubes_pure_validate_file_name(u8"\u03b1.txt"));
+    assert(qubes_pure_validate_file_name((uint8_t *)u8"\u03b2.txt"));
+    assert(qubes_pure_validate_file_name((uint8_t *)u8"\u03b1.txt"));
     // As are Cyrillic ones
-    assert(qubes_pure_validate_file_name(u8"\u0400.txt"));
+    assert(qubes_pure_validate_file_name((uint8_t *)u8"\u0400.txt"));
     // As are unicode quotation marks
-    assert(qubes_pure_validate_file_name(u8"\u201c"));
+    assert(qubes_pure_validate_file_name((uint8_t *)u8"\u201c"));
     // And CJK ideographs
     uint32_t cjk_ranges[] = {
         0x03400, 0x04DBF,
@@ -98,9 +98,15 @@ int main(int argc, char **argv)
     }
 
     // Flags are too complex to display :(
-    assert(!qubes_pure_validate_file_name(u8"\U0001f3f3\ufe0f\u200d\u26a7\ufe0f"));
+    assert(!qubes_pure_validate_file_name((uint8_t *)u8"\U0001f3f3"));
+    assert(!qubes_pure_validate_file_name((uint8_t *)u8"\ufe0f"));
+    assert(!qubes_pure_validate_file_name((uint8_t *)u8"\u200d"));
+    assert(!qubes_pure_validate_file_name((uint8_t *)u8"\u26a0"));
+
+    // Emojies are not allowed
+    assert(!qubes_pure_validate_file_name((uint8_t *)u8"\U0001f642"));
     // Cuneiform is way too obscure to be worth the risk
-    assert(!qubes_pure_validate_file_name(u8"\U00012000"));
+    assert(!qubes_pure_validate_file_name((uint8_t *)u8"\U00012000"));
     // Surrogates are forbidden
     for (uint32_t i = 0xD800; i <= 0xDFFF; ++i) {
         uint8_t buf[4] = { 0, 0, 0, 0 };
@@ -111,33 +117,33 @@ int main(int argc, char **argv)
     }
 
     // Directory traversal checks
-    assert(!qubes_pure_validate_file_name(".."));
-    assert(!qubes_pure_validate_file_name("../.."));
-    assert(!qubes_pure_validate_file_name("a/.."));
-    assert(!qubes_pure_validate_file_name("a/../b"));
-    assert(!qubes_pure_validate_file_name("/"));
-    assert(!qubes_pure_validate_file_name("//"));
-    assert(!qubes_pure_validate_file_name("///"));
-    assert(!qubes_pure_validate_file_name("/a"));
-    assert(!qubes_pure_validate_file_name("//a"));
-    assert(!qubes_pure_validate_file_name("///a"));
+    assert(!qubes_pure_validate_file_name((uint8_t *)".."));
+    assert(!qubes_pure_validate_file_name((uint8_t *)"../.."));
+    assert(!qubes_pure_validate_file_name((uint8_t *)"a/.."));
+    assert(!qubes_pure_validate_file_name((uint8_t *)"a/../b"));
+    assert(!qubes_pure_validate_file_name((uint8_t *)"/"));
+    assert(!qubes_pure_validate_file_name((uint8_t *)"//"));
+    assert(!qubes_pure_validate_file_name((uint8_t *)"///"));
+    assert(!qubes_pure_validate_file_name((uint8_t *)"/a"));
+    assert(!qubes_pure_validate_file_name((uint8_t *)"//a"));
+    assert(!qubes_pure_validate_file_name((uint8_t *)"///a"));
 
     // No repeated slashes
-    assert(!qubes_pure_validate_file_name("a//b"));
+    assert(!qubes_pure_validate_file_name((uint8_t *)"a//b"));
 
     // No "." as a path component
-    assert(!qubes_pure_validate_file_name("."));
-    assert(!qubes_pure_validate_file_name("a/."));
-    assert(!qubes_pure_validate_file_name("./a"));
-    assert(!qubes_pure_validate_file_name("a/./a"));
+    assert(!qubes_pure_validate_file_name((uint8_t *)"."));
+    assert(!qubes_pure_validate_file_name((uint8_t *)"a/."));
+    assert(!qubes_pure_validate_file_name((uint8_t *)"./a"));
+    assert(!qubes_pure_validate_file_name((uint8_t *)"a/./a"));
 
     // No ".." as a path component
-    assert(!qubes_pure_validate_file_name(".."));
-    assert(!qubes_pure_validate_file_name("a/.."));
-    assert(!qubes_pure_validate_file_name("../a"));
-    assert(!qubes_pure_validate_file_name("a/../a"));
+    assert(!qubes_pure_validate_file_name((uint8_t *)".."));
+    assert(!qubes_pure_validate_file_name((uint8_t *)"a/.."));
+    assert(!qubes_pure_validate_file_name((uint8_t *)"../a"));
+    assert(!qubes_pure_validate_file_name((uint8_t *)"a/../a"));
 
     // Looks like "." or ".." but is not
-    assert(qubes_pure_validate_file_name(".a"));
-    assert(qubes_pure_validate_file_name("..a"));
+    assert(qubes_pure_validate_file_name((uint8_t *)".a"));
+    assert(qubes_pure_validate_file_name((uint8_t *)"..a"));
 }
