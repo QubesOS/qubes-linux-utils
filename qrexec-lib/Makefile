@@ -13,7 +13,7 @@ all: libqubes-rpc-filecopy.so.$(SO_VER) $(pure_lib).$(pure_sover)
 libqubes-rpc-filecopy.so.$(SO_VER): $(objs) ./$(pure_lib).$(pure_sover)
 	$(CC) -shared $(LDFLAGS) -Wl,-soname,$@ -o $@ $^
 validator-test: validator-test.o ./$(pure_lib).$(pure_sover)
-	$(CC) $(LDFLAGS) -o $@ $^ ./$(pure_lib).$(pure_sover)
+	libs=$$(pkg-config --libs icu-uc) && $(CC) $(LDFLAGS) -o $@ $^ $$libs
 $(pure_objs): CFLAGS += -fvisibility=hidden -DQUBES_PURE_IMPLEMENTATION
 validator-test: CFLAGS += -UNDEBUG
 check: validator-test
