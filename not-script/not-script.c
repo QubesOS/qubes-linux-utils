@@ -88,7 +88,7 @@ static int setup_loop(struct loop_context *ctx,
 
 static void
 process_blk_dev(int fd, const char *path, bool writable, dev_t *dev,
-                uint64_t *diskseq, bool permissive, bool autoclear)
+                uint64_t *diskseq, bool autoclear)
 {
     struct stat statbuf;
     char buf[45];
@@ -97,12 +97,9 @@ process_blk_dev(int fd, const char *path, bool writable, dev_t *dev,
         err(1, "fstat");
 
     if (S_ISBLK(statbuf.st_mode)) {
-        if (permissive)
-            goto skip;
-
         /* block device */
-        if (strncmp(DEV_MAPPER, path, DEV_MAPPER_SIZE))
-            errx(1, "Only device-mapper block devices are supported (got %s)", path);
+        if (strncmp(DEV_MAPPER, path, DEV_MAPPER_SIZE) != 0)
+            goto skip;
 
         const char *const devname = path + DEV_MAPPER_SIZE;
         size_t const devname_len = strlen(devname);
@@ -345,7 +342,6 @@ int main(int argc, char **argv)
         ADD,
         REMOVE,
     } action;
-    bool permissive;
     redirect_stderr();
 #define XENBUS_PATH_PREFIX "XENBUS_PATH="
 #define BACKEND_VBD "backend/vbd/"
@@ -355,11 +351,6 @@ int main(int argc, char **argv)
 
     if (argc < 2 || argc > 3)
         errx(1, "Usage: [add|remove] [XENBUS_PATH=backend/vbd/REMOTE_DOMAIN/ID] (got %d arguments, expected 2 or 3)", argc);
-
-    const char *last_slash = strrchr(argv[0], '/');
-    last_slash = last_slash ? last_slash + 1 : argv[0];
-
-    permissive = strcmp(last_slash, "block") == 0;
 
     if (argc >= 3) {
         if (strncmp(argv[2], ARGV2_PREFIX, sizeof(ARGV2_PREFIX) - 1))
@@ -471,7 +462,7 @@ int main(int argc, char **argv)
         err(1, "open(%s)", data);
     char phys_dev[16 + 8 + 8 + 2 + 1];
 
-    process_blk_dev(fd, data, writable, &dev, &diskseq, permissive, autoclear);
+    process_blk_dev(fd, data, writable, &dev, &diskseq, autoclear);
     unsigned const int l =
         (unsigned)(autoclear ?
                    snprintf(phys_dev, sizeof phys_dev, "%" PRIx64 "@%lx:%lx",
