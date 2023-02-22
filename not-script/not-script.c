@@ -49,7 +49,7 @@ static int setup_loop(struct loop_context *ctx,
                       uint64_t offset,
                       uint64_t sizelimit,
                       bool writable, bool autoclear) {
-    int dev_file = -1, status;
+    int dev_file = -1;
 
     struct loop_config config = {
         .fd = fd,
@@ -62,6 +62,9 @@ static int setup_loop(struct loop_context *ctx,
     };
 
     for (int retry_count = 0; retry_count < 5 /* arbitrary */; retry_count++) {
+        int old_errno;
+        int status;
+
         if ((status = ioctl(ctx->fd, LOOP_CTL_GET_FREE)) == -1)
             return -errno;
         dev_file = open_loop_dev(status, writable);
@@ -70,9 +73,11 @@ static int setup_loop(struct loop_context *ctx,
             case 0:
                 return dev_file;
             case -1:
+                old_errno = errno;
                 if (close(dev_file))
                     abort(); /* cannot happen on Linux */
-                return -1;
+                errno = old_errno;
+                break;
             default:
                 abort();
             }
