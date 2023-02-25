@@ -39,9 +39,12 @@ static int open_loop_dev(uint32_t devnum, bool writable)
     char buf[sizeof("/dev/loop") + 10];
     if ((unsigned)snprintf(buf, sizeof buf, "/dev/loop%u", (unsigned)devnum) >= sizeof buf)
         abort();
-    int res = open(buf, (writable ? O_RDWR : O_RDONLY) |
-                   O_EXCL | O_CLOEXEC | O_NOCTTY | O_NOFOLLOW);
-    return res == -1 ? -errno : res;
+    int flags = (writable ? O_RDWR : O_RDONLY) |
+                   O_EXCL | O_CLOEXEC | O_NOCTTY | O_NOFOLLOW;
+    int res = open(buf, flags);
+    if (res < 0)
+        err(1, "open(\"%s\", %#x)", buf, flags);
+    return res;
 }
 
 static int setup_loop(struct loop_context *ctx,
@@ -50,6 +53,8 @@ static int setup_loop(struct loop_context *ctx,
                       uint64_t sizelimit,
                       bool writable, bool autoclear) {
     int dev_file = -1;
+    int retry_count = 0;
+    const int retry_limit = 5; /* arbitrary */
 
     struct loop_config config = {
         .fd = fd,
@@ -61,31 +66,27 @@ static int setup_loop(struct loop_context *ctx,
         },
     };
 
-    for (int retry_count = 0; retry_count < 5 /* arbitrary */; retry_count++) {
-        int old_errno;
-        int status;
-
-        if ((status = ioctl(ctx->fd, LOOP_CTL_GET_FREE)) == -1)
-            return -errno;
+    for (;;) {
+        int status = ioctl(ctx->fd, LOOP_CTL_GET_FREE);
+        if (status < 0)
+            err(1, "ioctl(%d, LOOP_CTL_GET_FREE)", ctx->fd);
         dev_file = open_loop_dev(status, writable);
         if (dev_file > 0) {
             switch (ioctl(dev_file, LOOP_CONFIGURE, &config)) {
             case 0:
                 return dev_file;
             case -1:
-                old_errno = errno;
+                retry_count++;
+                if ((errno != EBUSY && errno != ENXIO) || (retry_count > retry_limit))
+                    err(1, "ioctl(%d, LOOP_CONFIGURE, %p)", dev_file, &config);
                 if (close(dev_file))
                     abort(); /* cannot happen on Linux */
-                errno = old_errno;
                 break;
             default:
                 abort();
             }
         }
-        if (errno != EBUSY && errno != ENXIO)
-            break;
     }
-    return -1;
 }
 
 #define DEV_MAPPER "/dev/mapper/"
@@ -302,8 +303,7 @@ static void remove_device(struct xs_handle *const h, char *xenstore_path_buffer,
     if ((loop_control_fd = open_file("/dev/loop-control")) < 0)
         err(1, "open(/dev/loop-control)");
 
-    if ((loop_fd = open_loop_dev(_minor, false)) < 0)
-        err(1, "open(/dev/loop%lu)", _minor);
+    loop_fd = open_loop_dev(_minor, false);
 
     struct stat statbuf;
     if (fstat(loop_fd, &statbuf))
