@@ -20,6 +20,7 @@
 #include <linux/major.h>
 #include <linux/loop.h>
 #include <linux/fs.h>
+#include <linux/dm-ioctl.h>
 
 #include <xen/xen.h>
 #include <xen/io/xenbus.h>
@@ -66,25 +67,38 @@ static int setup_loop(struct loop_context *ctx,
         },
     };
 
-    for (;;) {
-        int status = ioctl(ctx->fd, LOOP_CTL_GET_FREE);
+    for (;; retry_count++) {
+        int status = ioctl(ctx->fd, retry_count ? LOOP_CTL_ADD : LOOP_CTL_GET_FREE, -1);
         if (status < 0)
-            err(1, "ioctl(%d, LOOP_CTL_GET_FREE)", ctx->fd);
-        dev_file = open_loop_dev(status, writable);
-        if (dev_file > 0) {
-            switch (ioctl(dev_file, LOOP_CONFIGURE, &config)) {
-            case 0:
-                return dev_file;
-            case -1:
-                retry_count++;
-                if ((errno != EBUSY && errno != ENXIO) || (retry_count > retry_limit))
-                    err(1, "ioctl(%d, LOOP_CONFIGURE, %p)", dev_file, &config);
-                if (close(dev_file))
-                    abort(); /* cannot happen on Linux */
-                break;
-            default:
-                abort();
+            err(1, "ioctl(%d, LOOP_CTL_%s)", ctx->fd, retry_count ? "ADD" : "GET_FREE");
+        char buf[sizeof("/dev/loop") + 10];
+        if ((unsigned)snprintf(buf, sizeof buf, "/dev/loop%u", (unsigned)status) >= sizeof buf)
+            abort();
+        int flags = (writable ? O_RDWR : O_RDONLY) |
+                       O_EXCL | O_CLOEXEC | O_NOCTTY | O_NOFOLLOW;
+        dev_file = open(buf, flags);
+        if (dev_file < 0) {
+            assert(dev_file == -1);
+            if ((errno != EAGAIN && errno != EBUSY && errno != ENXIO && errno != ENOENT) ||
+                (retry_count >= retry_limit))
+            {
+                err(1, "open(\"%s\", %#x): retry count %d, retry limit %d",
+                    buf, flags, retry_count, retry_limit);
             }
+            continue;
+        }
+        switch (ioctl(dev_file, LOOP_CONFIGURE, &config)) {
+        case 0:
+            return dev_file;
+        case -1:
+            if ((errno != EBUSY && errno != ENXIO) || (retry_count >= retry_limit))
+                err(1, "ioctl(%d, LOOP_CONFIGURE, %p): retry count %d, retry limit %d",
+                    dev_file, &config, retry_count, retry_limit);
+            if (close(dev_file))
+                abort(); /* cannot happen on Linux */
+            break;
+        default:
+            abort();
         }
     }
 }
@@ -109,7 +123,7 @@ process_blk_dev(int fd, const char *path, bool writable, dev_t *dev,
 
         const char *const devname = path + DEV_MAPPER_SIZE;
         size_t const devname_len = strlen(devname);
-        if (strcmp(devname, "control") == 0 ||
+        if (strcmp(devname, DM_CONTROL_NODE) == 0 ||
             strcmp(devname, ".") == 0 ||
             strcmp(devname, "..") == 0 ||
             memchr(devname, '/', devname_len) != NULL)
@@ -206,18 +220,24 @@ static void redirect_stderr(void)
         err(1, "close(%d)", redirect_fd);
 }
 
-static bool strict_strtoul_hex(char *p, char **endp, char expected, unsigned long *res)
+static bool strict_strtoul_hex(char *p, char **endp, char expected, uint64_t *res, uint64_t max)
 {
-    if (*p == '0') {
+    switch (*p) {
+    case '0':
         *res = 0;
         *endp = p + 1;
-    } else if ((*p < '1' || *p > '9') && (*p < 'a' && *p > 'f')) {
-        return false;
-    } else {
+        break;
+    case '1'...'9':
+    case 'a'...'f':
+    case 'A'...'F':
         errno = 0;
-        *res = strtoul(p, endp, 16);
-        if (*res > UINT32_MAX || errno)
+        unsigned long long out = strtoull(p, endp, 16);
+        if (out > max || errno)
             return false;
+        *res = out;
+        break;
+    default:
+        return false;
     }
 
     return **endp == expected;
@@ -246,13 +266,13 @@ static bool get_opened(struct xs_handle *const h, char *const extra_path,
 }
 
 static void remove_device(struct xs_handle *const h, char *xenstore_path_buffer,
-                          char *extra_path)
+                          char *extra_path, bool autoclear)
 {
     char *physdev, *end_path, *diskseq_str;
     unsigned int path_len, diskseq_len;
     int loop_control_fd, loop_fd;
-    uint64_t actual_diskseq;
-    unsigned long _major, _minor;
+    uint64_t actual_diskseq, expected_diskseq;
+    uint64_t _major, _minor;
 
     /*
      * Order matters here: the kernel only cares about "physical-device" for
@@ -267,19 +287,30 @@ static void remove_device(struct xs_handle *const h, char *xenstore_path_buffer,
     if (!xs_rm(h, 0, xenstore_path_buffer))
         err(1, "xs_rm(\"%s\")", xenstore_path_buffer);
 
-    strcpy(extra_path, "diskseq");
-    diskseq_str = xs_read(h, 0, xenstore_path_buffer, &diskseq_len);
-    if (diskseq_str == NULL) {
-        err(1, "Cannot obtain diskseq from XenStore path %s", xenstore_path_buffer);
-    }
+    if (autoclear) {
+        if (!strict_strtoul_hex(physdev, &end_path, '@', &expected_diskseq, UINT64_MAX))
+            goto bad_physdev;
+        end_path++;
+    } else {
+        strcpy(extra_path, "diskseq");
+        diskseq_str = xs_read(h, 0, xenstore_path_buffer, &diskseq_len);
+        if (diskseq_str == NULL) {
+            err(1, "Cannot obtain diskseq from XenStore path %s", xenstore_path_buffer);
+        }
 
-    if (!xs_rm(h, 0, xenstore_path_buffer))
-        err(1, "xs_rm(\"%s\")", xenstore_path_buffer);
+        if (!xs_rm(h, 0, xenstore_path_buffer))
+            err(1, "xs_rm(\"%s\")", xenstore_path_buffer);
+
+        if (!strict_strtoul_hex(diskseq_str, &end_path, '\0', &expected_diskseq, UINT64_MAX))
+            errx(1, "Bad diskseq %s", diskseq_str);
+        end_path = physdev;
+        free(diskseq_str);
+    }
 
     errno = 0;
 
-    if ((!strict_strtoul_hex(physdev, &end_path, ':', &_major)) ||
-        (!strict_strtoul_hex(end_path + 1, &end_path, '\0', &_minor)) ||
+    if ((!strict_strtoul_hex(end_path, &end_path, ':', &_major, UINT32_MAX)) ||
+        (!strict_strtoul_hex(end_path + 1, &end_path, '\0', &_minor, UINT32_MAX)) ||
         (end_path != physdev + path_len)) {
         goto bad_physdev;
     }
@@ -287,19 +318,6 @@ static void remove_device(struct xs_handle *const h, char *xenstore_path_buffer,
     if (_major != LOOP_MAJOR)
         return; /* Not a loop device */
 
-    if (diskseq_len != 16)
-        goto bad_diskseq;
-
-    for (unsigned i = 0; i < diskseq_len; ++i) {
-        if ((diskseq_str[i] < '0' || diskseq_str[i] > '9') &&
-            (diskseq_str[i] < 'a' || diskseq_str[i] > 'f')) {
-            goto bad_diskseq;
-        }
-    }
-
-    unsigned long long const diskseq = strtoull(diskseq_str, &end_path, 16);
-    if (errno || end_path != diskseq_str + diskseq_len)
-        abort(); /* cannot happen due to above check */
     if ((loop_control_fd = open_file("/dev/loop-control")) < 0)
         err(1, "open(/dev/loop-control)");
 
@@ -317,10 +335,10 @@ static void remove_device(struct xs_handle *const h, char *xenstore_path_buffer,
     if (ioctl(loop_fd, BLKGETDISKSEQ, &actual_diskseq))
         err(1, "ioctl(%d, BLKGETDISKSEQ, %p)", loop_fd, &actual_diskseq);
 
-    if (diskseq != actual_diskseq)
+    if (expected_diskseq != actual_diskseq)
         errx(1, "Loop device diskseq mismatch!");
 
-    if (ioctl(loop_fd, LOOP_CLR_FD))
+    if (!autoclear && ioctl(loop_fd, LOOP_CLR_FD))
         err(1, "ioctl(\"/dev/loop%lu\", LOOP_CLR_FD)", _minor);
 
     int res = ioctl(loop_control_fd, LOOP_CTL_REMOVE, (long)_minor);
@@ -336,8 +354,6 @@ static void remove_device(struct xs_handle *const h, char *xenstore_path_buffer,
     return;
 bad_physdev:
     errx(1, "Bad physical device value %s", physdev);
-bad_diskseq:
-    errx(1, "Bad diskseq %s", diskseq_str);
 }
 
 
@@ -416,8 +432,7 @@ int main(int argc, char **argv)
                                       action == REMOVE ? '1' : '0');
 
     if (action == REMOVE) {
-        if (!autoclear)
-            remove_device(h, xenstore_path_buffer, extra_path);
+        remove_device(h, xenstore_path_buffer, extra_path, autoclear);
         return 0;
     }
 
@@ -500,10 +515,13 @@ int main(int argc, char **argv)
 
         if (!autoclear) {
             char hex_diskseq[17];
-            if (snprintf(hex_diskseq, sizeof(hex_diskseq), "%016llx", (unsigned long long)diskseq) != 16)
+            int diskseq_len =
+                snprintf(hex_diskseq, sizeof(hex_diskseq), "%llx",
+                         (unsigned long long)diskseq);
+            if (diskseq_len < 1 || diskseq_len > 16)
                 err(1, "snprintf");
             strcpy(extra_path, "diskseq");
-            if (!xs_write(h, t, xenstore_path_buffer, hex_diskseq, 16))
+            if (!xs_write(h, t, xenstore_path_buffer, hex_diskseq, diskseq_len))
                 err(1, "xs_write(\"%s\", \"%s\")", xenstore_path_buffer, hex_diskseq);
         }
 
