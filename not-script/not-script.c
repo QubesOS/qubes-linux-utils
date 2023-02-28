@@ -43,10 +43,7 @@ static int open_loop_dev(uint32_t devnum, bool writable)
         abort();
     int flags = (writable ? O_RDWR : O_RDONLY) |
                    O_EXCL | O_CLOEXEC | O_NOCTTY | O_NOFOLLOW;
-    int res = open(buf, flags);
-    if (res < 0)
-        err(1, "open(\"%s\", %#x)", buf, flags);
-    return res;
+    return open(buf, flags);
 }
 
 static int setup_loop(struct loop_context *ctx,
@@ -78,24 +75,19 @@ static int setup_loop(struct loop_context *ctx,
         int status = ioctl(ctx->fd, retry_count ? LOOP_CTL_ADD : LOOP_CTL_GET_FREE, -1);
         if (status < 0)
             err(1, "ioctl(%d, LOOP_CTL_%s)", ctx->fd, retry_count ? "ADD" : "GET_FREE");
-        char buf[sizeof("/dev/loop") + 10];
-        if ((unsigned)snprintf(buf, sizeof buf, "/dev/loop%u", (unsigned)status) >= sizeof buf)
-            abort();
-        int flags = (writable ? O_RDWR : O_RDONLY) |
-                       O_EXCL | O_CLOEXEC | O_NOCTTY | O_NOFOLLOW;
-        dev_file = open(buf, flags);
+        dev_file = open_loop_dev(status, writable);
         if (dev_file < 0) {
             assert(dev_file == -1);
             if ((errno != EAGAIN && errno != EBUSY && errno != ENXIO && errno != ENOENT) ||
                 (retry_count >= retry_limit))
             {
-                err(1, "open(\"%s\", %#x): retry count %d, retry limit %d",
-                    buf, flags, retry_count, retry_limit);
+                err(1, "open(\"/dev/loop%d\"): retry count %d, retry limit %d",
+                    status, retry_count, retry_limit);
             }
             else
             {
-                warn("open(\"%s\", %#x): retry count %d, retry limit %d",
-                     buf, flags, retry_count, retry_limit);
+                warn("open(\"/dev/loop%d\"): retry count %d, retry limit %d",
+                     status, retry_count, retry_limit);
             }
             continue;
         }
@@ -335,6 +327,8 @@ static void remove_device(struct xs_handle *const h, char *xenstore_path_buffer,
         err(1, "open(/dev/loop-control)");
 
     loop_fd = open_loop_dev(_minor, false);
+    if (loop_fd < 0)
+        err(1, "open(\"/dev/loop/%lu\")", _minor);
 
     struct stat statbuf;
     if (fstat(loop_fd, &statbuf))
