@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <sys/file.h>
 #include <sys/ioctl.h>
 #include <sys/sysmacros.h>
 #include <sys/stat.h>
@@ -56,6 +57,12 @@ static int setup_loop(struct loop_context *ctx,
     int dev_file = -1;
     int retry_count = 0;
     const int retry_limit = 5; /* arbitrary */
+#define LOCK_FILE "/run/lock/qubes-script.lock"
+    int lock = open(LOCK_FILE, O_RDWR | O_CREAT | O_NOFOLLOW, 0600);
+    if (lock < 0)
+        err(1, "open(\"%s\")", LOCK_FILE);
+    if (flock(lock, LOCK_EX))
+        err(1, "flock(\"%s\")", LOCK_FILE);
 
     struct loop_config config = {
         .fd = fd,
@@ -85,10 +92,16 @@ static int setup_loop(struct loop_context *ctx,
                 err(1, "open(\"%s\", %#x): retry count %d, retry limit %d",
                     buf, flags, retry_count, retry_limit);
             }
+            else
+            {
+                warn("open(\"%s\", %#x): retry count %d, retry limit %d",
+                     buf, flags, retry_count, retry_limit);
+            }
             continue;
         }
         switch (ioctl(dev_file, LOOP_CONFIGURE, &config)) {
         case 0:
+            close(lock);
             return dev_file;
         case -1:
             if ((errno != EBUSY && errno != ENXIO) || (retry_count >= retry_limit))
@@ -338,15 +351,18 @@ static void remove_device(struct xs_handle *const h, char *xenstore_path_buffer,
     if (expected_diskseq != actual_diskseq)
         errx(1, "Loop device diskseq mismatch!");
 
-    if (!autoclear && ioctl(loop_fd, LOOP_CLR_FD))
-        err(1, "ioctl(\"/dev/loop%lu\", LOOP_CLR_FD)", _minor);
-
-    int res = ioctl(loop_control_fd, LOOP_CTL_REMOVE, (long)_minor);
-    if (res != 0 && !(res == -1 && errno == EBUSY))
-        err(1, "ioctl(%d, LOOP_CONTROL_REMOVE, %ld)", loop_control_fd, (long)_minor);
+    if (ioctl(loop_fd, LOOP_CLR_FD) && errno != EBUSY)
+        err(1, "ioctl(\"/dev/loop%" PRIu64 "\", LOOP_CLR_FD)", _minor);
 
     if (close(loop_fd))
-        err(1, "close(\"/dev/loop%lu\")", _minor);
+        err(1, "close(\"/dev/loop%" PRIu64 "\")", _minor);
+
+    if (0) {
+        warnx("About to destroy loop device %" PRIu64, _minor);
+        int res = ioctl(loop_control_fd, LOOP_CTL_REMOVE, (long)_minor);
+        if (res != 0 && !(res == -1 && errno == EBUSY))
+            err(1, "ioctl(%d, LOOP_CTL_REMOVE, %ld)", loop_control_fd, (long)_minor);
+    }
 
     if (close(loop_control_fd))
         err(1, "close(\"/dev/loop-control\")");
