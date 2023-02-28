@@ -36,6 +36,17 @@ struct loop_context {
     uint32_t fd;
 };
 
+#define APPEND_TO_XENSTORE_PATH(extra_path, x) do {                                       \
+    static_assert(__builtin_types_compatible_p(__typeof__(x), const char[sizeof(x)]),     \
+                  "Only string literals supported, got " #x);                             \
+    static_assert(__builtin_types_compatible_p(__typeof__("" x), const char[sizeof(x)]),  \
+                  "Only string literals supported, got " #x);                             \
+    static_assert(sizeof(x) <= sizeof("physical-device-path"),                            \
+                  "buffer overflow averted");                                             \
+    strcpy(extra_path, (x));                                                              \
+} while (0)
+
+
 static int open_loop_dev(uint32_t devnum, bool writable)
 {
     char buf[sizeof("/dev/loop") + 10];
@@ -248,12 +259,12 @@ static bool strict_strtoul_hex(char *p, char **endp, char expected, uint64_t *re
     return **endp == expected;
 }
 
-static const char *const opened_key = "opened";
+#define OPENED_KEY "opened"
 
-static bool get_opened(struct xs_handle *const h, char *const extra_path,
-                       const char *const xenstore_path_buffer, char expected)
+static bool get_opened(struct xs_handle *const h,
+                       const char *const xenstore_path_buffer,
+                       char expected)
 {
-    strcpy(extra_path, opened_key);
     unsigned int value_len;
     char *value = xs_read(h, 0, xenstore_path_buffer, &value_len);
     if (value) {
@@ -283,7 +294,7 @@ static void remove_device(struct xs_handle *const h, char *xenstore_path_buffer,
      * Order matters here: the kernel only cares about "physical-device" for
      * now, so ensure that it gets removed first.
      */
-    strcpy(extra_path, "physical-device");
+    APPEND_TO_XENSTORE_PATH(extra_path, "physical-device");
     physdev = xs_read(h, 0, xenstore_path_buffer, &path_len);
     if (physdev == NULL) {
         err(1, "Cannot obtain physical device from XenStore path %s", xenstore_path_buffer);
@@ -297,7 +308,7 @@ static void remove_device(struct xs_handle *const h, char *xenstore_path_buffer,
             goto bad_physdev;
         end_path++;
     } else {
-        strcpy(extra_path, "diskseq");
+        APPEND_TO_XENSTORE_PATH(extra_path, "diskseq");
         diskseq_str = xs_read(h, 0, xenstore_path_buffer, &diskseq_len);
         if (diskseq_str == NULL) {
             err(1, "Cannot obtain diskseq from XenStore path %s", xenstore_path_buffer);
@@ -438,7 +449,8 @@ int main(int argc, char **argv)
     /* Buffer to copy extra data into */
     char *const extra_path = xenstore_path_buffer + xs_path_len + 1;
     unsigned int len, path_len;
-    bool const autoclear = get_opened(h, extra_path, xenstore_path_buffer,
+    APPEND_TO_XENSTORE_PATH(extra_path, OPENED_KEY);
+    bool const autoclear = get_opened(h, xenstore_path_buffer,
                                       action == REMOVE ? '1' : '0');
 
     if (action == REMOVE) {
@@ -446,7 +458,7 @@ int main(int argc, char **argv)
         return 0;
     }
 
-    strcpy(extra_path, "params");
+    APPEND_TO_XENSTORE_PATH(extra_path, "params");
     char *data = xs_read(h, 0, xenstore_path_buffer, &path_len);
     if (data == NULL)
         err(1, "Cannot obtain parameters from XenStore path %s", xenstore_path_buffer);
@@ -460,7 +472,7 @@ int main(int argc, char **argv)
     unsigned int writable;
 
     {
-        strcpy(extra_path, "mode");
+        APPEND_TO_XENSTORE_PATH(extra_path, "mode");
         char *rw = xs_read(h, 0, xenstore_path_buffer, &len);
         if (rw == NULL) {
             if (errno != ENOENT)
@@ -505,8 +517,8 @@ int main(int argc, char **argv)
         err(1, "snprintf");
 
     if (autoclear) {
-        strcpy(extra_path, opened_key);
-        if (!xs_watch(h, xenstore_path_buffer, opened_key))
+        APPEND_TO_XENSTORE_PATH(extra_path, OPENED_KEY);
+        if (!xs_watch(h, xenstore_path_buffer, OPENED_KEY))
             err(1, "Cannot setup XenStore watch on %s", xenstore_path_buffer);
     }
 
@@ -515,11 +527,11 @@ int main(int argc, char **argv)
         if (!t)
             err(1, "Cannot start XenStore transaction");
 
-        strcpy(extra_path, "physical-device");
+        APPEND_TO_XENSTORE_PATH(extra_path, "physical-device");
         if (!xs_write(h, t, xenstore_path_buffer, phys_dev, l))
             err(1, "xs_write(\"%s\", \"%s\")", xenstore_path_buffer, phys_dev);
 
-        strcpy(extra_path, "physical-device-path");
+        APPEND_TO_XENSTORE_PATH(extra_path, "physical-device-path");
         if (!xs_write(h, t, xenstore_path_buffer, data, path_len))
             err(1, "xs_write(\"%s\", \"%s\")", xenstore_path_buffer, data);
 
@@ -530,7 +542,7 @@ int main(int argc, char **argv)
                          (unsigned long long)diskseq);
             if (diskseq_len < 1 || diskseq_len > 16)
                 err(1, "snprintf");
-            strcpy(extra_path, "diskseq");
+            APPEND_TO_XENSTORE_PATH(extra_path, "diskseq");
             if (!xs_write(h, t, xenstore_path_buffer, hex_diskseq, diskseq_len))
                 err(1, "xs_write(\"%s\", \"%s\")", xenstore_path_buffer, hex_diskseq);
         }
@@ -543,7 +555,7 @@ int main(int argc, char **argv)
     }
 
     if (autoclear) {
-        strcpy(extra_path, opened_key);
+        APPEND_TO_XENSTORE_PATH(extra_path, OPENED_KEY);
         for (;;) {
             unsigned int num, state_len;
             char *value, **watch_res = xs_read_watch(h, &num);
