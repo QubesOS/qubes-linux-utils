@@ -31,10 +31,6 @@ static int open_file(const char *path) {
     return open(path, O_RDONLY | O_NOCTTY | O_CLOEXEC | O_NOFOLLOW);
 }
 
-/* A simple library for loop device ioctls */
-struct loop_context {
-    uint32_t fd;
-};
 
 #define APPEND_TO_XENSTORE_PATH(extra_path, x) do {                                       \
     static_assert(__builtin_types_compatible_p(__typeof__(x), const char[sizeof(x)]),     \
@@ -57,11 +53,7 @@ static int open_loop_dev(uint32_t devnum, bool writable)
     return open(buf, flags);
 }
 
-static int setup_loop(struct loop_context *ctx,
-                      uint32_t fd,
-                      uint64_t offset,
-                      uint64_t sizelimit,
-                      bool writable, bool autoclear) {
+static int setup_loop(int ctrl_fd, uint32_t fd, bool writable, bool autoclear) {
     int dev_file = -1;
     int retry_count = 0;
     const int retry_limit = 5; /* arbitrary */
@@ -76,16 +68,14 @@ static int setup_loop(struct loop_context *ctx,
         .fd = fd,
         .block_size = 0, /* FIXME! */
         .info = {
-            .lo_offset = offset,
-            .lo_sizelimit = sizelimit,
             .lo_flags = LO_FLAGS_DIRECT_IO | (autoclear ? LO_FLAGS_AUTOCLEAR : 0) | (writable ? 0 : LO_FLAGS_READ_ONLY),
         },
     };
 
     for (;; retry_count++) {
-        int status = ioctl(ctx->fd, retry_count ? LOOP_CTL_ADD : LOOP_CTL_GET_FREE, -1);
+        int status = ioctl(ctrl_fd, retry_count ? LOOP_CTL_ADD : LOOP_CTL_GET_FREE, -1);
         if (status < 0)
-            err(1, "ioctl(%d, LOOP_CTL_%s)", ctx->fd, retry_count ? "ADD" : "GET_FREE");
+            err(1, "ioctl(%d, LOOP_CTL_%s)", ctrl_fd, retry_count ? "ADD" : "GET_FREE");
         dev_file = open_loop_dev(status, writable);
         if (dev_file < 0) {
             assert(dev_file == -1);
@@ -177,16 +167,15 @@ process_blk_dev(int fd, const char *path, bool writable, dev_t *dev,
         int ctrl_fd = open_file("/dev/loop-control");
         if (ctrl_fd < 0)
             err(1, "open(/dev/loop-control)");
-        struct loop_context ctx = { .fd = ctrl_fd };
-        int loop_fd = setup_loop(&ctx, fd, 0, (uint64_t)statbuf.st_size, writable, autoclear);
+        int loop_fd = setup_loop(ctrl_fd, fd, writable, autoclear);
         if (loop_fd < 0)
             err(1, "loop device setup failed");
         if (dup3(loop_fd, fd, O_CLOEXEC) != fd)
             err(1, "dup3(%d, %d, O_CLOEXEC)", loop_fd, fd);
         if (close(loop_fd))
             err(1, "close(%d)", loop_fd);
-        if (close(ctx.fd))
-            err(1, "close(%d)", ctx.fd);
+        if (close(ctrl_fd))
+            err(1, "close(%d)", ctrl_fd);
         if (fstat(fd, &statbuf))
             err(1, "fstat");
     } else {
