@@ -271,10 +271,9 @@ static bool get_opened(struct xs_handle *const h,
 }
 
 static void remove_device(struct xs_handle *const h, char *xenstore_path_buffer,
-                          char *extra_path, bool autoclear)
+                          char *extra_path)
 {
-    char *physdev, *end_path, *diskseq_str;
-    unsigned int path_len, diskseq_len;
+    char *end_path;
     int loop_control_fd, loop_fd;
     uint64_t actual_diskseq, expected_diskseq;
     uint64_t _major, _minor;
@@ -283,42 +282,48 @@ static void remove_device(struct xs_handle *const h, char *xenstore_path_buffer,
      * Order matters here: the kernel only cares about "physical-device" for
      * now, so ensure that it gets removed first.
      */
-    APPEND_TO_XENSTORE_PATH(extra_path, "physical-device");
-    physdev = xs_read(h, 0, xenstore_path_buffer, &path_len);
-    if (physdev == NULL) {
-        err(1, "Cannot obtain physical device from XenStore path %s", xenstore_path_buffer);
+    {
+        APPEND_TO_XENSTORE_PATH(extra_path, "physical-device");
+        unsigned int path_len;
+        char *physdev = xs_read(h, 0, xenstore_path_buffer, &path_len);
+        if (physdev == NULL) {
+            err(1, "Cannot obtain physical device from XenStore path %s", xenstore_path_buffer);
+        }
+
+        if (!xs_rm(h, 0, xenstore_path_buffer)) {
+            err(1, "xs_rm(\"%s\")", xenstore_path_buffer);
+        }
+
+        if ((!strict_strtoul_hex(end_path, &end_path, ':', &_major, UINT32_MAX)) ||
+            (!strict_strtoul_hex(end_path + 1, &end_path, '\0', &_minor, UINT32_MAX)) ||
+            (end_path != physdev + path_len))
+        {
+            errx(1, "Bad physical device value %s", physdev);
+        }
+        free(physdev);
     }
 
-    if (!xs_rm(h, 0, xenstore_path_buffer))
-        err(1, "xs_rm(\"%s\")", xenstore_path_buffer);
-
-    if (autoclear) {
-        if (!strict_strtoul_hex(physdev, &end_path, '@', &expected_diskseq, UINT64_MAX))
-            goto bad_physdev;
-        end_path++;
-    } else {
+    {
         APPEND_TO_XENSTORE_PATH(extra_path, "diskseq");
-        diskseq_str = xs_read(h, 0, xenstore_path_buffer, &diskseq_len);
+        unsigned int diskseq_len;
+        char *diskseq_str = xs_read(h, 0, xenstore_path_buffer, &diskseq_len);
         if (diskseq_str == NULL) {
             err(1, "Cannot obtain diskseq from XenStore path %s", xenstore_path_buffer);
         }
 
-        if (!xs_rm(h, 0, xenstore_path_buffer))
+        if (!xs_rm(h, 0, xenstore_path_buffer)) {
             err(1, "xs_rm(\"%s\")", xenstore_path_buffer);
+        }
 
-        if (!strict_strtoul_hex(diskseq_str, &end_path, '\0', &expected_diskseq, UINT64_MAX))
+        if ((!strict_strtoul_hex(diskseq_str, &end_path, '\0', &expected_diskseq, UINT64_MAX)) ||
+            (end_path != diskseq_str + diskseq_len))
+        {
             errx(1, "Bad diskseq %s", diskseq_str);
-        end_path = physdev;
+        }
         free(diskseq_str);
     }
 
     errno = 0;
-
-    if ((!strict_strtoul_hex(end_path, &end_path, ':', &_major, UINT32_MAX)) ||
-        (!strict_strtoul_hex(end_path + 1, &end_path, '\0', &_minor, UINT32_MAX)) ||
-        (end_path != physdev + path_len)) {
-        goto bad_physdev;
-    }
 
     if (_major != LOOP_MAJOR)
         return; /* Not a loop device */
@@ -362,8 +367,6 @@ static void remove_device(struct xs_handle *const h, char *xenstore_path_buffer,
         err(1, "close(\"/dev/loop-control\")");
 
     return;
-bad_physdev:
-    errx(1, "Bad physical device value %s", physdev);
 }
 
 
@@ -437,15 +440,16 @@ int main(int argc, char **argv)
     xenstore_path_buffer[xs_path_len] = '/';
     /* Buffer to copy extra data into */
     char *const extra_path = xenstore_path_buffer + xs_path_len + 1;
-    unsigned int len, path_len;
-    APPEND_TO_XENSTORE_PATH(extra_path, OPENED_KEY);
-    bool const autoclear = get_opened(h, xenstore_path_buffer,
-                                      action == REMOVE ? '1' : '0');
 
     if (action == REMOVE) {
-        remove_device(h, xenstore_path_buffer, extra_path, autoclear);
+        remove_device(h, xenstore_path_buffer, extra_path);
         return 0;
     }
+
+    unsigned int path_len;
+    APPEND_TO_XENSTORE_PATH(extra_path, OPENED_KEY);
+    bool const autoclear = getenv("QUBES_EXPERIMENTAL_XENSTORE_UAPI") ?
+        get_opened(h, xenstore_path_buffer, action == REMOVE ? '1' : '0') : false;
 
     APPEND_TO_XENSTORE_PATH(extra_path, "params");
     char *data = xs_read(h, 0, xenstore_path_buffer, &path_len);
@@ -462,6 +466,7 @@ int main(int argc, char **argv)
 
     {
         APPEND_TO_XENSTORE_PATH(extra_path, "mode");
+        unsigned int len;
         char *rw = xs_read(h, 0, xenstore_path_buffer, &len);
         if (rw == NULL) {
             if (errno != ENOENT)
@@ -491,18 +496,22 @@ int main(int argc, char **argv)
 
     if ((fd = open(data, (writable ? O_RDWR : O_RDONLY) | O_NOCTTY | O_CLOEXEC | O_NONBLOCK)) < 0)
         err(1, "open(%s)", data);
-    char phys_dev[16 + 8 + 8 + 2 + 1];
+    // Both major and minor are 8 hex digits, while colon and NUL
+    // terminator are one byte each.
+    char phys_dev[18];
+    char hex_diskseq[17];
 
     process_blk_dev(fd, data, writable, &dev, &diskseq, autoclear);
-    unsigned const int l =
-        (unsigned)(autoclear ?
-                   snprintf(phys_dev, sizeof phys_dev, "%" PRIx64 "@%lx:%lx",
-                            diskseq, (unsigned long)major(dev), (unsigned long)minor(dev)) :
-                   snprintf(phys_dev, sizeof phys_dev, "%lx:%lx",
-                            (unsigned long)major(dev), (unsigned long)minor(dev)));
+    int const physdev_len =
+        snprintf(phys_dev, sizeof phys_dev, "%lx:%lx",
+                 (unsigned long)major(dev), (unsigned long)minor(dev));
+    if (physdev_len < 3 || physdev_len >= (int)sizeof(phys_dev))
+        err(1, "snprintf");
 
-
-    if (l >= sizeof(phys_dev))
+    int const diskseq_len =
+        snprintf(hex_diskseq, sizeof(hex_diskseq), "%llx",
+                 (unsigned long long)diskseq);
+    if (diskseq_len < 1 || diskseq_len >= (int)sizeof(hex_diskseq))
         err(1, "snprintf");
 
     if (autoclear) {
@@ -517,14 +526,14 @@ int main(int argc, char **argv)
             err(1, "Cannot start XenStore transaction");
 
         APPEND_TO_XENSTORE_PATH(extra_path, "physical-device");
-        if (!xs_write(h, t, xenstore_path_buffer, phys_dev, l))
+        if (!xs_write(h, t, xenstore_path_buffer, phys_dev, physdev_len))
             err(1, "xs_write(\"%s\", \"%s\")", xenstore_path_buffer, phys_dev);
 
         APPEND_TO_XENSTORE_PATH(extra_path, "physical-device-path");
         if (!xs_write(h, t, xenstore_path_buffer, data, path_len))
             err(1, "xs_write(\"%s\", \"%s\")", xenstore_path_buffer, data);
 
-        if (!autoclear) {
+        {
             char hex_diskseq[17];
             int diskseq_len =
                 snprintf(hex_diskseq, sizeof(hex_diskseq), "%llx",
