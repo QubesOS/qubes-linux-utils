@@ -27,6 +27,10 @@
 #include <xen/io/xenbus.h>
 #include <xenstore.h>
 
+#define DEV_MAPPER "/dev/mapper/"
+#define DEV_MAPPER_SIZE (sizeof DEV_MAPPER - 1)
+#define LOCK_FILE "/run/lock/qubes-script.lock"
+
 static int open_file(const char *path) {
     return open(path, O_RDONLY | O_NOCTTY | O_CLOEXEC | O_NOFOLLOW);
 }
@@ -57,7 +61,6 @@ static int setup_loop(int ctrl_fd, uint32_t fd, bool writable, bool autoclear) {
     int dev_file = -1;
     int retry_count = 0;
     const int retry_limit = 5; /* arbitrary */
-#define LOCK_FILE "/run/lock/qubes-script.lock"
     int lock = open(LOCK_FILE, O_RDWR | O_CREAT | O_NOFOLLOW, 0600);
     if (lock < 0)
         err(1, "open(\"%s\")", LOCK_FILE);
@@ -108,9 +111,6 @@ static int setup_loop(int ctrl_fd, uint32_t fd, bool writable, bool autoclear) {
         }
     }
 }
-
-#define DEV_MAPPER "/dev/mapper/"
-#define DEV_MAPPER_SIZE (sizeof DEV_MAPPER - 1)
 
 static void
 process_blk_dev(int fd, const char *path, bool writable, dev_t *dev,
@@ -185,30 +185,9 @@ skip:
     *dev = statbuf.st_rdev;
 #ifndef BLKGETDISKSEQ
 #define BLKGETDISKSEQ _IOR(0x12,128,__u64)
-#else
-    static_assert(BLKGETDISKSEQ == _IOR(0x12,128,__u64),
-                  "wrong BLKGETDISKSEQ definition?");
 #endif
     if (ioctl(fd, BLKGETDISKSEQ, diskseq))
         err(1, "ioctl(%d, BLKGETDISKSEQ, %p)", fd, diskseq);
-}
-
-static void validate_int_start(char **p, unsigned long *out, bool path)
-{
-    char const s = **p;
-    if (s == '0') {
-        *out = 0;
-        (*p)++;
-    } else if (s >= '1' && s <= '9') {
-        errno = 0;
-        *out = strtoul(*p, p, 10);
-        if (errno)
-            err(1, "strtoul()");
-    } else if (path) {
-        errx(1, "Bad byte %d in XenStore path %s", s, *p);
-    } else {
-        errx(1, "Bad byte %d at start of Xenbus state", s);
-    }
 }
 
 static void redirect_stderr(void)
@@ -377,30 +356,14 @@ int main(int argc, char **argv)
         REMOVE,
     } action;
     redirect_stderr();
-#define XENBUS_PATH_PREFIX "XENBUS_PATH="
-#define BACKEND_VBD "backend/vbd/"
-#define ARGV2_PREFIX (XENBUS_PATH_PREFIX BACKEND_VBD)
 
-    const char *xs_path_raw = getenv("XENBUS_PATH");
+    const char *const xs_path = getenv("XENBUS_PATH");
 
-    if (argc < 2 || argc > 3)
-        errx(1, "Usage: [add|remove] [XENBUS_PATH=backend/vbd/REMOTE_DOMAIN/ID] (got %d arguments, expected 2 or 3)", argc);
+    if (argc != 2)
+        errx(1, "Usage: [add|remove] (got %d arguments, expected 2)", argc);
 
-    if (argc >= 3) {
-        if (strncmp(argv[2], ARGV2_PREFIX, sizeof(ARGV2_PREFIX) - 1))
-            errx(1, "Second argument must begin with XENBUS_PATH=backend/vbd/");
-        const char *const new_path = argv[2] + (sizeof(XENBUS_PATH_PREFIX) - 1);
-
-        if ((xs_path_raw != NULL) && (strcmp(xs_path_raw, new_path) != 0))
-            errx(1, "XENBUS_PATH was passed both on the command line and in"
-                    " the environment, but the values were different");
-
-        xs_path_raw = new_path;
-    } else if (xs_path_raw == NULL) {
-        errx(1, "Xenstore path required");
-    } else if (strncmp(xs_path_raw, BACKEND_VBD, sizeof(BACKEND_VBD) - 1)) {
-        errx(1, "Bad Xenstore path %s", xs_path_raw);
-    }
+    if (!xs_path)
+        errx(1, "XENBUS_PATH not set");
 
     if (strcmp(argv[1], "add") == 0) {
         action = ADD;
@@ -410,24 +373,7 @@ int main(int argc, char **argv)
         errx(1, "Bad command (expected \"add\" or \"remove\")");
     }
 
-    const char *const xs_path = xs_path_raw;
-    size_t xs_path_len;
-
-    {
-        /* strtoul() is not const-correct, sorry... */
-        char *xs_path_extra = (char *)(xs_path + (sizeof(BACKEND_VBD) - 1));
-        unsigned long peer_domid, tmp;
-        validate_int_start(&xs_path_extra, &peer_domid, true);
-        if (*xs_path_extra++ != '/')
-            errx(1, "Peer domain ID %lu not followed by '/'", peer_domid);
-        validate_int_start(&xs_path_extra, &tmp, true);
-        if (*xs_path_extra)
-            errx(1, "Junk after XenStore device ID %lu", tmp);
-        if (peer_domid >= DOMID_FIRST_RESERVED)
-            errx(1, "Peer domain ID %lu too large (limit %d)", peer_domid, DOMID_FIRST_RESERVED);
-        xs_path_len = (size_t)(xs_path_extra - xs_path);
-    }
-
+    size_t xs_path_len = strlen(xs_path);
     struct xs_handle *const h = xs_open(0);
     if (!h)
         err(1, "Cannot connect to XenStore");
