@@ -465,6 +465,14 @@ int main(int argc, char **argv)
         if (!xs_watch(h, xenstore_path_buffer, OPENED_KEY))
             err(1, "Cannot setup XenStore watch on %s", xenstore_path_buffer);
     }
+    char buf[sizeof("/dev/loop") + 10];
+    char *physdev_path = data;
+    if (major(dev) == LOOP_MAJOR) {
+        if ((unsigned)snprintf(buf, sizeof buf, "/dev/loop%" PRIu32,
+                               (unsigned)minor(dev)) >= sizeof buf)
+            abort();
+        physdev_path = buf;
+    }
 
     for (;;) {
         xs_transaction_t t = xs_transaction_start(h);
@@ -476,8 +484,8 @@ int main(int argc, char **argv)
             err(1, "xs_write(\"%s\", \"%s\")", xenstore_path_buffer, phys_dev);
 
         APPEND_TO_XENSTORE_PATH(extra_path, "physical-device-path");
-        if (!xs_write(h, t, xenstore_path_buffer, data, path_len))
-            err(1, "xs_write(\"%s\", \"%s\")", xenstore_path_buffer, data);
+        if (!xs_write(h, t, xenstore_path_buffer, physdev_path, path_len))
+            err(1, "xs_write(\"%s\", \"%s\")", xenstore_path_buffer, physdev_path);
 
         {
             char hex_diskseq[17];
