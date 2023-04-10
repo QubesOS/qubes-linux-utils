@@ -1,3 +1,70 @@
+qubes-utils (4.2.6) unstable; urgency=medium
+
+  [ Demi Marie Obenour ]
+  * Sanitize paths in qfile-unpacker
+  * Initial work on safe open
+  * Allow UTF-8 characters outside of ASCII
+  * Add a blocklist of bad characters
+  * Simplify rejection of invalid codepoints
+  * Use a generated blocklist
+  * Use FD-based versions chmod and utime
+  * Remove useless check
+  * Use simpler check to allow spaces in file names
+  * Do not allow UTIME_OMIT and UTIME_NOW
+  * Make code_point computations consistent
+  * Clarify differences between code and RFC3629
+  * Use GCC case ranges more
+  * Handle too-large code points in generated code
+  * Use "surrogates" instead of "category Cs"
+  * gentlb.py: Flush stdout before exiting
+  * Rename open_safe to opendir_safe and document it
+  * Avoid using a mutable static variable
+  * Avoid closing AT_FDCWD
+  * Avoid unit testing strchr()
+  * Forbid trailing slashes in paths
+  * Remove redundant code in pathname handling
+  * Drop a call to strlen()
+  * Simplify loop
+  * Reject all unassigned and invalid Unicode codepoints
+  * Misc cleanup
+  * Add fast path for ASCII
+  * Reject bidirectional text
+  * Only allow a subset of scripts
+  * Do not allow non-ASCII symbols in filenames
+  * Only allow scripts recommended for identifiers
+  * Create libqubes-pure: a library of Qubes-specific code that does no
+    I/O
+  * Fix CentOS 8 build
+  * Add some tests
+  * Generate allowlist at compile-time
+  * Use uint8_t* with U8_APPEND macros
+  * fix signs
+  * Link testsuite to ICU
+  * C block script implementation
+  * test
+  * more logs
+  * more logs
+  * Actually open files to be written for writing :)
+  * Do not rely on autoclear
+  * Working block script
+  * Allow xenstore watch
+  * Use new "opened" Xenstore key to indicate device open
+  * Use "opened" Xenstore key instead of magic file in /etc
+  * Use different physical-device format for autoclear-enabled kernels
+  * Always use permissive mode
+  * Retry LOOP_CONFIGURE as well as open
+  * Clean up some error checks
+  * Work around bug in LOOP_CTL_GET_FREE
+  * Serialize loop device opening
+  * deduplicate loop opening code
+  * Add some static assertions
+  * Avoid setting a size limit for the loop device
+  * Always write "diskseq" entry
+  * Respond to suggestions from code review
+  * Write /dev/loopN to physical-device-path
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Mon, 10 Apr 2023 02:23:11 +0200
+
 qubes-utils (4.2.5) unstable; urgency=medium
 
   * qubes-prepare-vm-kernel: make resize2fs work even if system time is
