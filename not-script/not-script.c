@@ -252,7 +252,6 @@ static bool get_opened(struct xs_handle *const h,
 static void remove_device(struct xs_handle *const h, char *xenstore_path_buffer,
                           char *extra_path)
 {
-    char *end_path;
     int loop_control_fd, loop_fd;
     uint64_t actual_diskseq, expected_diskseq;
     uint64_t _major, _minor;
@@ -264,6 +263,7 @@ static void remove_device(struct xs_handle *const h, char *xenstore_path_buffer,
     {
         APPEND_TO_XENSTORE_PATH(extra_path, "physical-device");
         unsigned int path_len;
+        char *physdev_end;
         char *physdev = xs_read(h, 0, xenstore_path_buffer, &path_len);
         if (physdev == NULL) {
             err(1, "Cannot obtain physical device from XenStore path %s", xenstore_path_buffer);
@@ -273,9 +273,9 @@ static void remove_device(struct xs_handle *const h, char *xenstore_path_buffer,
             err(1, "xs_rm(\"%s\")", xenstore_path_buffer);
         }
 
-        if ((!strict_strtoul_hex(end_path, &end_path, ':', &_major, UINT32_MAX)) ||
-            (!strict_strtoul_hex(end_path + 1, &end_path, '\0', &_minor, UINT32_MAX)) ||
-            (end_path != physdev + path_len))
+        if ((!strict_strtoul_hex(physdev, &physdev_end, ':', &_major, UINT32_MAX)) ||
+            (!strict_strtoul_hex(physdev_end + 1, &physdev_end, '\0', &_minor, UINT32_MAX)) ||
+            (physdev_end != physdev + path_len))
         {
             errx(1, "Bad physical device value %s", physdev);
         }
@@ -285,6 +285,7 @@ static void remove_device(struct xs_handle *const h, char *xenstore_path_buffer,
     {
         APPEND_TO_XENSTORE_PATH(extra_path, "diskseq");
         unsigned int diskseq_len;
+        char *diskseq_end;
         char *diskseq_str = xs_read(h, 0, xenstore_path_buffer, &diskseq_len);
         if (diskseq_str == NULL) {
             err(1, "Cannot obtain diskseq from XenStore path %s", xenstore_path_buffer);
@@ -294,8 +295,8 @@ static void remove_device(struct xs_handle *const h, char *xenstore_path_buffer,
             err(1, "xs_rm(\"%s\")", xenstore_path_buffer);
         }
 
-        if ((!strict_strtoul_hex(diskseq_str, &end_path, '\0', &expected_diskseq, UINT64_MAX)) ||
-            (end_path != diskseq_str + diskseq_len))
+        if ((!strict_strtoul_hex(diskseq_str, &diskseq_end, '\0', &expected_diskseq, UINT64_MAX)) ||
+            (diskseq_end != diskseq_str + diskseq_len))
         {
             errx(1, "Bad diskseq %s", diskseq_str);
         }
@@ -389,6 +390,7 @@ int main(int argc, char **argv)
 
     if (action == REMOVE) {
         remove_device(h, xenstore_path_buffer, extra_path);
+        free(xenstore_path_buffer);
         return 0;
     }
 
@@ -527,4 +529,5 @@ int main(int argc, char **argv)
         }
     }
     xs_close(h);
+    free(xenstore_path_buffer);
 }
