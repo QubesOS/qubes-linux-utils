@@ -1,7 +1,6 @@
 checks:tests:
   after_script:
-  - export PATH="$PATH:$HOME/.local/bin"
-  - codecov
+  - ./ci/codecov-wrapper
   before_script:
   - sudo dnf install -y python3-pip
   - export PATH="$PATH:$HOME/.local/bin"
