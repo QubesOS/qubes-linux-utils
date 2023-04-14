@@ -5,6 +5,7 @@ checks:tests:
   - sudo dnf install -y python3-pip
   - export PATH="$PATH:$HOME/.local/bin"
   - pip3 install --quiet -r ci/requirements.txt
+  - git config --global --add safe.directory "$PWD"
   script:
   - python3 -m coverage run -m unittest discover -v imgconverter -p test.py
   stage: checks
