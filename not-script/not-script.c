@@ -308,6 +308,23 @@ static void remove_device(struct xs_handle *const h, char *xenstore_path_buffer,
     if (_major != LOOP_MAJOR)
         return; /* Not a loop device */
 
+    {
+        /* Check if the device was created by us */
+        APPEND_TO_XENSTORE_PATH(extra_path, "physical-device-path");
+        unsigned int dev_len, params_len;
+        char *physical_device_path = xs_read(h, 0, xenstore_path_buffer, &dev_len);
+        if (physical_device_path == NULL)
+            err(1, "xs_read(%s)", xenstore_path_buffer);
+        APPEND_TO_XENSTORE_PATH(extra_path, "params");
+        char *params = xs_read(h, 0, xenstore_path_buffer, &params_len);
+        if (params == NULL)
+            err(1, "xs_read(%s)", xenstore_path_buffer);
+        if (params_len == dev_len && memcmp(physical_device_path, params, dev_len) == 0)
+            return; /* Not created by this code */
+        free(params);
+        free(physical_device_path);
+    }
+
     if ((loop_control_fd = open_file("/dev/loop-control")) < 0)
         err(1, "open(/dev/loop-control)");
 
