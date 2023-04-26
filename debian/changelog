@@ -1,3 +1,19 @@
+qubes-utils (4.2.7) unstable; urgency=medium
+
+  [ Marek Marczykowski-Górecki ]
+  * Switch to new codecov uploader
+  * ci: make git happy about source clone owned by a different user
+
+  [ Demi Marie Obenour ]
+  * Fix multiple bugs in block script
+  * qubes-block: Only destroy loop devices qubes-block created
+
+  [ Frédéric Pierret (fepitre) ]
+  * Rework Archlinux packaging
+  * archlinux: support for new packaging in legacy builder
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Wed, 26 Apr 2023 03:18:41 +0200
+
 qubes-utils (4.2.6) unstable; urgency=medium
 
   [ Demi Marie Obenour ]
