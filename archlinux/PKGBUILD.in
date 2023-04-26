@@ -1,0 +1,65 @@
+# Maintainer: Frédéric Pierret (fepitre) <frederic@invisiblethingslab.com>
+
+pkgname=(qubes-vm-utils qubes-vm-kernel-support)
+pkgver=@VERSION@
+pkgrel=@REL@
+pkgdesc="Common Linux files for Qubes VM."
+arch=("x86_64")
+url="http://qubes-os.org/"
+license=('GPL')
+depends=(
+    gcc
+    make
+    pkgconfig
+    python-setuptools
+    icu
+    qubes-libvchan-xen
+)
+options=('staticlibs')
+_pkgnvr="${pkgname}-${pkgver}-${pkgrel}"
+source=("${_pkgnvr}.tar.gz")
+sha256sums=(SKIP)
+
+build() {
+    cd "${_pkgnvr}"
+    make all
+}
+
+package_qubes-vm-utils() {
+    cd "${_pkgnvr}"
+
+    depends=(
+        graphicsmagick
+        python-cairo
+        python-pillow
+        python-numpy
+        icu
+    )
+    install=archlinux/PKGBUILD-qubes-vm-utils.install
+
+    make install \
+        DESTDIR="$pkgdir" \
+        LIBDIR=/usr/lib \
+        SYSLIBDIR=/usr/lib \
+        SBINDIR=/usr/bin
+}
+
+package_qubes-vm-kernel-support() {
+    cd "${_pkgnvr}"
+
+    depends=(
+        mkinitcpio
+        grub
+    )
+    install=archlinux/PKGBUILD-qubes-vm-kernel-support.install
+
+    mkdir -p "${pkgdir}/usr/lib/initcpio/install/"
+    mkdir -p "${pkgdir}/usr/lib/initcpio/hooks/"
+    mkdir -p "${pkgdir}/usr/lib/qubes/"
+    mkdir -p "${pkgdir}/etc/default"
+
+    install -m 611 "${srcdir}/${_pkgnvr}/archlinux/PKGBUILD-initcpio-install.sh" "${pkgdir}/usr/lib/initcpio/install/qubes"
+    install -m 611 "${srcdir}/${_pkgnvr}/archlinux/PKGBUILD-initcpio-hook.sh" "${pkgdir}/usr/lib/initcpio/hooks/qubes"
+    install -m 755 "${srcdir}/${_pkgnvr}/dracut/full-dmroot/qubes_cow_setup.sh" "${pkgdir}/usr/lib/qubes/qubes_cow_setup.sh"
+    install -m 0644 "${srcdir}/${_pkgnvr}/grub/grub.qubes-kernel-vm-support" "${pkgdir}/etc/default/grub.qubes-kernel-vm-support"
+}
