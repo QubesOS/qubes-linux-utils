@@ -1,3 +1,10 @@
+qubes-utils (4.2.8) unstable; urgency=medium
+
+  [ Rusty Bird ]
+  * qubes-block: force logical block size 512 for loop device
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Sat, 13 May 2023 01:11:13 +0200
+
 qubes-utils (4.2.7) unstable; urgency=medium
 
   [ Marek Marczykowski-Górecki ]
