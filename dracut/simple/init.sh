@@ -11,8 +11,12 @@ if [ -w /sys/devices/system/xen_memory/xen_memory0/scrub_pages ]; then
     echo 1 > /sys/devices/system/xen_memory/xen_memory0/scrub_pages
 fi
 
-if [ -e /dev/mapper/dmroot ] ; then 
-    echo "Qubes: FATAL error: /dev/mapper/dmroot already exists?!"
+# If device-mapper is built-in then Linux creates /dev/mapper,
+# but if it is a module then this script must do that.
+if [ ! -d /dev/mapper ]; then
+    mkdir -m 0755 /dev/mapper
+elif [ -e /dev/mapper/dmroot ]; then
+    echo "Qubes: FATAL error: /dev/mapper/dmroot already exists?!" >&2
 fi
 
 /sbin/modprobe xenblk || /sbin/modprobe xen-blkfront || echo "Qubes: Cannot load Xen Block Frontend..."
