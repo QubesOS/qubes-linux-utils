@@ -14,7 +14,7 @@ allow qubes_meminfo_writer_t { sysfs_t proc_t }:file { open read };
 files_read_etc_files(qubes_meminfo_writer_t)
 miscfiles_read_localization(qubes_meminfo_writer_t)
 dev_rw_xen(qubes_meminfo_writer_t)
-
+allow qubes_meminfo_writer_t self:unix_stream_socket { connectto create_stream_socket_perms };
 
 type qubes_meminfo_writer_var_run_t;
 files_pid_file(qubes_meminfo_writer_var_run_t)
