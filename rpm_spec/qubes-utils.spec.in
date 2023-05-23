@@ -88,7 +88,7 @@ make all selinux BACKEND_VMM=@BACKEND_VMM@ PYTHON=%{__python3} NO_REBUILD_TABLE=
 
 %check
 make -C qrexec-lib check NO_REBUILD_TABLE=1
-%if 0%{?fedora} == 36
+%if 0%{?fedora} == 38
 make -C qrexec-lib check-table-up-to-date NO_REBUILD_TABLE=1
 %endif
 
