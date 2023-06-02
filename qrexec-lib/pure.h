@@ -1,8 +1,34 @@
+/*
+ * The Qubes OS Project, https://www.qubes-os.org
+ *
+ * Copyright (C) 2023  Demi Marie Obenour  <demi@invisiblethingslab.com>
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ */
+
 #ifndef QUBES_UTIL_PURE_H
 #define QUBES_UTIL_PURE_H QUBES_UTIL_PURE_H
-#include <stdbool.h>
+#ifdef __cplusplus
+extern "C" {
+#else
+#include <stdbool.h> // for bool
+#endif
 #include <stdint.h>
 #include <stddef.h>
+#include <stdlib.h>
+#include <string.h>
 
 #if defined QUBES_EXPORT
 # error QUBES_EXPORT already defined
@@ -48,18 +74,18 @@
  */
 struct QubesSlice {
     /// Pointer to the data
-    const uint8_t *untrusted_pointer;
+    const uint8_t *pointer;
     /// Length of the data
     size_t length;
-} __attribute__((may_alias));
+} __attribute__((__may_alias__));
 
 /** A mutable slice.  Equivalent to Rust's &mut [T]. */
 struct QubesMutableSlice {
     /// Pointer to the data
-    uint8_t *untrusted_pointer;
+    uint8_t *pointer;
     /// Length of the data
     size_t length;
-} __attribute__((may_alias));
+} __attribute__((__may_alias__));
 
 /**
  * Validate that a string is a valid path and will not result in
@@ -121,4 +147,62 @@ qubes_pure_validate_symbolic_link(const uint8_t *untrusted_name,
 QUBES_PURE_PUBLIC bool
 qubes_pure_check_string_safe_for_display(const char *untrusted_str,
                                          size_t line_length);
+
+/** Initialize a QubesSlice from a nul-terminated string. */
+static inline struct QubesSlice
+qubes_pure_buffer_init_from_nul_terminated_string(const char *str)
+{
+    if (str == NULL)
+        abort();
+    return (struct QubesSlice) {
+        .pointer = (const uint8_t *)str,
+        .length = strlen(str),
+    };
+}
+
+/** Minimum length of a Qube name */
+#define QUBES_PURE_MIN_QUBE_NAME_LEN 1
+
+/** Maximum length of a Qube name */
+#define QUBES_PURE_MAX_QUBE_NAME_LEN 31
+
+/**
+ * Errors that can occur when validating a qube name.
+ */
+enum QubeNameValidationError {
+    /// Qube name is OK (not an error).
+    QUBE_NAME_OK = 0,
+    /// Name is empty.
+    QUBE_NAME_EMPTY = -1,
+    /// Name is more than QUBES_PURE_MAX_QUBE_NAME_LEN bytes.
+    QUBE_NAME_TOO_LONG = -2,
+    /// Name does not start with an ASCII letter.
+    QUBE_NAME_INVALID_FIRST_CHARACTER = -3,
+    /// Invalid character in name.
+    QUBE_NAME_INVALID_SUBSEQUENT_CHARACTER = -4,
+    /// Name is `none`, `default`, `Domain-0`, or ends in `-dm`.
+    /// These names are reserved.
+    QUBE_NAME_RESERVED = -6,
+};
+
+/**
+ * Validate that `untrusted_str` is a valid qube name.  A valid qube name
+ * must:
+ *
+ * - Have a length between 1 and 31 bytes (inclusive).
+ * - Consist only of characters matching the glob pattern [A-Za-z0-9_.-].
+ * - Begin with an uppercase or lowercase ASCII letter.
+ * - Not end with the 3 bytes `-dm`, to avoid confusing with device-model
+ *   stubdomains.
+ * - Not be `none` or `default`, which are reserved for the admin API.
+ * - Not be `Domain-0`, which is used by libvirt and libxl to refer to dom0.
+ *
+ * Returns QUBE_NAME_OK (0) on success and something else on failure.
+ */
+QUBES_PURE_PUBLIC enum QubeNameValidationError
+qubes_pure_is_valid_qube_name(const struct QubesSlice untrusted_str);
+
+#ifdef __cplusplus
+}
+#endif
 #endif // !defined QUBES_UTIL_PURE_H

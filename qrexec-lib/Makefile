@@ -7,7 +7,7 @@ objs := ioall.o copy-file.o crc32.o unpack.o pack.o
 
 pure_lib := libqubes-pure.so
 pure_sover := 0
-pure_objs := unicode.o
+pure_objs := unicode.o qube-name.o
 
 all: libqubes-rpc-filecopy.so.$(SO_VER) $(pure_lib).$(pure_sover)
 libqubes-rpc-filecopy.so.$(SO_VER): $(objs) ./$(pure_lib).$(pure_sover)
