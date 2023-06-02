@@ -7,3 +7,9 @@ pkgs
 debian/changelog.*
 /selinux/tmp/
 /selinux/*.pp
+/qrexec-lib/*.dep
+/qrexec-lib/unicode-class-table.c
+/qrexec-lib/unicode-generator
+/qrexec-lib/validator-test
+/qrexec-lib/libqubes-*.so*
+/imgconverter/qubesimgconverter.egg-info/
