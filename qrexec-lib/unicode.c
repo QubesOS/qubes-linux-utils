@@ -110,8 +110,8 @@ static size_t validate_path(const uint8_t *const untrusted_name, size_t allowed_
                     return 0;
                 if ((untrusted_name[i + 1] == '.') &&
                     (untrusted_name[i + 2] == '\0' || untrusted_name[i + 2] == '/')) {
-                    /* At least 2 leading components required */
-                    if (allowed_leading_dotdot <= 2)
+                    /* Check if the limit on leading ".." components has been exceeded */
+                    if (allowed_leading_dotdot < 1)
                         return 0;
                     allowed_leading_dotdot--;
                     i += 2; // advance past ".."
@@ -149,7 +149,15 @@ qubes_pure_validate_symbolic_link(const uint8_t *untrusted_name,
                                   const uint8_t *untrusted_target)
 {
     size_t depth = validate_path(untrusted_name, 0);
-    return depth > 0 && validate_path(untrusted_target, depth) > 0;
+    // Symlink paths must have at least 2 components: "a/b" is okay
+    // but "a" is not
+    if (depth < 2)
+        return false;
+    // Symlinks must have at least 2 more path components in the name
+    // than the number of leading ".." path elements in the target.
+    // "a/b" cannot point to "../c", and "a/b/c" can point to "../d"
+    // but not "../../d".
+    return validate_path(untrusted_target, depth - 2) > 0;
 }
 
 QUBES_PURE_PUBLIC bool

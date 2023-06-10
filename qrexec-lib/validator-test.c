@@ -144,6 +144,18 @@ int main(int argc, char **argv)
     assert(!qubes_pure_validate_file_name((uint8_t *)"a/../a"));
 
     // Looks like "." or ".." but is not
-    assert(qubes_pure_validate_file_name((uint8_t *)".a"));
-    assert(qubes_pure_validate_file_name((uint8_t *)"..a"));
+    assert(qubes_pure_validate_file_name((const uint8_t *)".a"));
+    assert(qubes_pure_validate_file_name((const uint8_t *)"..a"));
+
+    // Symbolic links
+    // Top level cannot be symlink
+    assert(!qubes_pure_validate_symbolic_link((const uint8_t *)"a", (const uint8_t *)"b"));
+    // Symbolic links cannot escape
+    assert(!qubes_pure_validate_symbolic_link((const uint8_t *)"a/b", (const uint8_t *)"../a"));
+    assert(!qubes_pure_validate_symbolic_link((const uint8_t *)"a/b", (const uint8_t *)"../a/b/c"));
+    assert(!qubes_pure_validate_symbolic_link((const uint8_t *)"a/b/c", (const uint8_t *)"../../a"));
+    assert(qubes_pure_validate_symbolic_link((const uint8_t *)"a/b", (const uint8_t *)"a"));
+    assert(qubes_pure_validate_symbolic_link((const uint8_t *)"a/b/c", (const uint8_t *)"../a"));
+    // Absolute symlinks are rejected
+    assert(!qubes_pure_validate_symbolic_link((const uint8_t *)"a/b/c", (const uint8_t *)"/a"));
 }
