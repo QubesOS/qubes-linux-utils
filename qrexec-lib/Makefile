@@ -1,7 +1,7 @@
 CC=gcc
 CFLAGS := $(CFLAGS) -I. -g3 -O2 -Wall -Wextra -Werror -pie -fPIC
 SO_VER=2
-LDFLAGS+=-Wl,--no-undefined,--as-needed
+LDFLAGS+=-Wl,--no-undefined,--as-needed -L .
 .PHONY: all clean install check
 objs := ioall.o copy-file.o crc32.o unpack.o pack.o
 
@@ -13,7 +13,7 @@ all: libqubes-rpc-filecopy.so.$(SO_VER) $(pure_lib).$(pure_sover)
 libqubes-rpc-filecopy.so.$(SO_VER): $(objs) ./$(pure_lib).$(pure_sover)
 	$(CC) -shared $(LDFLAGS) -Wl,-soname,$@ -o $@ $^
 validator-test: validator-test.o ./$(pure_lib).$(pure_sover)
-	libs=$$(pkg-config --libs icu-uc) && $(CC) $(LDFLAGS) -o $@ $^ $$libs
+	libs=$$(pkg-config --libs icu-uc) && $(CC) '-Wl,-rpath,$$ORIGIN' $(LDFLAGS) -o $@ $^ $$libs
 $(pure_objs): CFLAGS += -fvisibility=hidden -DQUBES_PURE_IMPLEMENTATION
 validator-test: CFLAGS += -UNDEBUG
 check: validator-test
