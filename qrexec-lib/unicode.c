@@ -161,7 +161,7 @@ qubes_pure_validate_symbolic_link(const uint8_t *untrusted_name,
 }
 
 QUBES_PURE_PUBLIC bool
-qubes_pure_string_safe_for_display(const uint8_t *untrusted_str __attribute__((unused)), size_t line_length __attribute__((unused)))
+qubes_pure_string_safe_for_display(const char *untrusted_str, size_t line_length)
 {
     assert(line_length == 0 && "Not yet implemented: nonzero line length");
     size_t i = 0;
@@ -169,7 +169,7 @@ qubes_pure_string_safe_for_display(const uint8_t *untrusted_str __attribute__((u
         if (untrusted_str[i] >= 0x20 && untrusted_str[i] <= 0x7E) {
             i++;
         } else {
-            int utf8_ret = validate_utf8_char(untrusted_str + i);
+            int utf8_ret = validate_utf8_char((const uint8_t *)(untrusted_str + i));
             if (utf8_ret > 0) {
                 i += utf8_ret;
             } else {

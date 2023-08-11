@@ -145,8 +145,8 @@ qubes_pure_validate_symbolic_link(const uint8_t *untrusted_name,
  * an assertion failure.
  */
 QUBES_PURE_PUBLIC bool
-qubes_pure_check_string_safe_for_display(const char *untrusted_str,
-                                         size_t line_length);
+qubes_pure_string_safe_for_display(const char *untrusted_str,
+                                   size_t line_length);
 
 /** Initialize a QubesSlice from a nul-terminated string. */
 static inline struct QubesSlice
