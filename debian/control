@@ -54,6 +54,23 @@ Description: Development headers for libqrexec-utils
  This package contains files required to compile Qubes file copy related
  utilities like qfile-agent.
 
+Package: libqubes-pure0
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Breaks: libqubes-rpc-filecopy2 (<< 4.2.12)
+Replaces: libqubes-rpc-filecopy2 (<< 4.2.12)
+Description: Qubes file copy protocol library
+ Utility library with qubes-specific functions.
+
+Package: libqubes-pure-dev
+Architecture: any
+Section: libdevel
+Depends: libqubes-pure0 (= ${binary:Version}), ${misc:Depends}
+Breaks: libqubes-rpc-filecopy-dev (<< 4.2.12)
+Replaces: libqubes-rpc-filecopy-dev (<< 4.2.12)
+Description: Development headers for libqrexec-utils
+ Utility library with qubes-specific functions - headers
+
 Package: python3-qubesimgconverter
 Architecture: any
 Depends: python3-cairo, python3-pil, python3-numpy, ${misc:Depends}

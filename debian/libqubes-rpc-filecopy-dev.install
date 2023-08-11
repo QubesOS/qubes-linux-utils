@@ -1,4 +1,2 @@
 usr/include/libqubes-rpc-filecopy.h
-usr/include/qubes/pure.h
 usr/lib/libqubes-rpc-filecopy.so
-usr/lib/libqubes-pure.so
