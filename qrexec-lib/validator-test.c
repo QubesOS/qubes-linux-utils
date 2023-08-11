@@ -116,6 +116,16 @@ int main(int argc, char **argv)
         assert(!qubes_pure_validate_file_name(buf));
     }
 
+    // Invalid codepoints beyond 0x10FFFFF are forbidden
+    for (uint32_t i = 0x90; i < 0xC0; ++i) {
+        for (uint32_t j = 0x80; j < 0xC0; ++j) {
+            for (uint32_t k = 0x80; k < 0xC0; ++k) {
+                char buf[5] = { 0xF4, i, j, k, 0 };
+                assert(!qubes_pure_string_safe_for_display(buf, 0));
+            }
+        }
+    }
+
     // Directory traversal checks
     assert(!qubes_pure_validate_file_name((uint8_t *)".."));
     assert(!qubes_pure_validate_file_name((uint8_t *)"../.."));
