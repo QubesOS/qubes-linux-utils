@@ -1,3 +1,9 @@
+qubes-utils (4.2.12) unstable; urgency=medium
+
+  * debian: split libqubes-pure into separate package
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Sun, 20 Aug 2023 03:11:55 +0200
+
 qubes-utils (4.2.11) unstable; urgency=medium
 
   [ Demi Marie Obenour ]
