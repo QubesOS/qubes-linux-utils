@@ -1,3 +1,14 @@
+qubes-utils (4.2.13) unstable; urgency=medium
+
+  [ Demi Marie Obenour ]
+  * Link against just-built libqubes-pure
+  * Stricter symbolic link checks
+  * Test rejection of codepoints past 0x10FFFFF
+  * Make qubes_pure_string_safe_for_display() usable
+  * Drop unmaintained asynctest library
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Sun, 10 Sep 2023 04:22:12 +0200
+
 qubes-utils (4.2.12) unstable; urgency=medium
 
   * debian: split libqubes-pure into separate package
