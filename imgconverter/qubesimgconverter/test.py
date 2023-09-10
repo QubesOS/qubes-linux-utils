@@ -8,11 +8,10 @@ except ImportError:
     from cStringIO import StringIO as BytesIO
 import unittest
 
-import asynctest
 
 import qubesimgconverter
 
-class TestCaseImage(asynctest.TestCase):
+class TestCaseImage(unittest.IsolatedAsyncioTestCase):
     def setUp(self):
         self.rgba = \
             b'\x00\x00\x00\xff' b'\xff\x00\x00\xff' \

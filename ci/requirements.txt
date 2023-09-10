@@ -1,4 +1,3 @@
 Pillow
 numpy
-asynctest
 coverage
