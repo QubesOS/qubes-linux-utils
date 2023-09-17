@@ -1,7 +1,7 @@
 CC=gcc
 CFLAGS := $(CFLAGS) -I. -g3 -O2 -Wall -Wextra -Werror -pie -fPIC
 SO_VER=2
-LDFLAGS+=-Wl,--no-undefined,--as-needed -L .
+LDFLAGS+=-Wl,--no-undefined,--as-needed,-Bsymbolic -L .
 .PHONY: all clean install check
 objs := ioall.o copy-file.o crc32.o unpack.o pack.o
 

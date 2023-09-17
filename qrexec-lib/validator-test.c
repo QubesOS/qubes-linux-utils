@@ -17,7 +17,9 @@ static void character_must_be_allowed(UChar32 c)
     U8_APPEND((uint8_t *)buf, off, 4, c, e);
     assert(!e && off <= 4);
     buf[off] = 0;
-    if (!qubes_pure_string_safe_for_display(buf, 0)) {
+    if (!qubes_pure_code_point_safe_for_display(c) ||
+        !qubes_pure_string_safe_for_display(buf, 0))
+    {
         fprintf(stderr, "BUG: cannot handle file name %s (codepoint U+%" PRIx32 ")\n", buf, (int32_t)c);
         abort();
     }
@@ -31,7 +33,9 @@ static void character_must_be_forbidden(UChar32 c)
     U8_APPEND((uint8_t *)buf, off, 4, c, e);
     assert(!e && off <= 4);
     buf[off] = 0;
-    if (qubes_pure_string_safe_for_display(buf, 0)) {
+    if (qubes_pure_code_point_safe_for_display(c) ||
+        qubes_pure_string_safe_for_display(buf, 0))
+    {
         fprintf(stderr, "BUG: allowed file name with codepoint U+%" PRIx32 "\n", (int32_t)c);
         abort();
     }
@@ -118,6 +122,7 @@ int main(int argc, char **argv)
         assert(buf[0] == 0xED);
         assert(buf[1] >= 0xA0 && buf[1] <= 0xBF);
         assert(!qubes_pure_string_safe_for_display((char *)buf, 0));
+        assert(!qubes_pure_code_point_safe_for_display(i));
     }
 
     // Invalid codepoints beyond 0x10FFFFF are forbidden
@@ -127,6 +132,16 @@ int main(int argc, char **argv)
                 char buf[5] = { 0xF4, i, j, k, 0 };
                 assert(!qubes_pure_string_safe_for_display(buf, 0));
             }
+        }
+    }
+
+    /* Check for code points that cannot be assigned characters */
+    for (uint64_t i = 0; i <= UINT32_MAX >> 0; ++i) {
+        uint32_t j = (uint32_t)i;
+        if (j < 32 || j == 0x7F || !U_IS_UNICODE_CHAR(j)) {
+            assert(!qubes_pure_code_point_safe_for_display(j));
+        } else {
+            assert(j < 0x10FFFFE);
         }
     }
 

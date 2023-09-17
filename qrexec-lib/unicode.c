@@ -7,6 +7,16 @@
 #include <inttypes.h>
 #include <assert.h>
 
+QUBES_PURE_PUBLIC bool
+qubes_pure_code_point_safe_for_display(uint32_t code_point) {
+    switch (code_point) {
+#include "unicode-allowlist-table.c"
+        return true;
+    default:
+        return false;
+    }
+}
+
 /* validate single UTF-8 character
  * return bytes count of this character, or 0 if the character is invalid */
 static int validate_utf8_char(const uint8_t *untrusted_c) {
@@ -88,12 +98,7 @@ static int validate_utf8_char(const uint8_t *untrusted_c) {
         code_point = code_point << 6 | (*untrusted_c & 0x3F);
     }
 
-    switch (code_point) {
-#include "unicode-allowlist-table.c"
-        return total_size;
-    default:
-        return 0;
-    }
+    return qubes_pure_code_point_safe_for_display(code_point) ? total_size : 0;
 }
 
 static size_t validate_path(const uint8_t *const untrusted_name, size_t allowed_leading_dotdot)

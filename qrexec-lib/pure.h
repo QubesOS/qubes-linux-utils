@@ -113,12 +113,12 @@ qubes_pure_validate_symbolic_link(const uint8_t *untrusted_name,
                                   const uint8_t *untrusted_target);
 
 /**
- * Validate that `untrusted_str` is safe to display.  To be considered safe to
- * display, a string must be valid UTF-8 and contain no control characters
- * except perhaps newline.  The string must also contain no characters that
- * are complex to render and thus significantly increase the attack surface
- * of text rendering libraries such as Fribidi, Harfbuzz, or Pango.  The set
- * of characters that are considered complex to render is implementation
+ * Validate that `code_point` is safe to display.  To be considered safe to
+ * display, a code point must be valid and not be a control character.
+ * Additionally, the code point must not be a character that is complex
+ * to render and thus significantly increases the attack surface of text
+ * rendering libraries such as Fribidi, Harfbuzz, or Pango.  The set of
+ * characters that are considered complex to render is implementation
  * dependent and may change in future versions of this library.  Currenty,
  * it includes the following:
  *
@@ -134,15 +134,23 @@ qubes_pure_validate_symbolic_link(const uint8_t *untrusted_name,
  *   HANGUL, BOPOMOFO, KATAKANA_OR_HIRAGANA, HIRIGANA, KATAKANA, JAPANESE,
  *   KOREAN, or COMMON.
  *
- * \param untrusted_str The string to be validated.  Must be NUL-terminated
- * but is otherwise untrusted.
+ * This is implemented as an allowlist, not as a blocklist, so unknown code
+ * points are considered _unsafe_ for display.
  *
- * \param line_length The maximum length of a line.  If zero, no line breaks
- * are allowed.  Otherwise, at most line_length characters can occur without
- * an intervening newline, and a trailing newline is required.
+ * @param code_point The code point to check for being safe to display.
  *
- * \note Currently, nonzero `line_length` is not implemented and will cause
- * an assertion failure.
+ * This API does _not_ require that @p code_point is a valid Unicode code point.
+ * Invalid code points are simply considered to be unsafe for display.
+ * Therefore, this function has defined behavior for _all_ inputs.
+ */
+QUBES_PURE_PUBLIC bool
+qubes_pure_code_point_safe_for_display(uint32_t code_point);
+
+/**
+ * Validate that `untrusted_str` is safe to display.  To be considered safe to
+ * display, a string must be valid UTF-8 and contain no control characters
+ * except perhaps newline.  The string must also contain no characters that
+ * are considered unsafe for display by qubes_pure_code_point_safe_for_display().
  */
 QUBES_PURE_PUBLIC bool
 qubes_pure_string_safe_for_display(const char *untrusted_str,
