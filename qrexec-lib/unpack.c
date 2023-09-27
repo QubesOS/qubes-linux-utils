@@ -359,6 +359,7 @@ int do_unpack(void) {
 int do_unpack_ext(int flags)
 {
     struct file_header untrusted_hdr;
+    int end_of_transfer_marker_seen = 0;
     int cwd_fd;
     int saved_errno;
 
@@ -366,8 +367,8 @@ int do_unpack_ext(int flags)
     /* initialize checksum */
     crc32_sum = 0;
     while (read_all_with_crc(0, &untrusted_hdr, sizeof untrusted_hdr)) {
-        /* check for end of transfer marker */
         if (untrusted_hdr.namelen == 0) {
+            end_of_transfer_marker_seen = 1;
             errno = 0;
             break;
         }
@@ -376,6 +377,8 @@ int do_unpack_ext(int flags)
             do_exit(EDQUOT, untrusted_namebuf);
         process_one_file(&untrusted_hdr, flags);
     }
+    if (!end_of_transfer_marker_seen && !errno)
+        errno = EREMOTEIO;
 
     saved_errno = errno;
     cwd_fd = open(".", O_RDONLY);
