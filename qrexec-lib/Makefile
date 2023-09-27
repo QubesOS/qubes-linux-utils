@@ -32,7 +32,8 @@ unicode.o: unicode-allowlist-table.c
 unicode.o: CFLAGS += $(shell pkg-config --cflags icu-uc)
 ifeq ($(NO_REBUILD_TABLE),)
 unicode-allowlist-table.c: unicode-generator
-	./unicode-generator > $@
+	./unicode-generator > $@.tmp
+	mv -- $@.tmp $@
 else ifneq ($(NO_REBUILD_TABLE),1)
 $(error NO_REBUILD_TABLE should be empty or 1)
 endif
@@ -50,7 +51,7 @@ unicode-class-table.c: gentbl.py Makefile
 %.a: $(objs)
 	$(AR) rcs $@ $^
 clean:
-	rm -f ./*.o ./*~ ./*.a ./*.so.* ./*.dep unicode-class-table.c
+	rm -f ./*.o ./*~ ./*.a ./*.so.* ./*.dep unicode-class-table.c unicode-allowlist-table.c.tmp
 
 install:
 	mkdir -p $(DESTDIR)$(LIBDIR)
