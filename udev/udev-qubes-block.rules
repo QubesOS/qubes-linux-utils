@@ -18,6 +18,21 @@ KERNEL=="dm-*", ENV{DM_NAME}=="snapshot-*", GOTO="qubes_block_end"
 KERNEL=="dm-*", ENV{DM_NAME}=="origin-*", GOTO="qubes_block_end"
 KERNEL=="dm-*", ENV{DM_NAME}=="", GOTO="qubes_block_end"
 
+# generate cropped uuid and populate qname variable
+ACTION=="add", ENV{ID_SERIAL}=="?*", PROGRAM="/usr/bin/uuidgen -s -n @oid -N $env{ID_SERIAL}$env{PARTN}", ENV{QNAME}="$result"
+
+# check if device already exist in qubesdb
+ACTION=="add", ENV{QNAME}=="?*", PROGRAM="/bin/sh -c '/usr/bin/qubesdb-read -q /qubes-block-devices/$env{QNAME}/desc || echo 1'", RESULT=="1", GOTO="skip_qname_fallback"
+
+# fallback for duplicates
+ACTION=="add", PROGRAM="/usr/bin/basename $env{DEVNAME}", ENV{QNAME}="$result"
+
+LABEL="skip_qname_fallback"
+
+ACTION=="add", SYMLINK+="$env{QNAME}"
+
+IMPORT{db}="QNAME"
+
 ACTION=="add", RUN+="/usr/lib/qubes/udev-block-add-change"
 ACTION=="change", RUN+="/usr/lib/qubes/udev-block-add-change"
 ACTION=="remove", RUN+="/usr/lib/qubes/udev-block-remove"
