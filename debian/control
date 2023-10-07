@@ -25,7 +25,7 @@ Description: Qubes Linux utilities
 Package: qubes-kernel-vm-support
 Architecture: any
 Depends:
- busybox,
+ busybox | busybox-static,
  initramfs-tools | dracut,
  grub2-common,
  ${misc:Depends}
