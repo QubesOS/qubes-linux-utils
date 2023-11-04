@@ -1,6 +1,7 @@
 MAKEFLAGS ::= -rR
-CFLAGS ::= $(shell pkg-config --cflags --libs ext2fs com_err) \
-    -fstack-protector-all -O2 -D_FORITFY_SOURCE=2 -fwrapv \
+LDLIBS += $(shell pkg-config --libs ext2fs com_err)
+CFLAGS += $(shell pkg-config --cflags ext2fs com_err) \
+    -fstack-protector-all -O2 -fwrapv \
     -fno-delete-null-pointer-checks -fno-strict-aliasing -Wall -Wextra \
     -Werror=format-security -pedantic-errors -Wformat=2 -Wmaybe-uninitialized \
     -Wshadow -g3
@@ -8,7 +9,7 @@ CFLAGS ::= $(shell pkg-config --cflags --libs ext2fs com_err) \
 all: genfs
 
 genfs: genfs.c
-	gcc $(CFLAGS) genfs.c -o $@
+	gcc $(CFLAGS) genfs.c $(LDLIBS) -o $@
 
 install: install-scripts install-genfs
 
