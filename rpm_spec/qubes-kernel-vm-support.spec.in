@@ -38,6 +38,10 @@ Requires:       e2fsprogs
 BuildRequires:  make
 BuildRequires:  gcc
 BuildRequires:  e2fsprogs-devel
+%if 0%{?is_opensuse}
+# for directory ownership
+BuildRequires: dracut
+%endif
 
 %description
 This package contains:
@@ -55,6 +59,7 @@ make -C kernel-modules all
 make install-fedora-kernel-support DESTDIR=%{buildroot}
 
 %files
+%dir %{_prefix}/lib/qubes
 /usr/lib/dracut/modules.d/90qubes-vm
 /usr/lib/dracut/modules.d/90qubes-vm-modules
 /usr/lib/dracut/modules.d/90qubes-vm-simple

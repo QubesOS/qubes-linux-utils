@@ -21,6 +21,10 @@ BuildRequires:  python3-rpm-macros
 BuildRequires:  xen-devel
 BuildRequires:	gcc
 BuildRequires:  selinux-policy-devel
+%if 0%{?is_opensuse}
+# for directory ownership
+BuildRequires: xen-tools
+%endif
 
 %description
 Common Linux files for Qubes Dom0 and VM
@@ -119,13 +123,16 @@ rm -rf $RPM_BUILD_ROOT
 %defattr(-,root,root,-)
 %_udevrulesdir/*-qubes-*.rules
 %_tmpfilesdir/xen-devices-qubes.conf
+%dir %{_prefix}/lib/qubes
 %{_prefix}/lib/qubes/udev-*
 %{_sbindir}/meminfo-writer
 %{_unitdir}/qubes-meminfo-writer.service
 %{_unitdir}/qubes-meminfo-writer-dom0.service
+%dir %_includedir/qubes
 /etc/xen/scripts/qubes-block
 
 %files -n python%{python3_pkgversion}-qubesimgconverter
+%dir %{python3_sitelib}/qubesimgconverter
 %{python3_sitelib}/qubesimgconverter/__init__.py
 %{python3_sitelib}/qubesimgconverter/imggen.py
 %{python3_sitelib}/qubesimgconverter/test.py
@@ -140,6 +147,7 @@ rm -rf $RPM_BUILD_ROOT
 %files devel
 %defattr(-,root,root,-)
 %_includedir/libqubes-rpc-filecopy.h
+%dir %_includedir/qubes
 %_includedir/qubes/pure.h
 %{_libdir}/libqubes-rpc-filecopy.so
 %{_libdir}/libqubes-pure.so
