@@ -33,7 +33,11 @@ Common Linux files for Qubes Dom0 and VM
 Summary:    Python package qubesimgconverter
 Requires:   python%{python3_pkgversion}
 Requires:   python%{python3_pkgversion}-cairo
+%if 0%{?is_opensuse}
+Requires:   python%{python3_pkgversion}-Pillow
+%else
 Requires:   python%{python3_pkgversion}-pillow
+%endif
 Requires:   python%{python3_pkgversion}-numpy
 
 %description -n python%{python3_pkgversion}-qubesimgconverter
