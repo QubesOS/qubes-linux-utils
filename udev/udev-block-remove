@@ -5,6 +5,7 @@ QDB_KEY="/qubes-block-devices/$NAME"
 # Trailing slash is intentional - it will remove the whole directory, instead of
 # a single base entry
 qubesdb-rm "$QDB_KEY/"
+# This is meant to trigger watches
 qubesdb-write /qubes-block-devices ''
 
 if [ -r /run/qubes/block-slave-cache-$NAME ]; then

@@ -7,4 +7,5 @@ NAME=`basename ${DEVPATH} | tr . _`
 QDB_KEY="/qubes-usb-devices/$NAME/"
 
 qubesdb-rm "$QDB_KEY"
+# This is meant to trigger watches
 qubesdb-write /qubes-usb-devices ''

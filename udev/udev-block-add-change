@@ -164,11 +164,18 @@ if [ -n "$DM_NAME" ]; then
     DESC="$DM_NAME"
 fi
 
+if [ -f /sys$DEVPATH/partition ]; then
+    parent=$(basename "$(dirname "$DEVPATH")")
+elif echo "$DEVPATH" | grep -q '/host'; then
+    parent=$(basename "$(sed 's|/host.*$||' <<< "$DEVPATH")")
+fi
+
 # The last one is meant to trigger watches
 qubesdb-write \
     "$QDB_KEY/desc" "$DESC" \
     "$QDB_KEY/size" "$SIZE" \
     "$QDB_KEY/mode" "$MODE" \
+    "$QDB_KEY/parent" "$parent" \
     /qubes-block-devices ''
 
 # Make sure that block backend is loaded
