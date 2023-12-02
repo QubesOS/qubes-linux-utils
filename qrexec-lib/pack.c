@@ -100,10 +100,10 @@ void wait_for_result(void)
     if (hdr.error_code != 0) {
         switch (hdr.error_code) {
             case EEXIST:
-                call_error_handler("A file named “%s” already exists in QubesIncoming dir", last_filename);
+                call_error_handler("A file named \"%s\" already exists in QubesIncoming dir", last_filename);
                 break;
             case EINVAL:
-                call_error_handler("File copy: Corrupted data from packer%s“%s”", last_filename_prefix, last_filename);
+                call_error_handler("File copy: Corrupted data from packer%s\"%s\"", last_filename_prefix, last_filename);
                 break;
             case EDQUOT:
                 if (ignore_quota_error) {
@@ -113,7 +113,7 @@ void wait_for_result(void)
                 }
 		/* fallthrough */
             default:
-                call_error_handler("File copy: “%s%s%s”",
+                call_error_handler("File copy: \"%s%s%s\"",
                         strerror(hdr.error_code), last_filename_prefix, last_filename);
         }
     }
