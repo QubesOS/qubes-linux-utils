@@ -55,7 +55,9 @@ void notify_end_and_wait_for_result(void)
 static void sanitize_remote_filename(char *untrusted_filename)
 {
     for (; *untrusted_filename; ++untrusted_filename) {
-        if (*untrusted_filename < ' ' || *untrusted_filename > '~')
+        if (*untrusted_filename < ' ' ||
+            *untrusted_filename > '~' ||
+            *untrusted_filename == '"')
             *untrusted_filename = '_';
     }
 }
