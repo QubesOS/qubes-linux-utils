@@ -487,8 +487,9 @@ int main(int argc, char **argv)
     char buf[sizeof("/dev/loop") + 10];
     char *physdev_path = data;
     if (major(dev) == LOOP_MAJOR) {
-        if ((unsigned)snprintf(buf, sizeof buf, "/dev/loop%" PRIu32,
-                               (unsigned)minor(dev)) >= sizeof buf)
+        path_len = (unsigned)snprintf(buf, sizeof buf, "/dev/loop%" PRIu32,
+                                      (unsigned)minor(dev));
+        if (path_len >= sizeof buf)
             abort();
         physdev_path = buf;
     }
