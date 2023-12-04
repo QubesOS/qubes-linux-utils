@@ -1,3 +1,19 @@
+qubes-utils (4.2.15) unstable; urgency=medium
+
+  [ Marek Marczykowski-Górecki ]
+  * rpm: fix missing directory ownership
+  * genfs: fix build/link flags
+  * rpm: adjust dependencies for openSUSE
+
+  [ Demi Marie Obenour ]
+  * Avoid writing junk into Xenstore
+
+  [ Rusty Bird ]
+  * qrexec-lib/pack: don't use curly quotes in error messages
+  * qrexec-lib/pack: sanitize straight quotes in remote filenames
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Mon, 04 Dec 2023 02:46:39 +0100
+
 qubes-utils (4.2.14) unstable; urgency=medium
 
   [ Demi Marie Obenour ]
