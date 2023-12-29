@@ -44,14 +44,10 @@ endif
 	/bin/bash -euc 'set -o pipefail; ./unicode-generator | diff -u ./unicode-allowlist-table.c -'
 .PHONY: check-table-up-to-date
 
-unicode-generator.o: unicode-class-table.c
-unicode-class-table.c: gentbl.py Makefile
-	python3 -- $< > $@
-
 %.a: $(objs)
 	$(AR) rcs $@ $^
 clean:
-	rm -f ./*.o ./*~ ./*.a ./*.so.* ./*.dep unicode-class-table.c unicode-allowlist-table.c.tmp
+	rm -f ./*.o ./*~ ./*.a ./*.so.* ./*.dep unicode-allowlist-table.c.tmp
 
 install:
 	mkdir -p $(DESTDIR)$(LIBDIR)

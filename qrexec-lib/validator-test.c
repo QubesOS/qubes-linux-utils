@@ -27,16 +27,41 @@ static void character_must_be_allowed(UChar32 c)
 
 static void character_must_be_forbidden(UChar32 c)
 {
-    char buf[5];
+    uint8_t buf[128];
     int32_t off = 0;
-    UBool e = false;
-    U8_APPEND((uint8_t *)buf, off, 4, c, e);
-    assert(!e && off <= 4);
-    buf[off] = 0;
-    if (qubes_pure_code_point_safe_for_display(c) ||
-        qubes_pure_string_safe_for_display(buf, 0))
+    if (qubes_pure_code_point_safe_for_display(c)) {
+        fprintf(stderr, "BUG: allowed codepoint U+%" PRIx32 "\n", (int32_t)c);
+        abort();
+    } else if (c < 0) {
+        return; // cannot be encoded sensibly
+    } else if (c < (1 << 7)) {
+        buf[off++] = c;
+    } else if (c < (1 << 11)) {
+        buf[off++] = (0xC0 | (c >> 6));
+        buf[off++] = (0x80 | (c & 0x3F));
+    } else if (c < (1L << 16)) {
+        buf[off++] = (0xE0 | (c >> 12));
+        buf[off++] = (0x80 | ((c >> 6) & 0x3F));
+        buf[off++] = (0x80 | (c & 0x3F));
+    } else if (c < 0x140000) {
+        buf[off++] = (0xF0 | (c >> 18));
+        buf[off++] = (0x80 | ((c >> 12) & 0x3F));
+        buf[off++] = (0x80 | ((c >> 6) & 0x3F));
+        buf[off++] = (0x80 | (c & 0x3F));
+    } else {
+        return; // trivially rejected
+    }
+    if (c < 0x110000 && !U_IS_SURROGATE(c)) {
+        UChar32 compare_c;
+        U8_GET(buf, 0, 0, off, compare_c);
+        assert(compare_c >= 0);
+        assert(compare_c == c);
+    }
+
+    buf[off++] = 0;
+    if (qubes_pure_string_safe_for_display((const char *)buf, 0))
     {
-        fprintf(stderr, "BUG: allowed file name with codepoint U+%" PRIx32 "\n", (int32_t)c);
+        fprintf(stderr, "BUG: allowed string with codepoint U+%" PRIx32 "\n", (int32_t)c);
         abort();
     }
 }
@@ -53,6 +78,9 @@ int main(int argc, char **argv)
     assert(qubes_pure_validate_file_name((uint8_t *)u8"\u0400.txt"));
     // As are unicode quotation marks
     assert(qubes_pure_validate_file_name((uint8_t *)u8"\u201c"));
+    // As are ASCII characters, except DEL and controls
+    for (uint32_t i = 0x20; i < 0x7F; ++i)
+        character_must_be_allowed(i);
     // And CJK ideographs
     uint32_t cjk_ranges[] = {
         0x03400, 0x04DBF,
@@ -92,7 +120,9 @@ int main(int argc, char **argv)
         0x1FFFE, 0x1FFFF,
         0x2FFFE, 0x2FFFF,
         // Forbidden codepoints
-        0x3134B, 0x10FFFF,
+        0x0323B0, 0x10FFFF,
+        // Too long
+        0x110000, UINT32_MAX - 1,
         0x0,
     };
     for (size_t i = 0; i == 0 || forbidden[i]; i += 2) {

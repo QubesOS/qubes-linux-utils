@@ -23,15 +23,62 @@ static bool is_permitted_code_point(uint32_t const code_point)
     if (!(U_IS_UNICODE_CHAR(code_point)))
         return false;
 
+    /* Reject all control characters */
+    if (code_point < 0x20)
+        return false;
+
+    /* Allow all other ASCII characters except DEL */
+    if (code_point < 0x7F)
+        return true;
+
     /*
      * Validate that the codepoint is a valid scalar value and is not a symbol,
      * space, unassigned character, or control character.
      */
-    switch (code_point) {
-#include "unicode-class-table.c"
-        return false; // Invalid UTF-8 or forbidden codepoint
-    default:
+    int category = u_charType(code_point);
+    switch (category) {
+    case U_UNASSIGNED:
+        return false;
+    case U_UPPERCASE_LETTER:
+    case U_LOWERCASE_LETTER:
+    case U_TITLECASE_LETTER:
+    case U_MODIFIER_LETTER:
+    case U_OTHER_LETTER:
         break;
+    case U_NON_SPACING_MARK:
+    case U_ENCLOSING_MARK:
+    case U_COMBINING_SPACING_MARK:
+        return false;
+    case U_DECIMAL_DIGIT_NUMBER:
+    case U_LETTER_NUMBER:
+    case U_OTHER_NUMBER:
+        break;
+    case U_SPACE_SEPARATOR:
+        return false;
+    case U_LINE_SEPARATOR:
+    case U_PARAGRAPH_SEPARATOR:
+    case U_CONTROL_CHAR:
+    case U_FORMAT_CHAR:
+    case U_PRIVATE_USE_CHAR:
+        return false;
+    case U_DASH_PUNCTUATION:
+    case U_START_PUNCTUATION:
+    case U_END_PUNCTUATION:
+    case U_CONNECTOR_PUNCTUATION:
+    case U_OTHER_PUNCTUATION:
+    case U_MATH_SYMBOL:
+    case U_CURRENCY_SYMBOL:
+        break;
+    case U_MODIFIER_SYMBOL:
+    case U_OTHER_SYMBOL:
+        return false;
+    case U_INITIAL_PUNCTUATION:
+    case U_FINAL_PUNCTUATION:
+        break;
+    case U_SURROGATE:
+    default:
+        fprintf(stderr, "BUG: u_charType(0x%" PRIx32 ") returned unexpected value %d", code_point, category);
+        abort();
     }
 
     uint32_t s = u_charDirection(code_point);
@@ -242,6 +289,8 @@ static void print_code_point_list(FILE *out)
     uint32_t range_start = 0;
     for (uint32_t v = 0x20; v < 0x110000; ++v) {
         bool this_allowed = is_permitted_code_point(v);
+        if (v < 0x7F)
+            assert(this_allowed);
         if (this_allowed ^ last_allowed) {
             last_allowed = this_allowed;
             if (this_allowed) {
