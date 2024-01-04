@@ -44,17 +44,17 @@ class TestCaseImage(asynctest.TestCase):
         io = BytesIO('{0[0]} {0[1]}\n'.format(self.size).encode() +
                      self.rgba[:-1])  # one byte too short
 
-        with self.assertRaisesRegexp(ValueError, 'data length violation'):
+        with self.assertRaisesRegex(ValueError, 'data length violation'):
             image = qubesimgconverter.Image.get_from_stream(io)
 
     def test_12_get_from_stream_too_big(self):
         io = BytesIO('{0[0]} {0[1]}\n'.format(self.size).encode() + self.rgba)  # 2x2
 
-        with self.assertRaisesRegexp(ValueError, 'size constraint violation'):
+        with self.assertRaisesRegex(ValueError, 'size constraint violation'):
             image = qubesimgconverter.Image.get_from_stream(io, max_width=1)
 
         io.seek(0)
-        with self.assertRaisesRegexp(ValueError, 'size constraint violation'):
+        with self.assertRaisesRegex(ValueError, 'size constraint violation'):
             image = qubesimgconverter.Image.get_from_stream(io, max_height=1)
 
     async def test_20_get_from_stream_async(self):
@@ -80,19 +80,19 @@ class TestCaseImage(asynctest.TestCase):
 
         reader = asyncio.StreamReader()
         reader.feed_data(data)
-        with self.assertRaisesRegexp(ValueError, 'size constraint violation'):
+        with self.assertRaisesRegex(ValueError, 'size constraint violation'):
             image = await qubesimgconverter.Image.get_from_stream_async(reader, max_width=1)
 
         reader = asyncio.StreamReader()
         reader.feed_data(data)
-        with self.assertRaisesRegexp(ValueError, 'size constraint violation'):
+        with self.assertRaisesRegex(ValueError, 'size constraint violation'):
             image = await qubesimgconverter.Image.get_from_stream_async(reader, max_height=1)
 
     async def test_23_get_from_stream_header_too_long(self):
         data = '{0[0]} {0[1]}\n'.format(self.size).encode() + self.rgba  # 2x2
         reader = asyncio.StreamReader()
         reader.feed_data(b'x' * 20 + b'\n')
-        with self.assertRaisesRegexp(ValueError, 'Header too long'):
+        with self.assertRaisesRegex(ValueError, 'Header too long'):
             image = await qubesimgconverter.Image.get_from_stream_async(reader)
 
 
