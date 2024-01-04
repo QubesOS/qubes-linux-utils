@@ -3,7 +3,7 @@ checks:tests:
   - (cd qrexec-lib; gcov *.c || :)
   - ./ci/codecov-wrapper --gcov
   before_script:
-  - sudo dnf install -y python3-pip 'pkgconfig(icu-uc)'
+  - sudo dnf install -y python3-pip 'pkgconfig(icu-uc)' sequoia-sqv
   - export PATH="$PATH:$HOME/.local/bin"
   - pip3 install --quiet -r ci/requirements.txt
   - git config --global --add safe.directory "$PWD"
