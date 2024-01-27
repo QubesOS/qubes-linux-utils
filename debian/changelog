@@ -1,3 +1,18 @@
+qubes-utils (4.1.20) unstable; urgency=medium
+
+  [ Marek Marczykowski-Górecki ]
+  * debian: reduce initramfs size
+
+  [ Rusty Bird ]
+  * qrexec-lib/unpack: fail on EOF before end of transfer marker
+  * qrexec-lib/pack: don't use curly quotes in error messages
+  * qrexec-lib/pack: sanitize straight quotes in remote filenames
+
+  [ Marek Marczykowski-Górecki ]
+  * Fix imgconverter tests
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Sat, 27 Jan 2024 12:22:21 +0100
+
 qubes-utils (4.1.19) unstable; urgency=medium
 
   * qubes-prepare-vm-kernel: make resize2fs work even if system time is
