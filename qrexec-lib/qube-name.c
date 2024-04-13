@@ -2,6 +2,42 @@
 #include "pure.h"
 
 QUBES_PURE_PUBLIC enum QubeNameValidationError
+qubes_pure_is_valid_qrexec_target(struct QubesSlice untrusted_name)
+{
+    if (untrusted_name.length < 1)
+        return QUBE_NAME_EMPTY;
+    if (untrusted_name.pointer[0] == '@') {
+        /* Allow: @default, @dispvm, @dispvm:QUBENAME, @adminvm */
+        switch (untrusted_name.length) {
+        case 8:
+            if (memcmp(untrusted_name.pointer, "@default", 8) == 0 ||
+                memcmp(untrusted_name.pointer, "@adminvm", 8) == 0)
+                return QUBE_NAME_OK;
+            break;
+        case 7:
+            if (memcmp(untrusted_name.pointer, "@dispvm", 7) == 0)
+                return QUBE_NAME_OK;
+            break;
+        default:
+            break;
+        }
+        if (untrusted_name.length < 8 ||
+            memcmp(untrusted_name.pointer, "@dispvm:", 8) != 0) {
+            return QREXEC_TARGET_INVALID_PREFIX;
+        }
+        untrusted_name.pointer += 8;
+        untrusted_name.length -= 8;
+    } else {
+        /* Device-model stubdomains are valid targets */
+        if (untrusted_name.length >= 4 &&
+                memcmp(untrusted_name.pointer + (untrusted_name.length - 3), "-dm", 3) == 0) {
+            untrusted_name.length -= 3;
+        }
+    }
+    return qubes_pure_is_valid_qube_name(untrusted_name);
+}
+
+QUBES_PURE_PUBLIC enum QubeNameValidationError
 qubes_pure_is_valid_qube_name(const struct QubesSlice untrusted_name)
 {
     /* Check the length first. */

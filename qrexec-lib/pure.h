@@ -191,6 +191,8 @@ enum QubeNameValidationError {
     /// Name is `none`, `default`, `Domain-0`, or ends in `-dm`.
     /// These names are reserved.
     QUBE_NAME_RESERVED = -6,
+    /// Prefix of qrexec target is invalid.
+    QREXEC_TARGET_INVALID_PREFIX = -7,
 };
 
 /**
@@ -209,6 +211,21 @@ enum QubeNameValidationError {
  */
 QUBES_PURE_PUBLIC enum QubeNameValidationError
 qubes_pure_is_valid_qube_name(const struct QubesSlice untrusted_str);
+
+/**
+ * Validate that `untrusted_str` is a valid qrexec target.  A valid qrexec
+ * target is one of the following, where `QUBE_NAME` can be any valid qube name.
+ *
+ * - `@adminvm`
+ * - `@default`
+ * - `@dispvm`
+ * - `@dispvm:QUBE_NAME`
+ * - `QUBE_NAME`
+ * - `QUBE_NAME-dm`
+ */
+QUBES_PURE_PUBLIC enum QubeNameValidationError
+qubes_pure_is_valid_qrexec_target(const struct QubesSlice untrusted_str);
+
 
 #ifdef __cplusplus
 }
