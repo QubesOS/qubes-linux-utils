@@ -219,4 +219,6 @@ int main(int argc, char **argv)
     assert(!qubes_pure_validate_symbolic_link((const uint8_t *)"a/b/c", (const uint8_t *)"/a"));
     // Symlinks may end in "..".
     assert(qubes_pure_validate_symbolic_link((const uint8_t *)"a/b/c", (const uint8_t *)".."));
+    // Symlinks may end in "/".
+    assert(qubes_pure_validate_symbolic_link((const uint8_t *)"a/b/c", (const uint8_t *)"a/"));
 }
