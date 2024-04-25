@@ -137,7 +137,7 @@ static ssize_t validate_path(const uint8_t *const untrusted_name, size_t allowed
         if (i == 0 || untrusted_name[i - 1] == '/') {
             switch (untrusted_name[i]) {
             case '/': // repeated or initial slash
-            case '\0': // trailing slash or empty string
+            case '\0': // empty string
                 return -1;
             case '.':
                 if (untrusted_name[i + 1] == '\0' || untrusted_name[i + 1] == '/')
