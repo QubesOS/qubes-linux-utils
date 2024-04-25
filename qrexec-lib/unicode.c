@@ -124,24 +124,29 @@ static int validate_utf8_char(const uint8_t *untrusted_c) {
 // is set to zero, and the number of non-".." components is incremented.
 //
 // The return value is the number of non-".." components on
-// success, or 0 on failure.
-static size_t validate_path(const uint8_t *const untrusted_name, size_t allowed_leading_dotdot)
+// success, or -1 on failure.
+static ssize_t validate_path(const uint8_t *const untrusted_name, size_t allowed_leading_dotdot)
 {
-    size_t non_dotdot_components = 0, i = 0;
+    // We assume that there are not SSIZE_MAX path components.
+    // This cannot happen on hardware using a flat address space,
+    // as this would require SIZE_MAX bytes in the path and leave
+    // no space for the executable code.
+    ssize_t non_dotdot_components = 0;
+    size_t i = 0;
     do {
         if (i == 0 || untrusted_name[i - 1] == '/') {
             switch (untrusted_name[i]) {
             case '/': // repeated or initial slash
             case '\0': // trailing slash or empty string
-                return 0;
+                return -1;
             case '.':
                 if (untrusted_name[i + 1] == '\0' || untrusted_name[i + 1] == '/')
-                    return 0;
+                    return -1;
                 if ((untrusted_name[i + 1] == '.') &&
                     (untrusted_name[i + 2] == '\0' || untrusted_name[i + 2] == '/')) {
                     /* Check if the limit on leading ".." components has been exceeded */
                     if (allowed_leading_dotdot < 1)
-                        return 0;
+                        return -1;
                     allowed_leading_dotdot--;
                     i += 2; // advance past ".."
                     continue;
@@ -160,7 +165,7 @@ static size_t validate_path(const uint8_t *const untrusted_name, size_t allowed_
             if (utf8_ret > 0) {
                 i += utf8_ret;
             } else {
-                return 0;
+                return -1;
             }
         }
     } while (untrusted_name[i]);
@@ -177,7 +182,7 @@ QUBES_PURE_PUBLIC bool
 qubes_pure_validate_symbolic_link(const uint8_t *untrusted_name,
                                   const uint8_t *untrusted_target)
 {
-    size_t depth = validate_path(untrusted_name, 0);
+    ssize_t depth = validate_path(untrusted_name, 0);
     // Symlink paths must have at least 2 components: "a/b" is okay
     // but "a" is not.  This ensures that the toplevel "a" entry
     // is not a symbolic link.
@@ -190,7 +195,7 @@ qubes_pure_validate_symbolic_link(const uint8_t *untrusted_name,
     // (which resolves to "a/d") but not "../../d" (which resolves to "d").
     // This ensures that ~/QubesIncoming/QUBENAME/a/b cannot point outside
     // of ~/QubesIncoming/QUBENAME/a.
-    return validate_path(untrusted_target, depth - 2) > 0;
+    return validate_path(untrusted_target, (size_t)(depth - 2)) >= 0;
 }
 
 QUBES_PURE_PUBLIC bool
