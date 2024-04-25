@@ -101,6 +101,30 @@ static int validate_utf8_char(const uint8_t *untrusted_c) {
     return qubes_pure_code_point_safe_for_display(code_point) ? total_size : 0;
 }
 
+// This is one of the trickiest, security-critical functions in the whole
+// repository (opendir_safe() in unpack.c is the other).  It is critical
+// for preventing directory traversal attacks.  The code does use a chroot()
+// and a bind mount, but the bind mount is not always effective if mount
+// namespaces are in use, and the chroot can be bypassed (QSB-015).
+//
+// Preconditions:
+//
+// - untrusted_name is NUL-terminated.
+// - allowed_leading_dotdot is the maximum number of leading "../" sequences
+//   allowed.  Might be 0.
+//
+// Algorithm:
+//
+// At the start of the loop and after '/', the code checks for '/' and '.'.
+// '/', "./", or ".\0" indicate a non-canonical path: the code skips past them
+// if allow_non_canonical is set, and fails otherwise.  "../" and "..\0" are
+// ".." components: the code checks that the limit on non-".." components has
+// not been exceeded, fails if it has, and otherwise decrements the limit.
+// Anything else is a normal path component: the limit on ".." components
+// is set to zero, and the number of non-".." components is incremented.
+//
+// The return value is the number of non-".." components on
+// success, or 0 on failure.
 static size_t validate_path(const uint8_t *const untrusted_name, size_t allowed_leading_dotdot)
 {
     size_t non_dotdot_components = 0, i = 0;
@@ -155,13 +179,17 @@ qubes_pure_validate_symbolic_link(const uint8_t *untrusted_name,
 {
     size_t depth = validate_path(untrusted_name, 0);
     // Symlink paths must have at least 2 components: "a/b" is okay
-    // but "a" is not
+    // but "a" is not.  This ensures that the toplevel "a" entry
+    // is not a symbolic link.
     if (depth < 2)
         return false;
     // Symlinks must have at least 2 more path components in the name
     // than the number of leading ".." path elements in the target.
-    // "a/b" cannot point to "../c", and "a/b/c" can point to "../d"
-    // but not "../../d".
+    // "a/b" can point to "c" (which resolves to "a/c") but not "../c"
+    // (which resolves to "c").  Similarly and "a/b/c" can point to "../d"
+    // (which resolves to "a/d") but not "../../d" (which resolves to "d").
+    // This ensures that ~/QubesIncoming/QUBENAME/a/b cannot point outside
+    // of ~/QubesIncoming/QUBENAME/a.
     return validate_path(untrusted_target, depth - 2) > 0;
 }
 
