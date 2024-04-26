@@ -204,7 +204,7 @@ void process_one_file_reg(struct file_header *untrusted_hdr,
     const char *last_segment;
     char *path_dup;
 
-    if (!qubes_pure_validate_file_name((uint8_t *)untrusted_name))
+    if (!qubes_pure_validate_file_name((const uint8_t *)untrusted_name))
         do_exit(EILSEQ, untrusted_name); /* FIXME: better error message */
     if ((path_dup = strdup(untrusted_name)) == NULL)
         do_exit(ENOMEM, untrusted_name);
@@ -266,7 +266,7 @@ void process_one_file_dir(struct file_header *untrusted_hdr,
     int safe_dirfd;
     const char *last_segment;
     char *path_dup;
-    if (!qubes_pure_validate_file_name((uint8_t *)untrusted_name))
+    if (!qubes_pure_validate_file_name((const uint8_t *)untrusted_name))
         do_exit(EILSEQ, untrusted_name); /* FIXME: better error message */
     if ((path_dup = strdup(untrusted_name)) == NULL)
         do_exit(ENOMEM, untrusted_name);
@@ -298,7 +298,7 @@ void process_one_file_link(struct file_header *untrusted_hdr,
     const char *last_segment;
     char *path_dup;
     unsigned int filelen;
-    if (!qubes_pure_validate_file_name((uint8_t *)untrusted_name))
+    if (!qubes_pure_validate_file_name((const uint8_t *)untrusted_name))
         do_exit(EILSEQ, untrusted_name); /* FIXME: better error message */
     int safe_dirfd;
     if (untrusted_hdr->filelen > MAX_PATH_LENGTH - 1)
@@ -315,8 +315,8 @@ void process_one_file_link(struct file_header *untrusted_hdr,
      * Ensure that no immediate subdirectory of ~/QubesIncoming/VMNAME
      * may have symlinks that point out of it.
      */
-    if (!qubes_pure_validate_symbolic_link((uint8_t *)untrusted_name,
-                                           (uint8_t *)untrusted_content))
+    if (!qubes_pure_validate_symbolic_link((const uint8_t *)untrusted_name,
+                                           (const uint8_t *)untrusted_content))
         do_exit(EILSEQ, untrusted_content);
 
     if ((path_dup = strdup(untrusted_name)) == NULL)
