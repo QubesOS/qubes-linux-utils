@@ -15,6 +15,9 @@ libqubes-rpc-filecopy.so.$(SO_VER): $(objs) ./$(pure_lib).$(pure_sover)
 validator-test: validator-test.o ./$(pure_lib).$(pure_sover)
 	libs=$$(pkg-config --libs icu-uc) && $(CC) '-Wl,-rpath,$$ORIGIN' $(LDFLAGS) -o $@ $^ $$libs
 $(pure_objs): CFLAGS += -fvisibility=hidden -DQUBES_PURE_IMPLEMENTATION
+ifeq ($(CHECK_UNREACHABLE),1)
+$(pure_objs): CFLAGS += -DCHECK_UNREACHABLE
+endif
 validator-test: CFLAGS += -UNDEBUG
 check: validator-test
 	LD_LIBRARY_PATH=. ./validator-test
