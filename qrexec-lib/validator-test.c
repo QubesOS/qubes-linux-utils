@@ -118,6 +118,8 @@ int main(int argc, char **argv)
     assert(qubes_pure_validate_symbolic_link((const uint8_t *)"a/b/c", (const uint8_t *)".."));
     // Symlinks may end in "/".
     assert(qubes_pure_validate_symbolic_link((const uint8_t *)"a/b/c", (const uint8_t *)"a/"));
+    // Symlinks reject invalid paths.
+    assert(!qubes_pure_validate_symbolic_link((const uint8_t *)"..", (const uint8_t *)"a/"));
 
     // Greek letters are safe
     assert(qubes_pure_validate_file_name((uint8_t *)u8"\u03b2.txt"));
