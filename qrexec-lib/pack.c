@@ -107,6 +107,16 @@ void wait_for_result(void)
             case EINVAL:
                 call_error_handler("File copy: Corrupted data from packer%s\"%s\"", last_filename_prefix, last_filename);
                 break;
+            case EILSEQ:
+                call_error_handler("Forbidden character in file or link target. Name might look somewhat like \"%s\"", last_filename);
+                break;
+            case ENOLINK:
+                // FIXME: the protocol only provides the name of the file, not what it points to.
+                // FIXME: This assumes that a symlink target was rejected, not a path.  However,
+                // this code should only produces valid paths, so if an invalid path gets sent,
+                // that's a bug.
+                call_error_handler("Cannot verify that link at \"%s\" would not be broken by copy", last_filename);
+                break;
             case EDQUOT:
                 if (ignore_quota_error) {
                     /* skip also CRC check as sender and receiver might be
