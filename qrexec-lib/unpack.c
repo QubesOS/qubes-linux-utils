@@ -298,8 +298,6 @@ static void process_one_file_link(struct file_header *untrusted_hdr,
     const char *last_segment;
     char *path_dup;
     unsigned int filelen;
-    if (!qubes_pure_validate_file_name((const uint8_t *)untrusted_name))
-        do_exit(EILSEQ, untrusted_name); /* FIXME: better error message */
     int safe_dirfd;
     if (untrusted_hdr->filelen > MAX_PATH_LENGTH - 1)
         do_exit(ENAMETOOLONG, untrusted_name);
@@ -312,6 +310,7 @@ static void process_one_file_link(struct file_header *untrusted_hdr,
         do_exit(LEGAL_EOF, untrusted_name); // hopefully remote has produced error message
     untrusted_content[filelen] = 0;
     /*
+     * Sanitize both the path of the symbolic link and its target.
      * Ensure that no immediate subdirectory of ~/QubesIncoming/VMNAME
      * may have symlinks that point out of it.
      */
