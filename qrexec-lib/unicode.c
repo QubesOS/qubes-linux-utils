@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <inttypes.h>
+#include <errno.h>
 #include <assert.h>
 
 QUBES_PURE_PUBLIC bool
@@ -101,8 +102,32 @@ static int validate_utf8_char(const uint8_t *untrusted_c) {
     return qubes_pure_code_point_safe_for_display(code_point) ? total_size : 0;
 }
 
-// This is one of the trickiest, security-critical functions in the whole
-// repository (opendir_safe() in unpack.c is the other).  It is critical
+// Statically assert that a statement is not reachable.
+//
+// At runtime, this is just abort(), but it comes with a neat trick:
+// if optimizations are on, CHECK_UNREACHABLE is defined, and the compiler
+// claims to be GNU-compatible, the compiler must prove that this is
+// unreachable.  Otherwise, it is a compile-time error.
+//
+// To enable static checking of this macro, pass CHECK_UNREACHABLE=1 to the
+// makefile or include it in the environment.
+#if defined __GNUC__ && defined __OPTIMIZE__ && defined CHECK_UNREACHABLE
+#define COMPILETIME_UNREACHABLE do {    \
+    extern void not_reachable(void)     \
+        __attribute__((                 \
+            error("Compiler could not prove that this statement is not reachable"), \
+            noreturn));                 \
+    not_reachable();                    \
+} while (0)
+#else
+#define COMPILETIME_UNREACHABLE do {    \
+    assert(0);                          \
+    abort();                            \
+} while (0)
+#endif
+
+// This is one of the trickiest, most security-critical functions in the
+// whole repository (opendir_safe() in unpack.c is the other).  It is critical
 // for preventing directory traversal attacks.  The code does use a chroot()
 // and a bind mount, but the bind mount is not always effective if mount
 // namespaces are in use, and the chroot can be bypassed (QSB-015).
@@ -116,16 +141,21 @@ static int validate_utf8_char(const uint8_t *untrusted_c) {
 // Algorithm:
 //
 // At the start of the loop and after '/', the code checks for '/' and '.'.
-// '/', "./", or ".\0" indicate a non-canonical path: the code skips past them
-// if allow_non_canonical is set, and fails otherwise.  "../" and "..\0" are
-// ".." components: the code checks that the limit on non-".." components has
-// not been exceeded, fails if it has, and otherwise decrements the limit.
+// '/', "./", or ".\0" indicate a non-canonical path.  These are currently
+// rejected, but they could safely be accepted in the future without allowing
+// directory traversal attacks.  "../" and "..\0" are ".." components: the code
+// checks that the limit on non-".." components has not been exceeded, fails if
+// it has, and otherwise decrements the limit.  This ensures that a directory
+// tree cannot contain symlinks that point outside of the tree itself.
 // Anything else is a normal path component: the limit on ".." components
 // is set to zero, and the number of non-".." components is incremented.
 //
 // The return value is the number of non-".." components on
-// success, or -1 on failure.
-static ssize_t validate_path(const uint8_t *const untrusted_name, size_t allowed_leading_dotdot)
+// success, or a negative errno value on failure.  The return value might be
+// zero.
+static ssize_t validate_path(const uint8_t *const untrusted_name,
+                             size_t allowed_leading_dotdot,
+                             const uint32_t flags)
 {
     // We assume that there are not SSIZE_MAX path components.
     // This cannot happen on hardware using a flat address space,
@@ -133,20 +163,26 @@ static ssize_t validate_path(const uint8_t *const untrusted_name, size_t allowed
     // no space for the executable code.
     ssize_t non_dotdot_components = 0;
     size_t i = 0;
+    if (untrusted_name[0] == '\0')
+        return -ENOLINK; // empty path
     do {
         if (i == 0 || untrusted_name[i - 1] == '/') {
             switch (untrusted_name[i]) {
+            case '\0': // impossible, loop exit condition & if statement before
+                       // loop check this
+                COMPILETIME_UNREACHABLE;
             case '/': // repeated or initial slash
-            case '\0': // empty string
-                return -1;
+                return -EILSEQ;
             case '.':
-                if (untrusted_name[i + 1] == '\0' || untrusted_name[i + 1] == '/')
-                    return -1;
+                if (untrusted_name[i + 1] == '\0' || untrusted_name[i + 1] == '/') {
+                    // Path component is "."
+                    return -EILSEQ;
+                }
                 if ((untrusted_name[i + 1] == '.') &&
                     (untrusted_name[i + 2] == '\0' || untrusted_name[i + 2] == '/')) {
                     /* Check if the limit on leading ".." components has been exceeded */
                     if (allowed_leading_dotdot < 1)
-                        return -1;
+                        return -ENOLINK;
                     allowed_leading_dotdot--;
                     i += 2; // advance past ".."
                     continue;
@@ -158,36 +194,61 @@ static ssize_t validate_path(const uint8_t *const untrusted_name, size_t allowed
                 break;
             }
         }
-        if (untrusted_name[i] >= 0x20 && untrusted_name[i] <= 0x7E) {
+        if (untrusted_name[i] == 0) {
+            // If this is violated, the subsequent i++ will be out of bounds
+            COMPILETIME_UNREACHABLE;
+        } else if ((0x20 <= untrusted_name[i] && untrusted_name[i] <= 0x7E) ||
+                   (flags & QUBES_PURE_ALLOW_UNSAFE_CHARACTERS) != 0) {
             i++;
         } else {
             int utf8_ret = validate_utf8_char((const unsigned char *)(untrusted_name + i));
             if (utf8_ret > 0) {
                 i += utf8_ret;
             } else {
-                return -1;
+                return -EILSEQ;
             }
         }
     } while (untrusted_name[i]);
     return non_dotdot_components;
 }
 
-QUBES_PURE_PUBLIC bool
-qubes_pure_validate_file_name(const uint8_t *untrusted_filename)
+static bool flag_check(const uint32_t flags)
 {
-    return validate_path(untrusted_filename, 0) > 0;
+    return (flags & ~(__typeof__(flags))(QUBES_PURE_ALLOW_UNSAFE_CHARACTERS)) == 0;
+}
+
+QUBES_PURE_PUBLIC int
+qubes_pure_validate_file_name_v2(const uint8_t *const untrusted_filename,
+                                 const uint32_t flags)
+{
+    if (!flag_check(flags))
+        return -EINVAL;
+    // We require at least one non-".." component in the path.
+    ssize_t res = validate_path(untrusted_filename, 0, flags);
+    return res > 0 ? 0 : -EILSEQ; // -ENOLINK is only for symlinks
 }
 
 QUBES_PURE_PUBLIC bool
-qubes_pure_validate_symbolic_link(const uint8_t *untrusted_name,
-                                  const uint8_t *untrusted_target)
+qubes_pure_validate_file_name(const uint8_t *const untrusted_filename)
 {
-    ssize_t depth = validate_path(untrusted_name, 0);
+    return qubes_pure_validate_file_name_v2(untrusted_filename, 0) == 0;
+}
+
+QUBES_PURE_PUBLIC int
+qubes_pure_validate_symbolic_link_v2(const uint8_t *untrusted_name,
+                                     const uint8_t *untrusted_target,
+                                     uint32_t flags)
+{
+    if (!flag_check(flags))
+        return -EINVAL;
+    ssize_t depth = validate_path(untrusted_name, 0, flags);
+    if (depth < 0)
+        return -EILSEQ; // -ENOLINK is only for symlinks
     // Symlink paths must have at least 2 components: "a/b" is okay
     // but "a" is not.  This ensures that the toplevel "a" entry
     // is not a symbolic link.
     if (depth < 2)
-        return false;
+        return -ENOLINK;
     // Symlinks must have at least 2 more path components in the name
     // than the number of leading ".." path elements in the target.
     // "a/b" can point to "c" (which resolves to "a/c") but not "../c"
@@ -195,7 +256,15 @@ qubes_pure_validate_symbolic_link(const uint8_t *untrusted_name,
     // (which resolves to "a/d") but not "../../d" (which resolves to "d").
     // This ensures that ~/QubesIncoming/QUBENAME/a/b cannot point outside
     // of ~/QubesIncoming/QUBENAME/a.
-    return validate_path(untrusted_target, (size_t)(depth - 2)) >= 0;
+    ssize_t res = validate_path(untrusted_target, (size_t)(depth - 2), flags);
+    return res < 0 ? res : 0;
+}
+
+QUBES_PURE_PUBLIC bool
+qubes_pure_validate_symbolic_link(const uint8_t *untrusted_name,
+                                  const uint8_t *untrusted_target)
+{
+    return qubes_pure_validate_symbolic_link_v2(untrusted_name, untrusted_target, 0) == 0;
 }
 
 QUBES_PURE_PUBLIC bool

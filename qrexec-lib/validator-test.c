@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <inttypes.h>
 #include <stdlib.h>
+#include <errno.h>
+
 #include "pure.h"
 #include <unicode/utf8.h>
 #ifdef NDEBUG
@@ -102,6 +104,20 @@ int main(int argc, char **argv)
     // Looks like "." or ".." but is not
     assert(qubes_pure_validate_file_name((const uint8_t *)".a"));
     assert(qubes_pure_validate_file_name((const uint8_t *)"..a"));
+
+    // Charset validation checks
+    for (unsigned int i = 0; i < 256; ++i) {
+        // These bytes are forbidden even if Unicode filtering is off.
+        bool always_forbidden = i == '/' || i == '.' || i == 0;
+        // NUL is not a valid continuation byte, so if Unicode filtering
+        // is on, all non-ASCII bytes are forbidden.
+        bool bad_unicode = i < 0x20 || i > 0x7E;
+        unsigned char buf[2] = { i, 0 };
+        assert(qubes_pure_validate_file_name_v2(buf, QUBES_PURE_ALLOW_UNSAFE_CHARACTERS) ==
+               (always_forbidden ? -EILSEQ : 0));
+        assert(qubes_pure_validate_file_name_v2(buf, 0) ==
+               (always_forbidden || bad_unicode ? -EILSEQ : 0));
+    }
 
     // Symbolic links
     // Top level cannot be symlink
