@@ -253,6 +253,7 @@ enum QubeNameValidationError {
 QUBES_PURE_PUBLIC enum QubeNameValidationError
 qubes_pure_is_valid_qube_name(const struct QubesSlice untrusted_str);
 
+/// Flags for pathname validation functions.
 enum QubesFilenameValidationFlags {
     /// Disable Unicode charset restrictions and UTF-8 validity checks.
     QUBES_PURE_ALLOW_UNSAFE_CHARACTERS = (1 << 0),
@@ -264,6 +265,8 @@ enum QubesFilenameValidationFlags {
     QUBES_PURE_ALLOW_UNSAFE_SYMLINKS = (1 << 2),
     /// Allow all paths to be non-canonical, including symlinks.
     QUBES_PURE_ALLOW_NON_CANONICAL_PATHS = (1 << 3),
+    /// Allow trailing slash.
+    QUBES_PURE_ALLOW_TRAILING_SLASH = (1 << 4),
 };
 
 #ifdef __cplusplus

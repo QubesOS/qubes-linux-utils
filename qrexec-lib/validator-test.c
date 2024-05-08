@@ -182,6 +182,14 @@ int main(int argc, char **argv)
         TEST("a/b", "b//c", QUBES_PURE_ALLOW_NON_CANONICAL_PATHS, true),
         // ...and non-canonical paths.
         TEST("a//b", "b//c", QUBES_PURE_ALLOW_NON_CANONICAL_PATHS, true),
+        // Symlinks may end in "/"...
+        TEST("a/b/c", "a/", QUBES_PURE_ALLOW_TRAILING_SLASH, true),
+        // ...even without QUBES_PURE_ALLOW_TRAILING_SLASH.
+        TEST("a/b/c", "a/", 0, true),
+        // but the path cannot...
+        TEST("a/b/c/", "a/", 0, false),
+        // ...unless QUBES_PURE_ALLOW_TRAILING_SLASH is passed.
+        TEST("a/b/c/", "a/", QUBES_PURE_ALLOW_TRAILING_SLASH, true),
     };
     int failed = 0;
 #define SYMLINK_TEST(a) symlink_test(a, sizeof(a)/sizeof(a[0]))

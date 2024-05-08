@@ -167,7 +167,8 @@ static ssize_t validate_path(const uint8_t *const untrusted_name,
         return allow_non_canonical ? 0 : -ENOLINK; // empty path
     if (untrusted_name[0] == '/')
         return -ENOLINK; // absolute path
-    for (size_t i = 0; untrusted_name[i]; i++) {
+    size_t i;
+    for (i = 0; untrusted_name[i]; i++) {
         if (i == 0 || untrusted_name[i - 1] == '/') {
             // Start of a path component
             switch (untrusted_name[i]) {
@@ -216,6 +217,14 @@ static ssize_t validate_path(const uint8_t *const untrusted_name,
             }
         }
     }
+    if (i < 1 || untrusted_name[i]) {
+        // ideally this would be COMPILETIME_UNREACHABLE but GCC can't prove this
+        assert(0);
+        return -EILSEQ;
+    }
+    if ((flags & QUBES_PURE_ALLOW_TRAILING_SLASH) == 0 &&
+            untrusted_name[i - 1] == '/')
+        return -EILSEQ;
     return non_dotdot_components;
 }
 
@@ -224,6 +233,7 @@ static bool flag_check(const uint32_t flags)
     int const allowed = (QUBES_PURE_ALLOW_UNSAFE_CHARACTERS |
                          QUBES_PURE_ALLOW_NON_CANONICAL_SYMLINKS |
                          QUBES_PURE_ALLOW_NON_CANONICAL_PATHS |
+                         QUBES_PURE_ALLOW_TRAILING_SLASH |
                          QUBES_PURE_ALLOW_UNSAFE_SYMLINKS);
     return (flags & ~(__typeof__(flags))allowed) == 0;
 }
@@ -243,7 +253,8 @@ qubes_pure_validate_file_name_v2(const uint8_t *const untrusted_filename,
 QUBES_PURE_PUBLIC bool
 qubes_pure_validate_file_name(const uint8_t *const untrusted_filename)
 {
-    return qubes_pure_validate_file_name_v2(untrusted_filename, 0) == 0;
+    return qubes_pure_validate_file_name_v2(untrusted_filename,
+                                            QUBES_PURE_ALLOW_TRAILING_SLASH) == 0;
 }
 
 QUBES_PURE_PUBLIC int
@@ -271,8 +282,10 @@ qubes_pure_validate_symbolic_link_v2(const uint8_t *untrusted_name,
     // (which resolves to "c").  Similarly and "a/b/c" can point to "../d"
     // (which resolves to "a/d") but not "../../d" (which resolves to "d").
     // This ensures that ~/QubesIncoming/QUBENAME/a/b cannot point outside
-    // of ~/QubesIncoming/QUBENAME/a.
-    ssize_t res = validate_path(untrusted_target, (size_t)(depth - 2), flags);
+    // of ~/QubesIncoming/QUBENAME/a.  Always allow trailing slash in the
+    // symbolic link target, whether or not they are allowed in the path.
+    ssize_t res = validate_path(untrusted_target, (size_t)(depth - 2),
+                                flags | QUBES_PURE_ALLOW_TRAILING_SLASH);
     return res < 0 ? res : 0;
 }
 
@@ -280,7 +293,8 @@ QUBES_PURE_PUBLIC bool
 qubes_pure_validate_symbolic_link(const uint8_t *untrusted_name,
                                   const uint8_t *untrusted_target)
 {
-    return qubes_pure_validate_symbolic_link_v2(untrusted_name, untrusted_target, 0) == 0;
+    return qubes_pure_validate_symbolic_link_v2(untrusted_name, untrusted_target,
+                                                QUBES_PURE_ALLOW_TRAILING_SLASH) == 0;
 }
 
 QUBES_PURE_PUBLIC bool
