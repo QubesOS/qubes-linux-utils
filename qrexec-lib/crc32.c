@@ -31,46 +31,6 @@ unsigned long Crc32_ComputeBuf( unsigned long inCrc32, const void *buf,
 
 /*----------------------------------------------------------------------------*\
  *  NAME:
- *     Crc32_ComputeFile() - compute CRC-32 value for a file
- *  DESCRIPTION:
- *     Computes the CRC-32 value for an opened file.
- *  ARGUMENTS:
- *     file - file pointer
- *     outCrc32 - (out) result CRC-32 value
- *  RETURNS:
- *     err - 0 on success or -1 on error
- *  ERRORS:
- *     - file errors
-\*----------------------------------------------------------------------------*/
-
-int Crc32_ComputeFile( FILE *file, unsigned long *outCrc32 )
-{
-#   define CRC_BUFFER_SIZE  8192
-    unsigned char buf[CRC_BUFFER_SIZE];
-    size_t bufLen;
-
-    /** accumulate crc32 from file **/
-    *outCrc32 = 0;
-    while (1) {
-        bufLen = fread( buf, 1, CRC_BUFFER_SIZE, file );
-        if (bufLen == 0) {
-            if (ferror(file)) {
-                fprintf( stderr, "error reading file\n" );
-                goto ERR_EXIT;
-            }
-            break;
-        }
-        *outCrc32 = Crc32_ComputeBuf( *outCrc32, buf, bufLen );
-    }
-    return( 0 );
-
-    /** error exit **/
-ERR_EXIT:
-    return( -1 );
-}
-
-/*----------------------------------------------------------------------------*\
- *  NAME:
  *     Crc32_ComputeBuf() - computes the CRC-32 value of a memory buffer
  *  DESCRIPTION:
  *     Computes or accumulates the CRC-32 value for a memory buffer.
