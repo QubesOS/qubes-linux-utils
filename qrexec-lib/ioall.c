@@ -24,8 +24,9 @@
 #include <stdlib.h>
 #include <fcntl.h>
 #include <errno.h>
+#include "libqubes-rpc-filecopy.h"
 
-void perror_wrapper(const char * msg)
+static void perror_wrapper(const char * msg)
 {
     int prev=errno;
     perror(msg);

@@ -45,7 +45,7 @@ void send_status_and_crc(int code, const char *last_filename);
 #define O_TMPFILE_MASK (__O_TMPFILE | O_DIRECTORY | O_CREAT)
 #endif
 
-_Noreturn void do_exit(int code, const char *last_filename)
+static _Noreturn void do_exit(int code, const char *last_filename)
 {
     close(0);
     send_status_and_crc(code, last_filename);
@@ -74,7 +74,7 @@ void set_procfs_fd(int value)
     use_tmpfile = 1;
 }
 
-int wait_for_space(int fd, unsigned long how_much) {
+static int wait_for_space(int fd, unsigned long how_much) {
     int counter = 0;
     struct statvfs fs_space;
     do {
@@ -91,7 +91,7 @@ int wait_for_space(int fd, unsigned long how_much) {
 }
 
 static unsigned long crc32_sum = 0;
-int read_all_with_crc(int fd, void *buf, int size) {
+static int read_all_with_crc(int fd, void *buf, int size) {
     int ret;
     ret = read_all(fd, buf, size);
     if (ret)
@@ -196,8 +196,8 @@ static int opendir_safe(int dirfd, char *path, const char **last_segment)
     }
 }
 
-void process_one_file_reg(struct file_header *untrusted_hdr,
-        const char *untrusted_name)
+static void process_one_file_reg(struct file_header *untrusted_hdr,
+                                 const char *untrusted_name)
 {
     int ret;
     int fdout = -1, safe_dirfd;
@@ -260,8 +260,8 @@ void process_one_file_reg(struct file_header *untrusted_hdr,
 }
 
 
-void process_one_file_dir(struct file_header *untrusted_hdr,
-        const char *untrusted_name)
+static void process_one_file_dir(struct file_header *untrusted_hdr,
+                                 const char *untrusted_name)
 {
     int safe_dirfd;
     const char *last_segment;
@@ -291,8 +291,8 @@ void process_one_file_dir(struct file_header *untrusted_hdr,
     free(path_dup);
 }
 
-void process_one_file_link(struct file_header *untrusted_hdr,
-        const char *untrusted_name)
+static void process_one_file_link(struct file_header *untrusted_hdr,
+                                  const char *untrusted_name)
 {
     char untrusted_content[MAX_PATH_LENGTH];
     const char *last_segment;
@@ -331,7 +331,7 @@ void process_one_file_link(struct file_header *untrusted_hdr,
     free(path_dup);
 }
 
-void process_one_file(struct file_header *untrusted_hdr, int flags)
+static void process_one_file(struct file_header *untrusted_hdr, int flags)
 {
     unsigned int namelen;
     if (untrusted_hdr->namelen > MAX_PATH_LENGTH - 1)
