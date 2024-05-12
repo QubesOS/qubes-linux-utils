@@ -172,6 +172,12 @@ int main(int argc, char **argv)
         TEST("a/b/c", "a/", 0, true),
         // Invalid paths are rejected...
         TEST("..", "a/", 0, false),
+        // ...even with QUBES_PURE_ALLOW_UNSAFE_SYMLINKS.
+        TEST("..", "a/", QUBES_PURE_ALLOW_UNSAFE_SYMLINKS, false),
+        // but QUBES_PURE_ALLOW_UNSAFE_SYMLINKS allows bad symlinks
+        TEST("a", "/home/user/.bashrc", QUBES_PURE_ALLOW_UNSAFE_SYMLINKS, true),
+        // that are otherwise rejected
+        TEST("a", "/home/user/.bashrc", 0, false),
         // QUBES_PURE_ALLOW_NON_CANONICAL_PATHS allows non-canonical symlinks...
         TEST("a/b", "b//c", QUBES_PURE_ALLOW_NON_CANONICAL_PATHS, true),
         // ...and non-canonical paths.

@@ -260,6 +260,8 @@ enum QubesFilenameValidationFlags {
     /// to be canonial, as they are assumed to come from a filesystem
     /// traversal, which will always produce canonical paths.
     QUBES_PURE_ALLOW_NON_CANONICAL_SYMLINKS = (1 << 1),
+    /// Do not check symbolic links at all.
+    QUBES_PURE_ALLOW_UNSAFE_SYMLINKS = (1 << 2),
     /// Allow all paths to be non-canonical, including symlinks.
     QUBES_PURE_ALLOW_NON_CANONICAL_PATHS = (1 << 3),
 };

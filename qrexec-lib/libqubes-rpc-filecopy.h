@@ -69,6 +69,7 @@ enum copy_flags {
     COPY_ALLOW_DIRECTORIES = (1 << 1),
     COPY_ALLOW_UNSAFE_CHARACTERS = (1 << 2),
     COPY_ALLOW_NON_CANONICAL_SYMLINKS = (1 << 3),
+    COPY_ALLOW_UNSAFE_SYMLINKS = (1 << 4),
 };
 
 /* feedback handling */
