@@ -119,23 +119,54 @@ int main(int argc, char **argv)
                (always_forbidden || bad_unicode ? -EILSEQ : 0));
     }
 
-    // Symbolic links
-    // Top level cannot be symlink
-    assert(!qubes_pure_validate_symbolic_link((const uint8_t *)"a", (const uint8_t *)"b"));
-    // Symbolic links cannot escape
-    assert(!qubes_pure_validate_symbolic_link((const uint8_t *)"a/b", (const uint8_t *)"../a"));
-    assert(!qubes_pure_validate_symbolic_link((const uint8_t *)"a/b", (const uint8_t *)"../a/b/c"));
-    assert(!qubes_pure_validate_symbolic_link((const uint8_t *)"a/b/c", (const uint8_t *)"../../a"));
-    assert(qubes_pure_validate_symbolic_link((const uint8_t *)"a/b", (const uint8_t *)"a"));
-    assert(qubes_pure_validate_symbolic_link((const uint8_t *)"a/b/c", (const uint8_t *)"../a"));
-    // Absolute symlinks are rejected
-    assert(!qubes_pure_validate_symbolic_link((const uint8_t *)"a/b/c", (const uint8_t *)"/a"));
-    // Symlinks may end in "..".
-    assert(qubes_pure_validate_symbolic_link((const uint8_t *)"a/b/c", (const uint8_t *)".."));
-    // Symlinks may end in "/".
-    assert(qubes_pure_validate_symbolic_link((const uint8_t *)"a/b/c", (const uint8_t *)"a/"));
-    // Symlinks reject invalid paths.
-    assert(!qubes_pure_validate_symbolic_link((const uint8_t *)"..", (const uint8_t *)"a/"));
+    struct p {
+        const char *const path, *const target, *const file;
+        int const line, flags;
+        bool const allowed;
+    } symlink_checks[] = {
+#define TEST(path_, target_, flags_, allowed_) \
+        { .path = (path_)                      \
+        , .target = (target_)                  \
+        , .file = __FILE__                     \
+        , .line = __LINE__                     \
+        , .flags = (flags_)                    \
+        , .allowed = (allowed_)                \
+        }
+        // Symbolic links
+        // Top level cannot be symlink
+        TEST("a", "b", 0, false),
+        TEST("a/b", "../a", 0, false),
+        TEST("a", "b", 0, false),
+        // Symbolic links cannot escape
+        TEST("a/b", "../a", 0, false),
+        TEST("a/b", "../a", 0, false),
+        TEST("a/b", "../a/b/c", 0, false),
+        TEST("a/b", "../a/b/c", 0, false),
+        TEST("a/b/c", "../../a", 0, false),
+        TEST("a/b/c", "../../a", 0, false),
+        TEST("a/b", "a", 0, true),
+        TEST("a/b/c", "../a", 0, true),
+        // Absolute symlinks are rejected
+        TEST("a/b/c", "/a", 0, false),
+        TEST("a/b/c", "/a", 0, false),
+        // Symlinks may end in "..".
+        TEST("a/b/c", "..", 0, true),
+        // Symlinks may end in "/".
+        TEST("a/b/c", "a/", 0, true),
+        // Invalid paths are rejected.
+        TEST("..", "a/", 0, false),
+    };
+    bool failed = false;
+    for (size_t i = 0; i < sizeof(symlink_checks)/sizeof(symlink_checks[0]); ++i) {
+        const struct p *p = symlink_checks + i;
+        if ((qubes_pure_validate_symbolic_link_v2((const unsigned char *)p->path,
+                                                  (const unsigned char *)p->target,
+                                                  p->flags) == 0) != p->allowed) {
+            failed = true;
+            fprintf(stderr, "%s:%d:Test failure\n", p->file, p->line);
+        }
+    }
+    assert(!failed);
 
     // Greek letters are safe
     assert(qubes_pure_validate_file_name((uint8_t *)u8"\u03b2.txt"));
