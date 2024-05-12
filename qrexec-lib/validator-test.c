@@ -67,6 +67,27 @@ static void character_must_be_forbidden(UChar32 c)
         abort();
     }
 }
+struct symlink_test {
+    const char *const path, *const target, *const file;
+    int const line, flags;
+    bool const allowed;
+};
+
+// returns 0 on success and nonzero on failure
+static int symlink_test(const struct symlink_test symlink_checks[], size_t size)
+{
+    bool failed = false;
+    for (size_t i = 0; i < size; ++i) {
+        const struct symlink_test *p = symlink_checks + i;
+        if ((qubes_pure_validate_symbolic_link_v2((const unsigned char *)p->path,
+                        (const unsigned char *)p->target,
+                        p->flags) == 0) != p->allowed) {
+            failed = true;
+            fprintf(stderr, "%s:%d:Test failure\n", p->file, p->line);
+        }
+    }
+    return (int)failed;
+}
 
 int main(int argc, char **argv)
 {
@@ -119,11 +140,7 @@ int main(int argc, char **argv)
                (always_forbidden || bad_unicode ? -EILSEQ : 0));
     }
 
-    struct p {
-        const char *const path, *const target, *const file;
-        int const line, flags;
-        bool const allowed;
-    } symlink_checks[] = {
+    const struct symlink_test checks[] = {
 #define TEST(path_, target_, flags_, allowed_) \
         { .path = (path_)                      \
         , .target = (target_)                  \
@@ -153,18 +170,41 @@ int main(int argc, char **argv)
         TEST("a/b/c", "..", 0, true),
         // Symlinks may end in "/".
         TEST("a/b/c", "a/", 0, true),
-        // Invalid paths are rejected.
+        // Invalid paths are rejected...
         TEST("..", "a/", 0, false),
+        // QUBES_PURE_ALLOW_NON_CANONICAL_PATHS allows non-canonical symlinks...
+        TEST("a/b", "b//c", QUBES_PURE_ALLOW_NON_CANONICAL_PATHS, true),
+        // ...and non-canonical paths.
+        TEST("a//b", "b//c", QUBES_PURE_ALLOW_NON_CANONICAL_PATHS, true),
     };
-    bool failed = false;
-    for (size_t i = 0; i < sizeof(symlink_checks)/sizeof(symlink_checks[0]); ++i) {
-        const struct p *p = symlink_checks + i;
-        if ((qubes_pure_validate_symbolic_link_v2((const unsigned char *)p->path,
-                                                  (const unsigned char *)p->target,
-                                                  p->flags) == 0) != p->allowed) {
-            failed = true;
-            fprintf(stderr, "%s:%d:Test failure\n", p->file, p->line);
-        }
+    int failed = 0;
+#define SYMLINK_TEST(a) symlink_test(a, sizeof(a)/sizeof(a[0]))
+    failed |= SYMLINK_TEST(checks);
+
+    for (int i = 0; i <= QUBES_PURE_ALLOW_NON_CANONICAL_SYMLINKS;
+            i += QUBES_PURE_ALLOW_NON_CANONICAL_SYMLINKS) {
+        const struct symlink_test canonical_checks[] = {
+            // QUBES_PURE_ALLOW_NON_CANONICAL_SYMLINKS allows non-canonical symlinks...
+            TEST("a/b", "b//c", i, i != 0),
+            TEST("a/b", "b/./c", i, i != 0),
+            TEST("a/b", "./c", i, i != 0),
+            TEST("a/b", "././c", i, i != 0),
+            TEST("a/b", "././", i, i != 0),
+            TEST("a/b", "c/./", i, i != 0),
+            TEST("b/c", "", i, i != 0),
+            TEST("b/c", ".", i, i != 0),
+            // ...but not non-canonical paths...
+            TEST("a//b", "b", i, false),
+            TEST("a/./b", "b", i, false),
+            TEST("./b/c", "b", i, false),
+            // ...or unsafe symlinks
+            TEST("a/b", "..", i, false),
+            TEST("a/b", "../b", i, false),
+            TEST("a/b", "/c", i, false),
+            TEST("b", "c", i, false),
+            TEST("b", ".", i, false),
+        };
+        failed |= SYMLINK_TEST(canonical_checks);
     }
     assert(!failed);
 

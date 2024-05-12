@@ -162,19 +162,27 @@ static ssize_t validate_path(const uint8_t *const untrusted_name,
     // as this would require SIZE_MAX bytes in the path and leave
     // no space for the executable code.
     ssize_t non_dotdot_components = 0;
+    bool const allow_non_canonical = (flags & QUBES_PURE_ALLOW_NON_CANONICAL_PATHS);
     if (untrusted_name[0] == '\0')
-        return -ENOLINK; // empty path
+        return allow_non_canonical ? 0 : -ENOLINK; // empty path
+    if (untrusted_name[0] == '/')
+        return -ENOLINK; // absolute path
     for (size_t i = 0; untrusted_name[i]; i++) {
         if (i == 0 || untrusted_name[i - 1] == '/') {
+            // Start of a path component
             switch (untrusted_name[i]) {
             case '\0': // impossible, loop exit condition & if statement before
                        // loop check this
                 COMPILETIME_UNREACHABLE;
-            case '/': // repeated or initial slash
+            case '/': // repeated slash
+                if (allow_non_canonical)
+                    continue;
                 return -EILSEQ;
             case '.':
                 if (untrusted_name[i + 1] == '\0' || untrusted_name[i + 1] == '/') {
                     // Path component is "."
+                    if (allow_non_canonical)
+                        continue;
                     return -EILSEQ;
                 }
                 if ((untrusted_name[i + 1] == '.') &&
@@ -213,7 +221,10 @@ static ssize_t validate_path(const uint8_t *const untrusted_name,
 
 static bool flag_check(const uint32_t flags)
 {
-    return (flags & ~(__typeof__(flags))(QUBES_PURE_ALLOW_UNSAFE_CHARACTERS)) == 0;
+    int const allowed = (QUBES_PURE_ALLOW_UNSAFE_CHARACTERS |
+                         QUBES_PURE_ALLOW_NON_CANONICAL_SYMLINKS |
+                         QUBES_PURE_ALLOW_NON_CANONICAL_PATHS);
+    return (flags & ~(__typeof__(flags))allowed) == 0;
 }
 
 QUBES_PURE_PUBLIC int
@@ -224,7 +235,8 @@ qubes_pure_validate_file_name_v2(const uint8_t *const untrusted_filename,
         return -EINVAL;
     // We require at least one non-".." component in the path.
     ssize_t res = validate_path(untrusted_filename, 0, flags);
-    return res > 0 ? 0 : -EILSEQ; // -ENOLINK is only for symlinks
+    // Always return -EILSEQ, since -ENOLINK only makes sense for symlinks
+    return res > 0 ? 0 : -EILSEQ;
 }
 
 QUBES_PURE_PUBLIC bool
@@ -243,6 +255,8 @@ qubes_pure_validate_symbolic_link_v2(const uint8_t *untrusted_name,
     ssize_t depth = validate_path(untrusted_name, 0, flags);
     if (depth < 0)
         return -EILSEQ; // -ENOLINK is only for symlinks
+    if ((flags & QUBES_PURE_ALLOW_NON_CANONICAL_SYMLINKS) != 0)
+        flags |= QUBES_PURE_ALLOW_NON_CANONICAL_PATHS;
     // Symlink paths must have at least 2 components: "a/b" is okay
     // but "a" is not.  This ensures that the toplevel "a" entry
     // is not a symbolic link.

@@ -343,7 +343,11 @@ static void process_one_file(struct file_header *untrusted_hdr, int flags)
     if (untrusted_hdr->namelen > MAX_PATH_LENGTH - 1)
         do_exit(ENAMETOOLONG, NULL); /* filename too long so not received at all */
     namelen = untrusted_hdr->namelen; /* sanitized above */
-    uint32_t validate_flags = ((uint32_t)flags >> 2) & (QUBES_PURE_ALLOW_UNSAFE_CHARACTERS);
+    // Never set QUBES_PURE_ALLOW_NON_CANONICAL_PATHS -- paths from qfile-agent
+    // will always be canonical.
+    uint32_t validate_flags = ((uint32_t)flags >> 2) &
+        (QUBES_PURE_ALLOW_UNSAFE_CHARACTERS |
+         QUBES_PURE_ALLOW_NON_CANONICAL_SYMLINKS);
     if (!read_all_with_crc(0, untrusted_namebuf, namelen))
         do_exit(LEGAL_EOF, NULL); // hopefully remote has produced error message
     untrusted_namebuf[namelen] = 0;

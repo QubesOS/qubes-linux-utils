@@ -256,6 +256,12 @@ qubes_pure_is_valid_qube_name(const struct QubesSlice untrusted_str);
 enum QubesFilenameValidationFlags {
     /// Disable Unicode charset restrictions and UTF-8 validity checks.
     QUBES_PURE_ALLOW_UNSAFE_CHARACTERS = (1 << 0),
+    /// Allow non-canonical symbolic links.  Paths are still checked
+    /// to be canonial, as they are assumed to come from a filesystem
+    /// traversal, which will always produce canonical paths.
+    QUBES_PURE_ALLOW_NON_CANONICAL_SYMLINKS = (1 << 1),
+    /// Allow all paths to be non-canonical, including symlinks.
+    QUBES_PURE_ALLOW_NON_CANONICAL_PATHS = (1 << 3),
 };
 
 #ifdef __cplusplus
