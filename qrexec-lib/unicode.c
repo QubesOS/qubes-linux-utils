@@ -223,7 +223,8 @@ static bool flag_check(const uint32_t flags)
 {
     int const allowed = (QUBES_PURE_ALLOW_UNSAFE_CHARACTERS |
                          QUBES_PURE_ALLOW_NON_CANONICAL_SYMLINKS |
-                         QUBES_PURE_ALLOW_NON_CANONICAL_PATHS);
+                         QUBES_PURE_ALLOW_NON_CANONICAL_PATHS |
+                         QUBES_PURE_ALLOW_UNSAFE_SYMLINKS);
     return (flags & ~(__typeof__(flags))allowed) == 0;
 }
 
@@ -255,6 +256,8 @@ qubes_pure_validate_symbolic_link_v2(const uint8_t *untrusted_name,
     ssize_t depth = validate_path(untrusted_name, 0, flags);
     if (depth < 0)
         return -EILSEQ; // -ENOLINK is only for symlinks
+    if ((flags & QUBES_PURE_ALLOW_UNSAFE_SYMLINKS) != 0)
+        return depth > 0 ? 0 : -ENOLINK;
     if ((flags & QUBES_PURE_ALLOW_NON_CANONICAL_SYMLINKS) != 0)
         flags |= QUBES_PURE_ALLOW_NON_CANONICAL_PATHS;
     // Symlink paths must have at least 2 components: "a/b" is okay
