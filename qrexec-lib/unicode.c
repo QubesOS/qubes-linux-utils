@@ -162,10 +162,9 @@ static ssize_t validate_path(const uint8_t *const untrusted_name,
     // as this would require SIZE_MAX bytes in the path and leave
     // no space for the executable code.
     ssize_t non_dotdot_components = 0;
-    size_t i = 0;
     if (untrusted_name[0] == '\0')
         return -ENOLINK; // empty path
-    do {
+    for (size_t i = 0; untrusted_name[i]; i++) {
         if (i == 0 || untrusted_name[i - 1] == '/') {
             switch (untrusted_name[i]) {
             case '\0': // impossible, loop exit condition & if statement before
@@ -184,7 +183,7 @@ static ssize_t validate_path(const uint8_t *const untrusted_name,
                     if (allowed_leading_dotdot < 1)
                         return -ENOLINK;
                     allowed_leading_dotdot--;
-                    i += 2; // advance past ".."
+                    i++; // loop will advance past second "."
                     continue;
                 }
                 __attribute__((fallthrough));
@@ -199,16 +198,16 @@ static ssize_t validate_path(const uint8_t *const untrusted_name,
             COMPILETIME_UNREACHABLE;
         } else if ((0x20 <= untrusted_name[i] && untrusted_name[i] <= 0x7E) ||
                    (flags & QUBES_PURE_ALLOW_UNSAFE_CHARACTERS) != 0) {
-            i++;
+            /* loop will advance past this */
         } else {
             int utf8_ret = validate_utf8_char((const unsigned char *)(untrusted_name + i));
             if (utf8_ret > 0) {
-                i += utf8_ret;
+                i += (size_t)(utf8_ret - 1); /* loop will do one more increment */
             } else {
                 return -EILSEQ;
             }
         }
-    } while (untrusted_name[i]);
+    }
     return non_dotdot_components;
 }
 
