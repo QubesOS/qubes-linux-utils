@@ -226,8 +226,6 @@ void process_one_file_reg(struct file_header *untrusted_hdr,
         fdout = openat(safe_dirfd, last_segment, O_WRONLY | O_CREAT | O_EXCL | O_NOFOLLOW | O_CLOEXEC | O_NOCTTY, 0000);
     if (fdout < 0)
         do_exit(errno, untrusted_name);
-    if (safe_dirfd != AT_FDCWD)
-        close(safe_dirfd);
 
     /* sizes are signed elsewhere */
     if (untrusted_hdr->filelen > LLONG_MAX || (bytes_limit && untrusted_hdr->filelen > bytes_limit))
@@ -251,10 +249,12 @@ void process_one_file_reg(struct file_header *untrusted_hdr,
         char fd_str[11];
         if ((unsigned)snprintf(fd_str, sizeof(fd_str), "%d", fdout) >= sizeof(fd_str))
             abort();
-        if (linkat(procdir_fd, fd_str, AT_FDCWD, untrusted_name, AT_SYMLINK_FOLLOW) < 0)
+        if (linkat(procdir_fd, fd_str, safe_dirfd, last_segment, AT_SYMLINK_FOLLOW) < 0)
             do_exit(errno, untrusted_name);
     }
     fix_times_and_perms(fdout, untrusted_hdr, NULL, untrusted_name);
+    if (safe_dirfd != AT_FDCWD)
+        close(safe_dirfd);
     close(fdout);
     free(path_dup);
 }
@@ -281,7 +281,7 @@ void process_one_file_dir(struct file_header *untrusted_hdr,
     }
     if (errno != EEXIST)
         do_exit(errno, untrusted_name);
-    if (stat(untrusted_name,&buf) < 0)
+    if (fstatat(safe_dirfd, last_segment, &buf, AT_SYMLINK_NOFOLLOW) < 0)
         do_exit(errno, untrusted_name);
     total_bytes += buf.st_size;
     /* size accumulated after the fact, so don't check limit here */
