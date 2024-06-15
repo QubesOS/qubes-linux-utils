@@ -1,3 +1,13 @@
+qubes-utils (4.3.0) unstable; urgency=medium
+
+  [ Piotr Bartman ]
+  * q-dev: add data to qubesdb needed by new API
+
+  [ Marek Marczykowski-Górecki ]
+  * ci: update tags
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Sat, 15 Jun 2024 19:38:29 +0200
+
 qubes-utils (4.2.16) unstable; urgency=medium
 
   [ Marek Marczykowski-Górecki ]
