@@ -93,10 +93,30 @@ struct QubesMutableSlice {
  * filenames are also rejected, including invalid UTF-8 sequences and
  * all control characters.  The input must be NUL-terminated.
  *
- * Returns true on success and false on failure.
+ * \param[in] untrusted_path The path to be checked.
+ * \return \true on success and \false on failure.
+ *
+ * This is equivalent to passing zero for the flags parameter
+ * to qubes_pure_validate_file_name_v2() and checking that
+ * the result is zero.
  */
 QUBES_PURE_PUBLIC bool
-qubes_pure_validate_file_name(const uint8_t *untrusted_filename);
+qubes_pure_validate_file_name(const uint8_t *untrusted_path);
+
+/**
+ * Validate that a string is a valid path and will not result in
+ * directory traversal if used as such.  If flags does not include
+ * \ref QUBES_PURE_ALLOW_UNSAFE_CHARACTERS, characters that are unsafe for
+ * filenames are also rejected, including invalid UTF-8 sequences and
+ * all control characters.  The input must be NUL-terminated.
+ *
+ * \param[in] untrusted_path The path to be checked.
+ * \param flags 0 or QUBES_PURE_ALLOW_UNSAFE_CHARACTERS.
+ * \return 0 on success, negative errno value on failure.
+ */
+QUBES_PURE_PUBLIC int
+qubes_pure_validate_file_name_v2(const uint8_t *const untrusted_path,
+                                 const uint32_t flags);
 
 /**
  * Validate that `untrusted_name` is a valid symbolic link name
@@ -107,10 +127,33 @@ qubes_pure_validate_file_name(const uint8_t *untrusted_filename);
  * NUL-terminated.
  *
  * Returns true on success and false on failure.
+ *
+ * This is equivalent to passing zero for the flags parameter
+ * to qubes_pure_validate_symbolic_link_v2() and checking that
+ * the result is zero.
  */
 QUBES_PURE_PUBLIC bool
 qubes_pure_validate_symbolic_link(const uint8_t *untrusted_name,
                                   const uint8_t *untrusted_target);
+
+/**
+ * Validate that `untrusted_path` is a valid symbolic link name
+ * and that creating a symbolic link with that name and target
+ * `untrusted_target` is also safe.  If flags does not include
+ * \ref QUBES_PURE_ALLOW_UNSAFE_CHARACTERS, characters that are unsafe for
+ * filenames are also rejected, including invalid UTF-8 sequences and
+ * all control characters.  The input must be NUL-terminated.
+ *
+ * \param[in] untrusted_path The path to be checked.
+ * \param[in] untrusted_target The proposed target for the symbolic link.
+ * \param flags 0 or QUBES_PURE_ALLOW_UNSAFE_CHARACTERS.
+ * \return 0 on success, negative errno value on failure.
+ */
+QUBES_PURE_PUBLIC int
+qubes_pure_validate_symbolic_link_v2(const uint8_t *untrusted_path,
+                                     const uint8_t *untrusted_target,
+                                     uint32_t flags);
+
 
 /**
  * Validate that `code_point` is safe to display.  To be considered safe to
@@ -209,6 +252,22 @@ enum QubeNameValidationError {
  */
 QUBES_PURE_PUBLIC enum QubeNameValidationError
 qubes_pure_is_valid_qube_name(const struct QubesSlice untrusted_str);
+
+/// Flags for pathname validation functions.
+enum QubesFilenameValidationFlags {
+    /// Disable Unicode charset restrictions and UTF-8 validity checks.
+    QUBES_PURE_ALLOW_UNSAFE_CHARACTERS = (1 << 0),
+    /// Allow non-canonical symbolic links.  Paths are still checked
+    /// to be canonial, as they are assumed to come from a filesystem
+    /// traversal, which will always produce canonical paths.
+    QUBES_PURE_ALLOW_NON_CANONICAL_SYMLINKS = (1 << 1),
+    /// Do not check symbolic links at all.
+    QUBES_PURE_ALLOW_UNSAFE_SYMLINKS = (1 << 2),
+    /// Allow all paths to be non-canonical, including symlinks.
+    QUBES_PURE_ALLOW_NON_CANONICAL_PATHS = (1 << 3),
+    /// Allow trailing slash.
+    QUBES_PURE_ALLOW_TRAILING_SLASH = (1 << 4),
+};
 
 #ifdef __cplusplus
 }

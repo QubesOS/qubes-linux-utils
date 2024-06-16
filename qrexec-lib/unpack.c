@@ -45,7 +45,7 @@ void send_status_and_crc(int code, const char *last_filename);
 #define O_TMPFILE_MASK (__O_TMPFILE | O_DIRECTORY | O_CREAT)
 #endif
 
-_Noreturn void do_exit(int code, const char *last_filename)
+static _Noreturn void do_exit(int code, const char *last_filename)
 {
     close(0);
     send_status_and_crc(code, last_filename);
@@ -74,7 +74,7 @@ void set_procfs_fd(int value)
     use_tmpfile = 1;
 }
 
-int wait_for_space(int fd, unsigned long how_much) {
+static int wait_for_space(int fd, unsigned long how_much) {
     int counter = 0;
     struct statvfs fs_space;
     do {
@@ -91,7 +91,7 @@ int wait_for_space(int fd, unsigned long how_much) {
 }
 
 static unsigned long crc32_sum = 0;
-int read_all_with_crc(int fd, void *buf, int size) {
+static int read_all_with_crc(int fd, void *buf, int size) {
     int ret;
     ret = read_all(fd, buf, size);
     if (ret)
@@ -196,16 +196,18 @@ static int opendir_safe(int dirfd, char *path, const char **last_segment)
     }
 }
 
-void process_one_file_reg(struct file_header *untrusted_hdr,
-        const char *untrusted_name)
+static void process_one_file_reg(struct file_header *untrusted_hdr,
+                                 const char *untrusted_name,
+                                 uint32_t flags)
 {
     int ret;
     int fdout = -1, safe_dirfd;
     const char *last_segment;
     char *path_dup;
 
-    if (!qubes_pure_validate_file_name((uint8_t *)untrusted_name))
-        do_exit(EILSEQ, untrusted_name); /* FIXME: better error message */
+    ret = qubes_pure_validate_file_name_v2((const uint8_t *)untrusted_name, flags);
+    if (ret != 0)
+        do_exit(-ret, untrusted_name); /* FIXME: better error message */
     if ((path_dup = strdup(untrusted_name)) == NULL)
         do_exit(ENOMEM, untrusted_name);
     safe_dirfd = opendir_safe(AT_FDCWD, path_dup, &last_segment);
@@ -260,14 +262,16 @@ void process_one_file_reg(struct file_header *untrusted_hdr,
 }
 
 
-void process_one_file_dir(struct file_header *untrusted_hdr,
-        const char *untrusted_name)
+static void process_one_file_dir(struct file_header *untrusted_hdr,
+                                 const char *untrusted_name,
+                                 uint32_t flags)
 {
     int safe_dirfd;
     const char *last_segment;
     char *path_dup;
-    if (!qubes_pure_validate_file_name((uint8_t *)untrusted_name))
-        do_exit(EILSEQ, untrusted_name); /* FIXME: better error message */
+    int rc = qubes_pure_validate_file_name_v2((const uint8_t *)untrusted_name, flags);
+    if (rc != 0)
+        do_exit(rc, untrusted_name); /* FIXME: better error message */
     if ((path_dup = strdup(untrusted_name)) == NULL)
         do_exit(ENOMEM, untrusted_name);
     safe_dirfd = opendir_safe(AT_FDCWD, path_dup, &last_segment);
@@ -291,15 +295,14 @@ void process_one_file_dir(struct file_header *untrusted_hdr,
     free(path_dup);
 }
 
-void process_one_file_link(struct file_header *untrusted_hdr,
-        const char *untrusted_name)
+static void process_one_file_link(struct file_header *untrusted_hdr,
+                                  const char *untrusted_name,
+                                  uint32_t flags)
 {
     char untrusted_content[MAX_PATH_LENGTH];
     const char *last_segment;
     char *path_dup;
     unsigned int filelen;
-    if (!qubes_pure_validate_file_name((uint8_t *)untrusted_name))
-        do_exit(EILSEQ, untrusted_name); /* FIXME: better error message */
     int safe_dirfd;
     if (untrusted_hdr->filelen > MAX_PATH_LENGTH - 1)
         do_exit(ENAMETOOLONG, untrusted_name);
@@ -312,12 +315,15 @@ void process_one_file_link(struct file_header *untrusted_hdr,
         do_exit(LEGAL_EOF, untrusted_name); // hopefully remote has produced error message
     untrusted_content[filelen] = 0;
     /*
+     * Sanitize both the path of the symbolic link and its target.
      * Ensure that no immediate subdirectory of ~/QubesIncoming/VMNAME
      * may have symlinks that point out of it.
      */
-    if (!qubes_pure_validate_symbolic_link((uint8_t *)untrusted_name,
-                                           (uint8_t *)untrusted_content))
-        do_exit(EILSEQ, untrusted_content);
+    int rc = qubes_pure_validate_symbolic_link_v2((const uint8_t *)untrusted_name,
+                                                  (const uint8_t *)untrusted_content,
+                                                  flags);
+    if (rc != 0)
+        do_exit(-rc, untrusted_content);
 
     if ((path_dup = strdup(untrusted_name)) == NULL)
         do_exit(ENOMEM, untrusted_name);
@@ -331,21 +337,26 @@ void process_one_file_link(struct file_header *untrusted_hdr,
     free(path_dup);
 }
 
-void process_one_file(struct file_header *untrusted_hdr, int flags)
+static void process_one_file(struct file_header *untrusted_hdr, int flags)
 {
     unsigned int namelen;
     if (untrusted_hdr->namelen > MAX_PATH_LENGTH - 1)
         do_exit(ENAMETOOLONG, NULL); /* filename too long so not received at all */
     namelen = untrusted_hdr->namelen; /* sanitized above */
+    // Never set QUBES_PURE_ALLOW_NON_CANONICAL_PATHS -- paths from qfile-agent
+    // will always be canonical.
+    uint32_t validate_flags = ((uint32_t)flags >> 2) &
+        (QUBES_PURE_ALLOW_UNSAFE_CHARACTERS | QUBES_PURE_ALLOW_UNSAFE_SYMLINKS |
+         QUBES_PURE_ALLOW_NON_CANONICAL_SYMLINKS);
     if (!read_all_with_crc(0, untrusted_namebuf, namelen))
         do_exit(LEGAL_EOF, NULL); // hopefully remote has produced error message
     untrusted_namebuf[namelen] = 0;
     if (S_ISREG(untrusted_hdr->mode))
-        process_one_file_reg(untrusted_hdr, untrusted_namebuf);
+        process_one_file_reg(untrusted_hdr, untrusted_namebuf, validate_flags);
     else if (S_ISLNK(untrusted_hdr->mode) && (flags & COPY_ALLOW_SYMLINKS))
-        process_one_file_link(untrusted_hdr, untrusted_namebuf);
+        process_one_file_link(untrusted_hdr, untrusted_namebuf, validate_flags);
     else if (S_ISDIR(untrusted_hdr->mode) && (flags & COPY_ALLOW_DIRECTORIES))
-        process_one_file_dir(untrusted_hdr, untrusted_namebuf);
+        process_one_file_dir(untrusted_hdr, untrusted_namebuf, validate_flags);
     else
         do_exit(EINVAL, untrusted_namebuf);
     if (verbose && !S_ISDIR(untrusted_hdr->mode))

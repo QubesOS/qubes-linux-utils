@@ -283,6 +283,8 @@ static bool is_permitted_code_point(uint32_t const code_point)
     }
 }
 
+// Generate the table of allowed codepoints,
+// as a bunch of cases in a switch statement.
 static void print_code_point_list(FILE *out)
 {
     bool last_allowed = false;
