@@ -1,3 +1,24 @@
+qubes-utils (4.3.1) unstable; urgency=medium
+
+  [ Demi Marie Obenour ]
+  * Document algorithm used to sanitize paths
+  * Allow symlinks ending in ".."
+  * Test that symbolic links can end in '/'
+  * Move path validation tests before charset tests
+  * Document the pretty-printer in the code generator
+  * Avoid casting away const when not needed
+  * Fix -Wmissing-declarations and -Wmissing-prototypes warnings
+  * Avoid redundantly validating symbolic link names
+  * Better error message for forbidden symbolic links
+  * Allow disabling character set filtering
+  * Improve symlink tests
+  * Use for loop instead of do-while
+  * Add flag to allow non-canonical symbolic links
+  * Allow disabling symbolic link checking
+  * Don't allow trailing slashes in paths being unpacked
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Mon, 17 Jun 2024 04:33:01 +0200
+
 qubes-utils (4.3.0) unstable; urgency=medium
 
   [ Piotr Bartman ]
