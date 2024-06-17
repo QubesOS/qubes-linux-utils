@@ -1,3 +1,9 @@
+qubes-utils (4.3.2) unstable; urgency=medium
+
+  * debian: bump required versions for libs
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Mon, 17 Jun 2024 04:38:28 +0200
+
 qubes-utils (4.3.1) unstable; urgency=medium
 
   [ Demi Marie Obenour ]
