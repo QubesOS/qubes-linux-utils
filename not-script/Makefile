@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS := $(CFLAGS) -g3 -O2 -Wall -Wextra -Werror -fPIE -D_FORTIFY_SOURCE=2 -D_GNU_SOURCE -Wmaybe-uninitialized
+CFLAGS += -g -O2 -Wall -Wextra -Werror -fPIE -D_GNU_SOURCE -Wmaybe-uninitialized
 .PHONY: clean install all
 all: not-script
 
