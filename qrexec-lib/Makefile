@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS := $(CFLAGS) -I. -g3 -O2 -Wall -Wextra -Werror -pie -fPIC -Wmissing-declarations -Wmissing-prototypes
+CFLAGS += -I. -g -O2 -Wall -Wextra -Werror -pie -fPIC -Wmissing-declarations -Wmissing-prototypes
 SO_VER=2
 LDFLAGS+=-Wl,--no-undefined,--as-needed,-Bsymbolic -L .
 .PHONY: all clean install check
