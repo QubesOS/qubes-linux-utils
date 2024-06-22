@@ -1,3 +1,35 @@
+qubes-utils (4.2.17) unstable; urgency=medium
+
+  [ Marek Marczykowski-Górecki ]
+  * ci: collect test coverage from qrexec-lib too
+  * Fix imgconverter tests
+  * Switch to sequoia for codecov signature check
+
+  [ Demi Marie Obenour ]
+  * Math and currency symbols are safe for display
+  * Document algorithm used to sanitize paths
+  * Allow symlinks ending in ".."
+  * Test that symbolic links can end in '/'
+  * Move path validation tests before charset tests
+  * Document the pretty-printer in the code generator
+  * Avoid casting away const when not needed
+  * Fix -Wmissing-declarations and -Wmissing-prototypes warnings
+  * Avoid redundantly validating symbolic link names
+  * Better error message for forbidden symbolic links
+  * Allow disabling character set filtering
+  * Improve symlink tests
+  * Use for loop instead of do-while
+  * Add flag to allow non-canonical symbolic links
+  * Allow disabling symbolic link checking
+  * Don't allow trailing slashes in paths being unpacked
+
+  [ Marek Marczykowski-Górecki ]
+  * ci: update tags
+  * debian: bump required versions for libs
+  * Do not redefine compiler flags that are up to build env to define
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Sat, 22 Jun 2024 11:53:42 +0200
+
 qubes-utils (4.2.15) unstable; urgency=medium
 
   [ Marek Marczykowski-Górecki ]
