@@ -130,7 +130,6 @@ static long validate_utime_nsec(uint32_t untrusted_nsec)
 
 static void fix_times_and_perms(const int fd,
         const struct file_header *const untrusted_hdr,
-        const char *const last_segment,
         const char *const untrusted_name)
 {
     const struct timespec times[2] =
@@ -144,21 +143,12 @@ static void fix_times_and_perms(const int fd,
             .tv_nsec = validate_utime_nsec(untrusted_hdr->mtime_nsec)
         },
     };
-    if (last_segment == NULL) {
-        /* Do not change the mode of symbolic links */
-        if (!S_ISLNK(untrusted_hdr->mode) &&
+    /* Do not change the mode of symbolic links */
+    if (!S_ISLNK(untrusted_hdr->mode) &&
             fchmod(fd, untrusted_hdr->mode & 07777))
-            do_exit(errno, untrusted_name);
-        if (futimens(fd, times))  /* as above */
-            do_exit(errno, untrusted_name);
-    } else {
-        /* Do not change the mode of what a symbolic link points to */
-        if (!S_ISLNK(untrusted_hdr->mode) &&
-            fchmodat(fd, last_segment, untrusted_hdr->mode & 07777, 0))
-            do_exit(errno, untrusted_name);
-        if (utimensat(fd, last_segment, times, AT_SYMLINK_NOFOLLOW))  /* as above */
-            do_exit(errno, untrusted_name);
-    }
+        do_exit(errno, untrusted_name);
+    if (futimens(fd, times))  /* as above */
+        do_exit(errno, untrusted_name);
 }
 
 // Open the second-to-last component of a path, enforcing O_NOFOLLOW for every
@@ -228,8 +218,6 @@ static void process_one_file_reg(struct file_header *untrusted_hdr,
         fdout = openat(safe_dirfd, last_segment, O_WRONLY | O_CREAT | O_EXCL | O_NOFOLLOW | O_CLOEXEC | O_NOCTTY, 0000);
     if (fdout < 0)
         do_exit(errno, untrusted_name);
-    if (safe_dirfd != AT_FDCWD)
-        close(safe_dirfd);
 
     /* sizes are signed elsewhere */
     if (untrusted_hdr->filelen > LLONG_MAX || (bytes_limit && untrusted_hdr->filelen > bytes_limit))
@@ -253,10 +241,12 @@ static void process_one_file_reg(struct file_header *untrusted_hdr,
         char fd_str[11];
         if ((unsigned)snprintf(fd_str, sizeof(fd_str), "%d", fdout) >= sizeof(fd_str))
             abort();
-        if (linkat(procdir_fd, fd_str, AT_FDCWD, untrusted_name, AT_SYMLINK_FOLLOW) < 0)
+        if (linkat(procdir_fd, fd_str, safe_dirfd, last_segment, AT_SYMLINK_FOLLOW) < 0)
             do_exit(errno, untrusted_name);
     }
-    fix_times_and_perms(fdout, untrusted_hdr, NULL, untrusted_name);
+    fix_times_and_perms(fdout, untrusted_hdr, untrusted_name);
+    if (safe_dirfd != AT_FDCWD)
+        close(safe_dirfd);
     close(fdout);
     free(path_dup);
 }
@@ -285,11 +275,13 @@ static void process_one_file_dir(struct file_header *untrusted_hdr,
     }
     if (errno != EEXIST)
         do_exit(errno, untrusted_name);
-    if (stat(untrusted_name,&buf) < 0)
+    int new_dirfd = openat(safe_dirfd, last_segment, O_RDONLY | O_NOFOLLOW | O_CLOEXEC | O_DIRECTORY);
+    if (new_dirfd < 0 || fstat(new_dirfd, &buf) < 0)
         do_exit(errno, untrusted_name);
     total_bytes += buf.st_size;
     /* size accumulated after the fact, so don't check limit here */
-    fix_times_and_perms(safe_dirfd, untrusted_hdr, last_segment, untrusted_name);
+    fix_times_and_perms(new_dirfd, untrusted_hdr, untrusted_name);
+    close(new_dirfd);
     if (safe_dirfd != AT_FDCWD)
         close(safe_dirfd);
     free(path_dup);
