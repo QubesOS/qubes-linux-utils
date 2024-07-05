@@ -1,3 +1,14 @@
+qubes-utils (4.3.3) unstable; urgency=medium
+
+  [ Marek Marczykowski-Górecki ]
+  * Do not redefine compiler flags that are up to build env to define
+
+  [ Demi Marie Obenour ]
+  * Do not use path containing "/" in linkat() or stat()
+  * Do not use fchmodat() because it follows symlinks
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Fri, 05 Jul 2024 17:31:25 +0200
+
 qubes-utils (4.3.2) unstable; urgency=medium
 
   * debian: bump required versions for libs
