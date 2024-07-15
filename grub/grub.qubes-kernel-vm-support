@@ -6,3 +6,7 @@ if [ -r /usr/share/qubes/marker-vm ] &&
     GRUB_CMDLINE_LINUX="$GRUB_CMDLINE_LINUX xen_scrub_pages=0"
 fi
 GRUB_ENABLE_BLSCFG=false
+# Add qubes version to boot menu on dom0
+if [ -f "/etc/qubes-release" ]; then
+    GRUB_DISTRIBUTOR="$(sed 's,\(.*\) release \(.*\) (R\(.*\)),\1 (R\3),g' /etc/system-release)"
+fi
