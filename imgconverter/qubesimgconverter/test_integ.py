@@ -56,9 +56,9 @@ class TC_00_ImgConverter(qubes.tests.extra.ExtraTestCase):
             self.skipTest('failed to create test image: {}'.format(stdout))
 
     def assertCorrectlyTransformed(self, orig_filename, trusted_filename):
-        self.assertEquals(
+        self.assertEqual(
             self.vm.run('test -r "{}"'.format(trusted_filename), wait=True), 0)
-        self.assertEquals(
+        self.assertEqual(
             self.vm.run('test -r "{}"'.format(orig_filename), wait=True), 0)
         # retrieve original image too, to compensate for compression
         p = self.vm.run('gm convert "{}" rgb:-'.format(orig_filename),
@@ -67,7 +67,7 @@ class TC_00_ImgConverter(qubes.tests.extra.ExtraTestCase):
         p = self.vm.run('gm convert "{}" rgb:-'.format(trusted_filename),
             passio_popen=True)
         trusted_image_data, _ = p.communicate()
-        self.assertEquals(orig_image_data, trusted_image_data)
+        self.assertEqual(orig_image_data, trusted_image_data)
 
     def test_000_png(self):
         self.create_img('test.png')
@@ -76,7 +76,7 @@ class TC_00_ImgConverter(qubes.tests.extra.ExtraTestCase):
         (stdout, _) = p.communicate()
         if p.returncode == 127:
             self.skipTest('qubes-img-converter not installed')
-        self.assertEquals(p.returncode, 0, 'qvm-convert-img failed: {}'.format(
+        self.assertEqual(p.returncode, 0, 'qvm-convert-img failed: {}'.format(
             stdout))
         self.assertCorrectlyTransformed('test.png', 'trusted.png')
 
@@ -88,7 +88,7 @@ class TC_00_ImgConverter(qubes.tests.extra.ExtraTestCase):
         (stdout, _) = p.communicate()
         if p.returncode == 127:
             self.skipTest('qubes-img-converter not installed')
-        self.assertEquals(p.returncode, 0, 'qvm-convert-img failed: {}'.format(
+        self.assertEqual(p.returncode, 0, 'qvm-convert-img failed: {}'.format(
             stdout))
         self.assertCorrectlyTransformed(
             'test with spaces.png', 'trusted with spaces.png')
