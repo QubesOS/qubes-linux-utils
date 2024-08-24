@@ -1,3 +1,13 @@
+qubes-utils (4.3.4) unstable; urgency=medium
+
+  [ Ali Mirjamali ]
+  * Add qubes version to boot menu
+
+  [ Marek Marczykowski-Górecki ]
+  * tests: assertEquals -> assertEqual
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Sat, 24 Aug 2024 02:41:12 +0200
+
 qubes-utils (4.3.3) unstable; urgency=medium
 
   [ Marek Marczykowski-Górecki ]
