@@ -71,7 +71,7 @@ static int setup_loop(int ctrl_fd, uint32_t fd, bool writable, bool autoclear) {
         .fd = fd,
         .block_size = 512, /* FIXME! */
         .info = {
-            .lo_flags = LO_FLAGS_DIRECT_IO | (autoclear ? LO_FLAGS_AUTOCLEAR : 0) | (writable ? 0 : LO_FLAGS_READ_ONLY),
+            .lo_flags = (autoclear ? LO_FLAGS_AUTOCLEAR : 0) | (writable ? 0 : LO_FLAGS_READ_ONLY),
         },
     };
 
