@@ -1,3 +1,10 @@
+qubes-utils (4.3.5) unstable; urgency=medium
+
+  [ Rusty Bird ]
+  * qubes-block: disable direct I/O for now
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Wed, 06 Nov 2024 01:08:19 +0100
+
 qubes-utils (4.3.4) unstable; urgency=medium
 
   [ Ali Mirjamali ]
