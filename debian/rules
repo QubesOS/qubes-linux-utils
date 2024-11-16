@@ -15,6 +15,7 @@ override_dh_auto_build:
 override_dh_auto_install:
 	make install LIBDIR=/usr/lib DEBIANBUILD=1 PYTHON_PREFIX_ARG=--install-layout=deb
 	make install-debian-kernel-support LIBDIR=/usr/lib DEBIANBUILD=1 
+	make install-gptfix SBINDIR=/usr/sbin
 
 override_dh_install:
 	dh_install --fail-missing

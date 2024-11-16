@@ -17,5 +17,6 @@ esac
 
 copy_exec /sbin/sfdisk
 copy_exec /sbin/mkswap
+copy_exec /usr/sbin/gptfix
 force_load xen-blkfront
 force_load dm-snapshot

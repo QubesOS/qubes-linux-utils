@@ -38,6 +38,7 @@ Requires:       e2fsprogs
 BuildRequires:  make
 BuildRequires:  gcc
 BuildRequires:  e2fsprogs-devel
+BuildRequires:  pkgconfig(zlib)
 %if 0%{?is_opensuse}
 # for directory ownership
 BuildRequires: dracut
@@ -54,9 +55,11 @@ initrd is provided by dom0.
 
 %build
 make -C kernel-modules all
+make gptfixer/gpt
 
 %install
 make install-fedora-kernel-support DESTDIR=%{buildroot}
+make install-gptfix SBINDIR=%_sbindir DESTDIR=%{buildroot}
 
 %files
 %dir %{_prefix}/lib/qubes
@@ -65,7 +68,8 @@ make install-fedora-kernel-support DESTDIR=%{buildroot}
 /usr/lib/dracut/modules.d/90qubes-vm-simple
 /usr/lib/dracut/modules.d/80xen-scrub-pages
 /usr/lib/qubes/vm-modules-genfs
-/usr/sbin/qubes-prepare-vm-kernel
+%_sbindir/qubes-prepare-vm-kernel
+%_sbindir/gptfix
 %config(noreplace) /etc/default/grub.qubes-kernel-vm-support
 
 %triggerin -- grub2-tools
