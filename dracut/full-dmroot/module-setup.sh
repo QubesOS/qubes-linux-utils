@@ -18,5 +18,6 @@ install() {
     inst_multiple \
         sfdisk \
         swapon \
-        mkswap
+        mkswap \
+        gptfix
 }

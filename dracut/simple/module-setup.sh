@@ -29,5 +29,6 @@ install() {
         rmdir \
         sleep \
         sfdisk \
-        mkswap
+        mkswap \
+        gptfix
 }

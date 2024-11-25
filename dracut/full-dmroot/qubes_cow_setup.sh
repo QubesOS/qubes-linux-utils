@@ -54,19 +54,32 @@ modprobe xenblk || modprobe xen-blkfront || warn "Qubes: Cannot load Xen Block F
 
 log_begin "Waiting for /dev/xvda* devices..."
 udevadm settle --exit-if-exists=/dev/xvda
-log_end
 
 # prefer partition if exists
-if [ -b /dev/xvda1 ]; then
+if /usr/sbin/gptfix fix /dev/xvda; then
+    udevadm settle --exit-if-exists=/dev/xvda1
     if [ -e "/dev/disk/by-partlabel/Root\\x20filesystem" ]; then
         ROOT_DEV=$(readlink "/dev/disk/by-partlabel/Root\\x20filesystem")
         ROOT_DEV=${ROOT_DEV##*/}
     else
         ROOT_DEV=xvda3
     fi
+    if ! [ -b "/dev/$ROOT_DEV" ]; then udevadm settle "--exit-if-exists=/dev/$ROOT_DEV"; fi
 else
-    ROOT_DEV=xvda
+    status=$?
+    case $status in
+    (1|2) # EIO, ENOMEM, or bug.  Fatal.
+        die 'Fatal error reading partition table';;
+    (4|5|8) # Bad or no partition table
+        ROOT_DEV=xvda;;
+    (*)
+        # TODO: what should be done?
+        # This is things like:
+        # - "Partition table not supported"
+        die 'GPT cannot be fixed';;
+    esac
 fi
+log_end
 
 SWAP_SIZE_GiB=1
 SWAP_SIZE_512B=$(( SWAP_SIZE_GiB * 1024 * 1024 * 2 ))

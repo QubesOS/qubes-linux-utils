@@ -28,22 +28,33 @@ die() {
 
 echo "Waiting for /dev/xvda* devices..."
 while ! [ -e /dev/xvda ]; do sleep 0.1; done
-
-# prefer partition if exists
-if [ -b /dev/xvda1 ]; then
+# Fix up partition tables
+if /usr/sbin/gptfix fix /dev/xvda; then
+    while ! [ -e /dev/xvda1 ]; do sleep 0.01; done
     if [ -d /dev/disk/by-partlabel ]; then
         ROOT_DEV=$(readlink "/dev/disk/by-partlabel/Root\\x20filesystem")
         ROOT_DEV=${ROOT_DEV##*/}
     else
-        ROOT_DEV=$(grep -l "PARTNAME=Root filesystem" /sys/block/xvda/xvda*/uevent |\
+        ROOT_DEV=$(grep -l "PARTNAME=Root filesystem" /sys/block/xvda/xvda*/uevent |
             grep -o "xvda[0-9]")
     fi
     if [ -z "$ROOT_DEV" ]; then
         # fallback to third partition
         ROOT_DEV=xvda3
     fi
+    while ! [ -b "/dev/$ROOT_DEV" ]; do sleep 0.01; done
 else
-    ROOT_DEV=xvda
+    case $? in
+    (1|2) # EIO, ENOMEM, or bug.  Fatal.
+        die 'Fatal error reading partition table';;
+    (4|5|8) # Bad or no partition table
+        ROOT_DEV=xvda;;
+    (*)
+        # TODO: what should be done?
+        # - "Partition table not supported"
+        # - "Disk truncated"
+        die 'GPT cannot be fixed or disk truncated';;
+    esac
 fi
 
 SWAP_SIZE_GiB=1
