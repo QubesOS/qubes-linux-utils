@@ -1,0 +1,195 @@
+Checking that no-one is using this disk right now ... OK
+
+Disk dummy.img: 20 GiB, 21474836480 bytes, 41943040 sectors
+Units: sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+
+>>> Script header accepted.
+>>> Script header accepted.
+>>> Script header accepted.
+>>> Script header accepted.
+>>> Script header accepted.
+>>> Script header accepted.
+>>> Script header accepted.
+>>> Script header accepted.
+>>> Created a new GPT disklabel (GUID: F4796A2A-E377-45BD-B539-D6D49E569055).
+The maximal number of partitions is 33 (default is 128).
+dummy.img1: Created a new partition 1 of type 'EFI System' and of size 200 MiB.
+dummy.img2: Created a new partition 2 of type 'BIOS boot' and of size 2 MiB.
+dummy.img3: Created a new partition 3 of type 'Linux filesystem' and of size 2 MiB.
+dummy.img4: Created a new partition 4 of type 'Linux filesystem' and of size 2 MiB.
+dummy.img5: Created a new partition 5 of type 'unknown' and of size 4 KiB.
+dummy.img6: Created a new partition 6 of type 'unknown' and of size 4 KiB.
+dummy.img7: Created a new partition 7 of type 'unknown' and of size 4 KiB.
+dummy.img8: Created a new partition 8 of type 'unknown' and of size 4 KiB.
+dummy.img9: Created a new partition 9 of type 'unknown' and of size 4 KiB.
+dummy.img10: Created a new partition 10 of type 'unknown' and of size 4 KiB.
+dummy.img11: Created a new partition 11 of type 'unknown' and of size 4 KiB.
+dummy.img12: Created a new partition 12 of type 'unknown' and of size 4 KiB.
+dummy.img13: Created a new partition 13 of type 'unknown' and of size 4 KiB.
+dummy.img14: Created a new partition 14 of type 'unknown' and of size 4 KiB.
+dummy.img15: Created a new partition 15 of type 'unknown' and of size 4 KiB.
+dummy.img16: Created a new partition 16 of type 'unknown' and of size 4 KiB.
+dummy.img17: Created a new partition 17 of type 'unknown' and of size 4 KiB.
+dummy.img18: Created a new partition 18 of type 'unknown' and of size 4 KiB.
+dummy.img19: Created a new partition 19 of type 'unknown' and of size 4 KiB.
+dummy.img20: Created a new partition 20 of type 'unknown' and of size 4 KiB.
+dummy.img21: Created a new partition 21 of type 'unknown' and of size 4 KiB.
+dummy.img22: Created a new partition 22 of type 'unknown' and of size 4 KiB.
+dummy.img23: Created a new partition 23 of type 'unknown' and of size 4 KiB.
+dummy.img24: Created a new partition 24 of type 'unknown' and of size 4 KiB.
+dummy.img25: Created a new partition 25 of type 'unknown' and of size 4 KiB.
+dummy.img26: Created a new partition 26 of type 'unknown' and of size 4 KiB.
+dummy.img27: Created a new partition 27 of type 'unknown' and of size 4 KiB.
+dummy.img28: Created a new partition 28 of type 'unknown' and of size 4 KiB.
+dummy.img29: Created a new partition 29 of type 'unknown' and of size 4 KiB.
+dummy.img30: Created a new partition 30 of type 'unknown' and of size 4 KiB.
+dummy.img31: Created a new partition 31 of type 'unknown' and of size 4 KiB.
+dummy.img32: Created a new partition 32 of type 'unknown' and of size 4 KiB.
+dummy.img33: Created a new partition 33 of type 'Linux filesystem' and of size 19.8 GiB.
+All partitions used.
+
+New situation:
+Disklabel type: gpt
+Disk identifier: F4796A2A-E377-45BD-B539-D6D49E569055
+
+Device       Start      End  Sectors  Size Type
+dummy.img1      32   409623   409592  200M EFI System
+dummy.img2  411648   415743     4096    2M BIOS boot
+dummy.img3  415744   419839     4096    2M Linux filesystem
+dummy.img4  419840   423935     4096    2M Linux filesystem
+dummy.img5  423944   423951        8    4K unknown
+dummy.img6  423952   423959        8    4K unknown
+dummy.img7  423960   423967        8    4K unknown
+dummy.img8  423968   423975        8    4K unknown
+dummy.img9  423976   423983        8    4K unknown
+dummy.img10 423984   423991        8    4K unknown
+dummy.img11 423992   423999        8    4K unknown
+dummy.img12 424000   424007        8    4K unknown
+dummy.img13 424008   424015        8    4K unknown
+dummy.img14 424016   424023        8    4K unknown
+dummy.img15 424024   424031        8    4K unknown
+dummy.img16 424032   424039        8    4K unknown
+dummy.img17 424040   424047        8    4K unknown
+dummy.img18 424048   424055        8    4K unknown
+dummy.img19 424056   424063        8    4K unknown
+dummy.img20 424064   424071        8    4K unknown
+dummy.img21 424072   424079        8    4K unknown
+dummy.img22 424080   424087        8    4K unknown
+dummy.img23 424088   424095        8    4K unknown
+dummy.img24 424096   424103        8    4K unknown
+dummy.img25 424104   424111        8    4K unknown
+dummy.img26 424112   424119        8    4K unknown
+dummy.img27 424120   424127        8    4K unknown
+dummy.img28 424128   424135        8    4K unknown
+dummy.img29 424136   424143        8    4K unknown
+dummy.img30 424144   424151        8    4K unknown
+dummy.img31 424152   424159        8    4K unknown
+dummy.img32 424160   424167        8    4K unknown
+dummy.img33 424168 41943015 41518848 19.8G Linux filesystem
+
+The partition table has been altered.
+Syncing disks.
+Dumping broken partition table
+label: dos
+label-id: 0x00000000
+device: /dev/loop0
+unit: sectors
+sector-size: 4096
+
+/dev/loop0p1 : start=           1, size=     5242879, type=ee
+Dumping fixed partition table
+label: gpt
+label-id: F4796A2A-E377-45BD-B539-D6D49E569055
+device: /dev/loop0
+unit: sectors
+first-lba: 4
+last-lba: 5242876
+table-length: 33
+sector-size: 4096
+
+/dev/loop0p1 : start=           4, size=       51199, type=C12A7328-F81F-11D2-BA4B-00A0C93EC93B, uuid=FA4D6529-56DA-47C7-AE88-E2DFECB72621, name="EFI System"
+/dev/loop0p2 : start=       51456, size=         512, type=21686148-6449-6E6F-744E-656564454649, uuid=1E6C9DB4-1E91-46C4-846A-2030DCB13B8C, name="BIOS boot partition"
+/dev/loop0p3 : start=       51968, size=         512, type=0FC63DAF-8483-4772-8E79-3D69D8477DE4, uuid=5DCECC9F-71B8-4357-8039-1BEBB7A48653, name="/home"
+/dev/loop0p4 : start=       52480, size=         512, type=0FC63DAF-8483-4772-8E79-3D69D8477DE4, uuid=3EA4A03F-ACCF-4EDF-99EC-8E5F2B382459, name="/usr"
+/dev/loop0p5 : start=      423944, size=           8, type=00000000-0000-0000-0000-000000000000, uuid=00000000-0000-0000-0000-000000000000
+/dev/loop0p6 : start=      423952, size=           8, type=00000000-0000-0000-0000-000000000000, uuid=00000000-0000-0000-0000-000000000000
+/dev/loop0p7 : start=      423960, size=           8, type=00000000-0000-0000-0000-000000000000, uuid=00000000-0000-0000-0000-000000000000
+/dev/loop0p8 : start=      423968, size=           8, type=00000000-0000-0000-0000-000000000000, uuid=00000000-0000-0000-0000-000000000000
+/dev/loop0p9 : start=      423976, size=           8, type=00000000-0000-0000-0000-000000000000, uuid=00000000-0000-0000-0000-000000000000
+/dev/loop0p10 : start=      423984, size=           8, type=00000000-0000-0000-0000-000000000000, uuid=00000000-0000-0000-0000-000000000000
+/dev/loop0p11 : start=      423992, size=           8, type=00000000-0000-0000-0000-000000000000, uuid=00000000-0000-0000-0000-000000000000
+/dev/loop0p12 : start=      424000, size=           8, type=00000000-0000-0000-0000-000000000000, uuid=00000000-0000-0000-0000-000000000000
+/dev/loop0p13 : start=      424008, size=           8, type=00000000-0000-0000-0000-000000000000, uuid=00000000-0000-0000-0000-000000000000
+/dev/loop0p14 : start=      424016, size=           8, type=00000000-0000-0000-0000-000000000000, uuid=00000000-0000-0000-0000-000000000000
+/dev/loop0p15 : start=      424024, size=           8, type=00000000-0000-0000-0000-000000000000, uuid=00000000-0000-0000-0000-000000000000
+/dev/loop0p16 : start=      424032, size=           8, type=00000000-0000-0000-0000-000000000000, uuid=00000000-0000-0000-0000-000000000000
+/dev/loop0p17 : start=      424040, size=           8, type=00000000-0000-0000-0000-000000000000, uuid=00000000-0000-0000-0000-000000000000
+/dev/loop0p18 : start=      424048, size=           8, type=00000000-0000-0000-0000-000000000000, uuid=00000000-0000-0000-0000-000000000000
+/dev/loop0p19 : start=      424056, size=           8, type=00000000-0000-0000-0000-000000000000, uuid=00000000-0000-0000-0000-000000000000
+/dev/loop0p20 : start=      424064, size=           8, type=00000000-0000-0000-0000-000000000000, uuid=00000000-0000-0000-0000-000000000000
+/dev/loop0p21 : start=      424072, size=           8, type=00000000-0000-0000-0000-000000000000, uuid=00000000-0000-0000-0000-000000000000
+/dev/loop0p22 : start=      424080, size=           8, type=00000000-0000-0000-0000-000000000000, uuid=00000000-0000-0000-0000-000000000000
+/dev/loop0p23 : start=      424088, size=           8, type=00000000-0000-0000-0000-000000000000, uuid=00000000-0000-0000-0000-000000000000
+/dev/loop0p24 : start=      424096, size=           8, type=00000000-0000-0000-0000-000000000000, uuid=00000000-0000-0000-0000-000000000000
+/dev/loop0p25 : start=      424104, size=           8, type=00000000-0000-0000-0000-000000000000, uuid=00000000-0000-0000-0000-000000000000
+/dev/loop0p26 : start=      424112, size=           8, type=00000000-0000-0000-0000-000000000000, uuid=00000000-0000-0000-0000-000000000000
+/dev/loop0p27 : start=      424120, size=           8, type=00000000-0000-0000-0000-000000000000, uuid=00000000-0000-0000-0000-000000000000
+/dev/loop0p28 : start=      424128, size=           8, type=00000000-0000-0000-0000-000000000000, uuid=00000000-0000-0000-0000-000000000000
+/dev/loop0p29 : start=      424136, size=           8, type=00000000-0000-0000-0000-000000000000, uuid=00000000-0000-0000-0000-000000000000
+/dev/loop0p30 : start=      424144, size=           8, type=00000000-0000-0000-0000-000000000000, uuid=00000000-0000-0000-0000-000000000000
+/dev/loop0p31 : start=      424152, size=           8, type=00000000-0000-0000-0000-000000000000, uuid=00000000-0000-0000-0000-000000000000
+/dev/loop0p32 : start=      424160, size=           8, type=00000000-0000-0000-0000-000000000000, uuid=00000000-0000-0000-0000-000000000000
+/dev/loop0p33 : start=       53021, size=     5189856, type=0FC63DAF-8483-4772-8E79-3D69D8477DE4, uuid=693244E6-3E07-47BF-AD79-ACADE4293FE7, name="Root filesystem"
+Dumping broken partition table
+label: dos
+label-id: 0x00000000
+device: /dev/loop0
+unit: sectors
+sector-size: 512
+
+/dev/loop0p1 : start=           1, size=    41943039, type=ee
+Dumping fixed partition table
+label: gpt
+label-id: F4796A2A-E377-45BD-B539-D6D49E569055
+device: /dev/loop0
+unit: sectors
+first-lba: 32
+last-lba: 41943015
+table-length: 33
+sector-size: 512
+
+/dev/loop0p1 : start=          32, size=      409592, type=C12A7328-F81F-11D2-BA4B-00A0C93EC93B, uuid=FA4D6529-56DA-47C7-AE88-E2DFECB72621, name="EFI System"
+/dev/loop0p2 : start=      411648, size=        4096, type=21686148-6449-6E6F-744E-656564454649, uuid=1E6C9DB4-1E91-46C4-846A-2030DCB13B8C, name="BIOS boot partition"
+/dev/loop0p3 : start=      415744, size=        4096, type=0FC63DAF-8483-4772-8E79-3D69D8477DE4, uuid=5DCECC9F-71B8-4357-8039-1BEBB7A48653, name="/home"
+/dev/loop0p4 : start=      419840, size=        4096, type=0FC63DAF-8483-4772-8E79-3D69D8477DE4, uuid=3EA4A03F-ACCF-4EDF-99EC-8E5F2B382459, name="/usr"
+/dev/loop0p5 : start=      423944, size=           8, type=00000000-0000-0000-0000-000000000000, uuid=00000000-0000-0000-0000-000000000000
+/dev/loop0p6 : start=      423952, size=           8, type=00000000-0000-0000-0000-000000000000, uuid=00000000-0000-0000-0000-000000000000
+/dev/loop0p7 : start=      423960, size=           8, type=00000000-0000-0000-0000-000000000000, uuid=00000000-0000-0000-0000-000000000000
+/dev/loop0p8 : start=      423968, size=           8, type=00000000-0000-0000-0000-000000000000, uuid=00000000-0000-0000-0000-000000000000
+/dev/loop0p9 : start=      423976, size=           8, type=00000000-0000-0000-0000-000000000000, uuid=00000000-0000-0000-0000-000000000000
+/dev/loop0p10 : start=      423984, size=           8, type=00000000-0000-0000-0000-000000000000, uuid=00000000-0000-0000-0000-000000000000
+/dev/loop0p11 : start=      423992, size=           8, type=00000000-0000-0000-0000-000000000000, uuid=00000000-0000-0000-0000-000000000000
+/dev/loop0p12 : start=      424000, size=           8, type=00000000-0000-0000-0000-000000000000, uuid=00000000-0000-0000-0000-000000000000
+/dev/loop0p13 : start=      424008, size=           8, type=00000000-0000-0000-0000-000000000000, uuid=00000000-0000-0000-0000-000000000000
+/dev/loop0p14 : start=      424016, size=           8, type=00000000-0000-0000-0000-000000000000, uuid=00000000-0000-0000-0000-000000000000
+/dev/loop0p15 : start=      424024, size=           8, type=00000000-0000-0000-0000-000000000000, uuid=00000000-0000-0000-0000-000000000000
+/dev/loop0p16 : start=      424032, size=           8, type=00000000-0000-0000-0000-000000000000, uuid=00000000-0000-0000-0000-000000000000
+/dev/loop0p17 : start=      424040, size=           8, type=00000000-0000-0000-0000-000000000000, uuid=00000000-0000-0000-0000-000000000000
+/dev/loop0p18 : start=      424048, size=           8, type=00000000-0000-0000-0000-000000000000, uuid=00000000-0000-0000-0000-000000000000
+/dev/loop0p19 : start=      424056, size=           8, type=00000000-0000-0000-0000-000000000000, uuid=00000000-0000-0000-0000-000000000000
+/dev/loop0p20 : start=      424064, size=           8, type=00000000-0000-0000-0000-000000000000, uuid=00000000-0000-0000-0000-000000000000
+/dev/loop0p21 : start=      424072, size=           8, type=00000000-0000-0000-0000-000000000000, uuid=00000000-0000-0000-0000-000000000000
+/dev/loop0p22 : start=      424080, size=           8, type=00000000-0000-0000-0000-000000000000, uuid=00000000-0000-0000-0000-000000000000
+/dev/loop0p23 : start=      424088, size=           8, type=00000000-0000-0000-0000-000000000000, uuid=00000000-0000-0000-0000-000000000000
+/dev/loop0p24 : start=      424096, size=           8, type=00000000-0000-0000-0000-000000000000, uuid=00000000-0000-0000-0000-000000000000
+/dev/loop0p25 : start=      424104, size=           8, type=00000000-0000-0000-0000-000000000000, uuid=00000000-0000-0000-0000-000000000000
+/dev/loop0p26 : start=      424112, size=           8, type=00000000-0000-0000-0000-000000000000, uuid=00000000-0000-0000-0000-000000000000
+/dev/loop0p27 : start=      424120, size=           8, type=00000000-0000-0000-0000-000000000000, uuid=00000000-0000-0000-0000-000000000000
+/dev/loop0p28 : start=      424128, size=           8, type=00000000-0000-0000-0000-000000000000, uuid=00000000-0000-0000-0000-000000000000
+/dev/loop0p29 : start=      424136, size=           8, type=00000000-0000-0000-0000-000000000000, uuid=00000000-0000-0000-0000-000000000000
+/dev/loop0p30 : start=      424144, size=           8, type=00000000-0000-0000-0000-000000000000, uuid=00000000-0000-0000-0000-000000000000
+/dev/loop0p31 : start=      424152, size=           8, type=00000000-0000-0000-0000-000000000000, uuid=00000000-0000-0000-0000-000000000000
+/dev/loop0p32 : start=      424160, size=           8, type=00000000-0000-0000-0000-000000000000, uuid=00000000-0000-0000-0000-000000000000
+/dev/loop0p33 : start=      424168, size=    41518848, type=0FC63DAF-8483-4772-8E79-3D69D8477DE4, uuid=693244E6-3E07-47BF-AD79-ACADE4293FE7, name="Root filesystem"

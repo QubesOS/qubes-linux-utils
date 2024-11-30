@@ -1,6 +1,7 @@
 checks:tests:
   after_script:
   - (cd qrexec-lib; gcov *.c || :)
+  - (cd gptfixer; gcov *.c || :)
   - ./ci/codecov-wrapper --gcov
   before_script:
   - sudo dnf install -y python3-pip 'pkgconfig(icu-uc)' sequoia-sqv
@@ -11,6 +12,7 @@ checks:tests:
   - python3 -m coverage run -m unittest discover -v imgconverter -p test.py
   - export CFLAGS="--coverage -DCOVERAGE" LDFLAGS=--coverage
   - make -C qrexec-lib check NO_REBUILD_TABLE=1
+  - gptfixer/test.sh
   stage: checks
   tags:
   - docker

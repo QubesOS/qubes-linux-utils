@@ -1,0 +1,27 @@
++ truncate -s 0 dummy.img
++ truncate -s 20GiB dummy.img
++ sfdisk --force dummy.img
++ chk 4096
+++ sudo losetup --nooverlap --find --sector-size 4096 --show -- dummy.img
++ loopdev=/dev/loop0
++ [[ /dev/loop0 != \/\d\e\v\/\l\o\o\p\0 ]]
++ echo Dumping broken partition table
++ sudo sfdisk --label=gpt --dump -- /dev/loop0
+GPT PMBR size mismatch (41943039 != 5242879) will be corrected by write.
++ sudo ./gpt fix /dev/loop0
+gpt: Found GPT with different sector size, altering
++ echo Dumping fixed partition table
++ sudo sfdisk --label=gpt --dump -- /dev/loop0
++ sudo losetup -d /dev/loop0
++ chk 512
+++ sudo losetup --nooverlap --find --sector-size 512 --show -- dummy.img
++ loopdev=/dev/loop0
++ [[ /dev/loop0 != \/\d\e\v\/\l\o\o\p\0 ]]
++ echo Dumping broken partition table
++ sudo sfdisk --label=gpt --dump -- /dev/loop0
+GPT PMBR size mismatch (5242879 != 41943039) will be corrected by write.
++ sudo ./gpt fix /dev/loop0
+gpt: Found GPT with different sector size, altering
++ echo Dumping fixed partition table
++ sudo sfdisk --label=gpt --dump -- /dev/loop0
++ sudo losetup -d /dev/loop0
