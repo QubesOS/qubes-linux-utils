@@ -1,3 +1,12 @@
+qubes-utils (4.3.6) unstable; urgency=medium
+
+  [ Demi Marie Obenour ]
+  * Add tool to adjust partition tables when sector size changes
+  * Fix up the GPT in the initramfs
+  * Add test case
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Sun, 08 Dec 2024 05:39:16 +0100
+
 qubes-utils (4.3.5) unstable; urgency=medium
 
   [ Rusty Bird ]
