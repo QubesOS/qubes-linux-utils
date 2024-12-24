@@ -72,6 +72,9 @@ License: GPLv2+
 SELinux policy for meminfo-writer.  You need this package to run meminfo-writer
 on a system where SELinux is in enforcing mode.
 
+%pre selinux
+%selinux_relabel_pre
+
 %post selinux
 %selinux_modules_install %{_datadir}/selinux/packages/qubes-meminfo-writer.pp || :
 
