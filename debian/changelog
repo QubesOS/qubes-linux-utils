@@ -1,3 +1,13 @@
+qubes-utils (4.3.7) unstable; urgency=medium
+
+  [ Marek Marczykowski-Górecki ]
+  * rpm: adjust SELinux snippets for relabeling
+
+  [ Demi Marie Obenour ]
+  * Ensure that qubesdb SELinux labels are correct on Fedora 41
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Wed, 25 Dec 2024 05:11:06 +0100
+
 qubes-utils (4.3.6) unstable; urgency=medium
 
   [ Demi Marie Obenour ]
