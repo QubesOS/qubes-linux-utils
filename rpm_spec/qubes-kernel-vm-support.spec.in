@@ -56,7 +56,7 @@ initrd is provided by dom0.
 make -C kernel-modules all
 
 %install
-make install-fedora-kernel-support DESTDIR=%{buildroot}
+make install-fedora-kernel-support DESTDIR=%{buildroot} SBINDIR=%{_sbindir}
 
 %files
 %dir %{_prefix}/lib/qubes
