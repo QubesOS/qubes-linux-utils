@@ -5,6 +5,7 @@ CFLAGS += $(shell pkg-config --cflags ext2fs com_err) \
     -fno-delete-null-pointer-checks -fno-strict-aliasing -Wall -Wextra \
     -Werror=format-security -pedantic-errors -Wformat=2 -Wmaybe-uninitialized \
     -Wshadow -g3
+SBINDIR ?= /usr/sbin
 
 all: genfs
 
@@ -14,8 +15,8 @@ genfs: genfs.c
 install: install-scripts install-genfs
 
 install-scripts:
-	install -d $(DESTDIR)/usr/sbin
-	install qubes-prepare-vm-kernel $(DESTDIR)/usr/sbin
+	install -d $(DESTDIR)$(SBINDIR)
+	install qubes-prepare-vm-kernel $(DESTDIR)$(SBINDIR)
 
 install-genfs:
 	install -d $(DESTDIR)/usr/lib/qubes

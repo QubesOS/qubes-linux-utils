@@ -58,7 +58,7 @@ make -C kernel-modules all
 make gptfixer/gpt
 
 %install
-make install-fedora-kernel-support DESTDIR=%{buildroot}
+make install-fedora-kernel-support DESTDIR=%{buildroot} SBINDIR=%{_sbindir}
 make install-gptfix SBINDIR=%_sbindir DESTDIR=%{buildroot}
 
 %files

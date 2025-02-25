@@ -104,7 +104,7 @@ make -C qrexec-lib check-table-up-to-date NO_REBUILD_TABLE=1
 %endif
 
 %install
-make install install-selinux DESTDIR=%{buildroot} PYTHON=%{__python3} NO_REBUILD_TABLE=1
+make install install-selinux DESTDIR=%{buildroot} PYTHON=%{__python3} NO_REBUILD_TABLE=1 SBINDIR=%{_sbindir}
 
 %post
 # dom0
