@@ -18,7 +18,7 @@ $(pure_objs): CFLAGS += -fvisibility=hidden -DQUBES_PURE_IMPLEMENTATION
 ifeq ($(CHECK_UNREACHABLE),1)
 $(pure_objs): CFLAGS += -DCHECK_UNREACHABLE
 endif
-validator-test: CFLAGS += -UNDEBUG
+validator-test: CFLAGS += -UNDEBUG -std=gnu17
 check: validator-test
 	LD_LIBRARY_PATH=. ./validator-test
 
