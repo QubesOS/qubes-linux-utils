@@ -90,7 +90,6 @@ dummy.img32 424160   424167        8    4K unknown
 dummy.img33 424168 41943015 41518848 19.8G Linux filesystem
 
 The partition table has been altered.
-Syncing disks.
 Dumping broken partition table
 label: dos
 label-id: 0x00000000

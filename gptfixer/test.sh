@@ -20,7 +20,7 @@ go () (
     set -x
     truncate -s 0 dummy.img
     truncate -s 20GiB dummy.img
-    sfdisk --force dummy.img < layout
+    sfdisk --force dummy.img < layout | grep -v "^Syncing disks"
     chk 4096
     chk 512
 )

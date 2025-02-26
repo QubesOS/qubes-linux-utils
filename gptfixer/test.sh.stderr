@@ -1,6 +1,7 @@
 + truncate -s 0 dummy.img
 + truncate -s 20GiB dummy.img
 + sfdisk --force dummy.img
++ grep -v '^Syncing disks'
 + chk 4096
 ++ sudo losetup --nooverlap --find --sector-size 4096 --show -- dummy.img
 + loopdev=/dev/loop0
