@@ -1,3 +1,12 @@
+qubes-utils (4.3.8) unstable; urgency=medium
+
+  * Force C17 standard in qrexec-lib/validator-test.c
+  * Fix installing files with unified sbin
+  * ci: switch to R4.3
+  * gptfixer test: ignore irrelevant message from sfdisk
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Wed, 26 Feb 2025 22:51:46 +0100
+
 qubes-utils (4.3.7) unstable; urgency=medium
 
   [ Marek Marczykowski-Górecki ]
