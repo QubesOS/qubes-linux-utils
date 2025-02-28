@@ -1,6 +1,8 @@
 #!/bin/sh
 echo "Qubes initramfs script here:"
 
+PATH=/sbin:/bin
+
 mkdir -p /proc /sys /dev
 mount -t proc proc /proc
 mount -t sysfs sysfs /sys
@@ -100,10 +102,15 @@ EOF
     echo Qubes: done.
 fi
 
-/sbin/modprobe ext4
+rootfs_type=$(blkid --output value --match-tag TYPE /dev/mapper/dmroot)
+/sbin/modprobe "$rootfs_type"
 
 mkdir -p /sysroot
-mount /dev/mapper/dmroot /sysroot -o rw
+if [ "$rootfs_type" = "btrfs" ]; then
+    mount /dev/mapper/dmroot /sysroot -o rw,subvol=root
+else
+    mount /dev/mapper/dmroot /sysroot -o rw
+fi
 NEWROOT=/sysroot
 
 kver="`uname -r`"
@@ -112,7 +119,7 @@ if ! [ -d "$NEWROOT/lib/modules/$kver/kernel" ]; then
     while ! [ -e /dev/xvdd ]; do sleep 0.1; done
 
     mkdir -p /tmp/modules
-    mount -n -t ext3 /dev/xvdd /tmp/modules
+    mount -r -n -t ext3 /dev/xvdd /tmp/modules
     if /sbin/modprobe overlay; then
         # if overlayfs is supported, use that to provide fully writable /lib/modules
         if ! [ -d "$NEWROOT/lib/.modules_work" ]; then
