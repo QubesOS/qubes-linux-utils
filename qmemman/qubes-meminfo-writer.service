@@ -5,7 +5,7 @@ Before=systemd-user-sessions.service
 
 [Service]
 Type=forking
-ExecStart=/usr/sbin/meminfo-writer 30000 100000 /run/meminfo-writer.pid
+ExecStart=/usr/bin/meminfo-writer 30000 100000 /run/meminfo-writer.pid
 PIDFile=/run/meminfo-writer.pid
 
 [Install]

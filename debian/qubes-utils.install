@@ -1,4 +1,4 @@
-usr/sbin/meminfo-writer
+usr/bin/meminfo-writer
 lib/systemd/system/qubes-meminfo-writer.service
 usr/lib/qubes/*
 usr/lib/udev/*

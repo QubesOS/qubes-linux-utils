@@ -6,7 +6,7 @@ ConditionPathExists=/run/qubes/qmemman.sock
 
 [Service]
 Type=simple
-ExecStart=/usr/sbin/meminfo-writer 30000 100000
+ExecStart=/usr/bin/meminfo-writer 30000 100000
 RemainAfterExit=yes
 
 [Install]
