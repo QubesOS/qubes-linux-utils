@@ -1,3 +1,9 @@
+qubes-utils (4.3.9) unstable; urgency=medium
+
+  * Move meminfo-writer to /usr/bin
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Mon, 03 Mar 2025 05:07:15 +0100
+
 qubes-utils (4.3.8) unstable; urgency=medium
 
   * Force C17 standard in qrexec-lib/validator-test.c
