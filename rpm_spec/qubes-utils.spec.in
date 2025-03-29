@@ -14,7 +14,11 @@ Requires:	GraphicsMagick
 Requires:	python%{python3_pkgversion}-qubesimgconverter
 Requires:	(%{name}-selinux if selinux-policy)
 %{?systemd_requires}
+%if 0%{?is_opensuse}
+BuildRequires:  (systemd or systemd-mini)
+%else
 BuildRequires:  systemd
+%endif
 BuildRequires:  python%{python3_pkgversion}-setuptools
 BuildRequires:  python3-rpm-macros
 # for meminfo-writer
