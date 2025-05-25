@@ -22,7 +22,7 @@ $end"
   if [[ ! -s /etc/default/grub ]]; then
     echo >> /etc/default/grub
   fi
-  sed -Ei 's/^(HOOKS=[("])base/\1lvm2 qubes base/' /etc/mkinitcpio.conf
+  sed -Ei '/^HOOKS=/ s/(block)/\1 lvm2 qubes/' /etc/mkinitcpio.conf
   echo 'Adding qubes required hooks to /etc/default/grub'
   sed -Ei "/^$begin\$/,/^$end\$/{
 \$c$combined
@@ -41,7 +41,7 @@ post_upgrade () {
 post_remove () {
   local begin='### BEGIN QUBES HOOKS ###' end='### END QUBES HOOKS ###'
   echo 'Removing qubes required hooks from mkinitcpio.conf'
-  sed -Ei 's/^(HOOKS=[("])lvm2 qubes base/\1base/' /etc/mkinitcpio.conf
+  sed -Ei '/^HOOKS=/ s/(block) lvm2 qubes/\1/' /etc/mkinitcpio.conf
   echo 'Removing qubes required hooks from /etc/default/grub'
   sed -Ei "/^$begin\$/,/^$end\$/d" /etc/default/grub
   grub-mkconfig -o /boot/grub/grub.cfg
