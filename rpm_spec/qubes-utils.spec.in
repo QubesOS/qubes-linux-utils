@@ -14,7 +14,11 @@ Requires:	GraphicsMagick
 Requires:	python%{python3_pkgversion}-qubesimgconverter
 Requires:	(%{name}-selinux if selinux-policy)
 %{?systemd_requires}
+%if 0%{?is_opensuse}
+BuildRequires:  (systemd or systemd-mini)
+%else
 BuildRequires:  systemd
+%endif
 BuildRequires:  python%{python3_pkgversion}-setuptools
 BuildRequires:  python3-rpm-macros
 # for meminfo-writer
@@ -144,7 +148,7 @@ rm -rf $RPM_BUILD_ROOT
 %{python3_sitelib}/qubesimgconverter/imggen.py
 %{python3_sitelib}/qubesimgconverter/test.py
 %{python3_sitelib}/qubesimgconverter/test_integ.py
-%{python3_sitelib}/qubesimgconverter-%{version}-py?.[0-9]*.egg-info
+%{python3_sitelib}/qubesimgconverter-*.egg-info
 %{python3_sitelib}/qubesimgconverter/__pycache__
 
 %files libs
