@@ -61,6 +61,7 @@ package_qubes-vm-kernel-support() {
     install -m 611 "${srcdir}/${_pkgnvr}/archlinux/PKGBUILD-initcpio-install.sh" "${pkgdir}/usr/lib/initcpio/install/qubes"
     install -m 611 "${srcdir}/${_pkgnvr}/archlinux/PKGBUILD-initcpio-hook.sh" "${pkgdir}/usr/lib/initcpio/hooks/qubes"
     install -m 755 "${srcdir}/${_pkgnvr}/dracut/full-dmroot/qubes_cow_setup.sh" "${pkgdir}/usr/lib/qubes/qubes_cow_setup.sh"
+    install -m 755 "${srcdir}/${_pkgnvr}/dracut/xen-balloon-scrub-pages/scrub_pages.sh" "${pkgdir}/usr/lib/qubes/scrub_pages.sh"
     install -m 0644 "${srcdir}/${_pkgnvr}/grub/grub.qubes-kernel-vm-support" "${pkgdir}/etc/default/grub.qubes-kernel-vm-support"
     make install-gptfix SBINDIR=/usr/bin "DESTDIR=$pkgdir"
 }
