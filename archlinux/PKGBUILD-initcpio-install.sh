@@ -10,6 +10,10 @@ build() {
   add_binary "/usr/bin/gptfix"
   add_binary "/usr/lib/qubes/scrub_pages.sh"
   add_binary "/usr/lib/qubes/qubes_cow_setup.sh"
+
+  map add_module \
+    'dm-mod' \
+    'dm-snapshot'
   
   add_runscript
 
