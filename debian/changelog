@@ -1,3 +1,17 @@
+qubes-utils (4.3.10) unstable; urgency=medium
+
+  [ Saswat Padhi ]
+  * Add gptfix and swapon to Arch Linux initramfs
+  * Fix the order of mkinitcpio hooks
+
+  [ Marek Marczykowski-Górecki ]
+  * rpm: allow BR: systemd-mini on openSUSE
+  * rpm: relax regex in %files
+  * archlinux: include scrub_pages initrd hook
+  * archlinux/initcpio: add required modules directly
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Fri, 30 May 2025 04:41:46 +0200
+
 qubes-utils (4.3.9) unstable; urgency=medium
 
   * Move meminfo-writer to /usr/bin
