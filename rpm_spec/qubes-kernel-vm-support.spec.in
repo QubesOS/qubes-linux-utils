@@ -65,7 +65,7 @@ make install-fedora-kernel-support DESTDIR=%{buildroot} SBINDIR=%{_sbindir}
 /usr/lib/dracut/modules.d/90qubes-vm-simple
 /usr/lib/dracut/modules.d/80xen-scrub-pages
 /usr/lib/qubes/vm-modules-genfs
-/usr/sbin/qubes-prepare-vm-kernel
+%_sbindir/qubes-prepare-vm-kernel
 %config(noreplace) /etc/default/grub.qubes-kernel-vm-support
 
 %triggerin -- grub2-tools
