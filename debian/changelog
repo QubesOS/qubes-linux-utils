@@ -1,3 +1,13 @@
+qubes-utils (4.2.20) unstable; urgency=medium
+
+  * Force C17 standard in qrexec-lib/validator-test.c
+  * Fix installing files with unified sbin
+  * Move meminfo-writer to /usr/bin
+  * ci: drop R4.1
+  * rpm: use %_sbindir macro consistently
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Fri, 06 Jun 2025 02:09:27 +0200
+
 qubes-utils (4.2.19) unstable; urgency=medium
 
   [ Marek Marczykowski-Górecki ]
