@@ -114,13 +114,13 @@ get_from_stream(), get_from_vm(), get_xdg_icon_from_vm(), get_through_dvm()'''
 
         # use a 1D image representation since we only process a single pixel at a time
         pixels = self._size[0] * self._size[1]
-        x = numpy.fromstring(self._rgba, 'B').reshape(pixels, 4)
+        x = numpy.frombuffer(self._rgba, dtype=numpy.uint8).reshape(pixels, 4)
         r = x[:, 0]
         g = x[:, 1]
         b = x[:, 2]
         a = x[:, 3]
-        M = numpy.maximum(numpy.maximum(r, g), b).astype('u4')
-        m = numpy.minimum(numpy.minimum(r, g), b).astype('u4')
+        M = numpy.maximum(numpy.maximum(r, g), b).astype(numpy.uint32)
+        m = numpy.minimum(numpy.minimum(r, g), b).astype(numpy.uint32)
 
         # Tn/Td is how much chroma range is reserved for the tint color
         # 0 -> greyscale image becomes greyscale image
@@ -150,9 +150,9 @@ get_from_stream(), get_from_vm(), get_xdg_icon_from_vm(), get_through_dvm()'''
         c2_m2d = c2 * m2d
 
         # float vt = m2 + tvn * c2
-        rt = ((m2_c2d_tdn + trn * c2_m2d) // m2d_c2d_tdn).astype('B')
-        gt = ((m2_c2d_tdn + tgn * c2_m2d) // m2d_c2d_tdn).astype('B')
-        bt = ((m2_c2d_tdn + tbn * c2_m2d) // m2d_c2d_tdn).astype('B')
+        rt = ((m2_c2d_tdn + trn * c2_m2d) // m2d_c2d_tdn).astype(numpy.uint8)
+        gt = ((m2_c2d_tdn + tgn * c2_m2d) // m2d_c2d_tdn).astype(numpy.uint8)
+        bt = ((m2_c2d_tdn + tbn * c2_m2d) // m2d_c2d_tdn).astype(numpy.uint8)
 
         xt = numpy.column_stack((rt, gt, bt, a))
         return self.__class__(rgba=xt.tobytes(), size=self._size)
