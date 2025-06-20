@@ -1,3 +1,10 @@
+qubes-utils (4.3.11) unstable; urgency=medium
+
+  [ Ali Mirjamali ]
+  * Replace `numpy.fromstring` with `numpy.frombuffer`
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Fri, 20 Jun 2025 18:44:59 +0200
+
 qubes-utils (4.3.10) unstable; urgency=medium
 
   [ Saswat Padhi ]
