@@ -6,7 +6,7 @@ pkgrel=@REL@
 pkgdesc="Common Linux files for Qubes VM."
 arch=("x86_64")
 url="http://qubes-os.org/"
-license=('GPL')
+license=('GPL-2.0-or-later')
 depends=(
     gcc
     make
