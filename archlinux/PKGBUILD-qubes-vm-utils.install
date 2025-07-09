@@ -1,4 +1,9 @@
 
+pre_install () {
+  # Make sure there is a qubes group
+  groupadd --force --system --gid 98 qubes
+}
+
 ## arg 1:  the new package version
 post_install() {
   ldconfig
