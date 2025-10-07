@@ -5,6 +5,7 @@ SUBSYSTEM!="usb", GOTO="qubes_usb_end"
 
 # ignore qemu emulated devices in HVM
 ENV{ID_VENDOR}=="QEMU", GOTO="qubes_usb_end"
+ENV{QUBES_EXPORT_USB_DEVICE}=="0", GOTO="qubes_usb_end"
 
 ACTION=="add", IMPORT{program}="/usr/lib/qubes/udev-usb-add-change"
 ACTION=="change", IMPORT{program}="/usr/lib/qubes/udev-usb-add-change"

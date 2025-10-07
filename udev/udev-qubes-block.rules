@@ -12,6 +12,7 @@ ENV{MAJOR}=="202", GOTO="qubes_block_end"
 
 # skip devices excluded elsewhere
 ENV{DM_UDEV_DISABLE_DISK_RULES_FLAG}=="1", ENV{QUBES_EXPORT_BLOCK_DEVICE}!="1", GOTO="qubes_block_end"
+ENV{QUBES_EXPORT_BLOCK_DEVICE}=="0", GOTO="qubes_block_end"
 
 # Skip device-mapper devices
 KERNEL=="dm-*", ENV{DM_NAME}=="snapshot-*", GOTO="qubes_block_end"
