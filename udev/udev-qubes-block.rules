@@ -19,6 +19,9 @@ KERNEL=="dm-*", ENV{DM_NAME}=="snapshot-*", GOTO="qubes_block_end"
 KERNEL=="dm-*", ENV{DM_NAME}=="origin-*", GOTO="qubes_block_end"
 KERNEL=="dm-*", ENV{DM_NAME}=="", GOTO="qubes_block_end"
 
+# Skip zram devices
+KERNEL=="zram*", GOTO="qubes_block_end"
+
 ACTION=="add", RUN+="/usr/lib/qubes/udev-block-add-change"
 ACTION=="change", RUN+="/usr/lib/qubes/udev-block-add-change"
 ACTION=="remove", RUN+="/usr/lib/qubes/udev-block-remove"
