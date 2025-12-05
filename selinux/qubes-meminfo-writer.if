@@ -9,9 +9,9 @@
 ## </summary>
 ## </param>
 interface(`qubes_meminfo_writer_signal',`
-	gen_require(``
+	gen_require(`
 		type qubes_meminfo_writer_t, qubes_meminfo_writer_var_run_t;
-	'')`
+	')`
 	allow '$1` qubes_meminfo_writer_t:process signal;
 	allow '$1` qubes_meminfo_writer_var_run_t:file 'read_file_perms;
 ')
