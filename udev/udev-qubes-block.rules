@@ -3,6 +3,9 @@
 # Only block devices are interesting
 SUBSYSTEM!="block", GOTO="qubes_block_end"
 
+# Skip devices hidden from udisks by other rules
+ENV{UDISKS_IGNORE}=="1", GOTO="qubes_block_end"
+
 # Hide qubes-internal drives from udisks, so file selection dialogs
 ENV{MAJOR}=="7", ENV{UDISKS_IGNORE}="1"
 KERNEL=="xvda|xvdb|xvdc*|xvdd", ENV{UDISKS_IGNORE}="1"
