@@ -1,3 +1,16 @@
+qubes-utils (4.3.14) unstable; urgency=medium
+
+  [ Ali Mirjamali ]
+  * Do not announce ZRAM devices as block device
+
+  [ Marek Marczykowski-Górecki ]
+  * Hide disks that other udev rules marked as hidden from udisks
+
+  [ Ali Mirjamali ]
+  * Prevent Selinux scriptlet  errors during upgrades
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Tue, 23 Dec 2025 11:01:56 +0100
+
 qubes-utils (4.3.13) unstable; urgency=medium
 
   [ Marcus Ofenhed ]
