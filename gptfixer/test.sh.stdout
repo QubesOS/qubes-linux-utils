@@ -12,7 +12,6 @@ I/O size (minimum/optimal): 512 bytes / 512 bytes
 >>> Script header accepted.
 >>> Script header accepted.
 >>> Script header accepted.
->>> Script header accepted.
 >>> Created a new GPT disklabel (GUID: F4796A2A-E377-45BD-B539-D6D49E569055).
 The maximal number of partitions is 33 (default is 128).
 dummy.img1: Created a new partition 1 of type 'EFI System' and of size 200 MiB.
