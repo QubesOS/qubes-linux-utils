@@ -56,7 +56,7 @@ log_begin "Waiting for /dev/xvda* devices..."
 udevadm settle --exit-if-exists=/dev/xvda
 
 # prefer partition if exists
-if /usr/sbin/gptfix fix /dev/xvda; then
+if gptfix fix /dev/xvda; then
     udevadm settle --exit-if-exists=/dev/xvda1
     if [ -e "/dev/disk/by-partlabel/Root\\x20filesystem" ]; then
         ROOT_DEV=$(readlink "/dev/disk/by-partlabel/Root\\x20filesystem")
