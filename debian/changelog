@@ -1,3 +1,14 @@
+qubes-utils (4.3.15) unstable; urgency=medium
+
+  [ Marek Marczykowski-Górecki ]
+  * tests: remove last-lba header from gptfixer/layout
+  * tests: update gptfixer test expected output
+
+  [ Oleg Drokin ]
+  * Do not use full path to gptfix in dracut scripts
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Mon, 12 Jan 2026 12:56:55 +0100
+
 qubes-utils (4.3.14) unstable; urgency=medium
 
   [ Ali Mirjamali ]
