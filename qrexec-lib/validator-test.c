@@ -2,6 +2,7 @@
 #include <inttypes.h>
 #include <stdlib.h>
 #include <errno.h>
+#include <string.h>
 
 #include "pure.h"
 #include <unicode/utf8.h>
@@ -89,10 +90,72 @@ static int symlink_test(const struct symlink_test symlink_checks[], size_t size)
     return (int)failed;
 }
 
+static void test_string_sanitization(void)
+{
+    char buf[128];
+    size_t len;
+
+    // 1. Empty string
+    len = qubes_pure_sanitize_string_safe_for_display("", buf, sizeof(buf));
+    assert(len == 0);
+    assert(buf[0] == '\0');
+
+    // 2. Normal ASCII
+    len = qubes_pure_sanitize_string_safe_for_display("Hello", buf, sizeof(buf));
+    assert(len == 5);
+    assert(strcmp(buf, "Hello") == 0);
+
+    // 3. Safe UTF-8 (Greek Beta: \xCE\xB2)
+    len = qubes_pure_sanitize_string_safe_for_display("\xCE\xB2", buf, sizeof(buf));
+    assert(len == 2);
+    assert(strcmp(buf, "\xCE\xB2") == 0);
+
+    // 4. Unsafe UTF-8
+    // \U0001f642 is \xF0\x9F\x99\x82 (4 bytes).
+    len = qubes_pure_sanitize_string_safe_for_display("\xF0\x9F\x99\x82", buf, sizeof(buf));
+    assert(len == 1);
+    assert(strcmp(buf, "_") == 0);
+
+    // 5. Invalid UTF-8 (partial)
+    len = qubes_pure_sanitize_string_safe_for_display("\xE0", buf, sizeof(buf));
+    assert(len == 1);
+    assert(strcmp(buf, "_") == 0);
+
+    // 6. Invalid UTF-8 (bad continuation)
+    len = qubes_pure_sanitize_string_safe_for_display("\xE0 ", buf, sizeof(buf));
+    assert(len == 2);
+    assert(strcmp(buf, "_ ") == 0);
+
+    // 7. Max line length
+    len = qubes_pure_sanitize_string_safe_for_display("ABCD", buf, 4);
+    assert(len == 3);
+    assert(strcmp(buf, "ABC") == 0);
+
+    // 8. Truncation in middle of UTF-8
+    // needs 3+1=4, but we have 3
+    len = qubes_pure_sanitize_string_safe_for_display("A\xCE\xB2", buf, 3);
+    assert(len == 1);
+    assert(strcmp(buf, "A") == 0);
+
+    // 9. Unsafe char replacement fits
+    // A + Emoji, so 5 bytes but the emoji is replaced with '_' and fits
+    len = qubes_pure_sanitize_string_safe_for_display("A\xF0\x9F\x99\x82", buf, 3);
+    assert(len == 2);
+    assert(strcmp(buf, "A_") == 0);
+
+    // 10. mixed valid invalid
+    len = qubes_pure_sanitize_string_safe_for_display("a\x80""b", buf, 10);
+    assert(len == 3);
+    assert(strcmp(buf, "a_b") == 0);
+}
+
 int main(int argc, char **argv)
 {
     (void)argc;
     (void)argv;
+
+    test_string_sanitization();
+
     assert(qubes_pure_validate_file_name((const uint8_t *)u8"simple_safe_filename.txt"));
 
     // Directory traversal checks

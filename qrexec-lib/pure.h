@@ -199,6 +199,19 @@ QUBES_PURE_PUBLIC bool
 qubes_pure_string_safe_for_display(const char *untrusted_str,
                                    size_t line_length);
 
+/**
+ * Implements filtering and replaces non-printable/non-safe characters with `_`.
+ *
+ * @param str Input string (read-only)
+ * @param result Buffer to store the sanitized output (must be max_line_length)
+ * @param max_line_length Maximum length of the input string to process
+ * @return The length of the sanitized string written to result
+ */
+QUBES_PURE_PUBLIC size_t
+qubes_pure_sanitize_string_safe_for_display(const char *untrusted_str,
+                                            char *result,
+                                            size_t max_line_length);
+
 /** Initialize a QubesSlice from a nul-terminated string. */
 static inline struct QubesSlice
 qubes_pure_buffer_init_from_nul_terminated_string(const char *str)

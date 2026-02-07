@@ -19,8 +19,9 @@ qubes_pure_code_point_safe_for_display(uint32_t code_point) {
 }
 
 /* validate single UTF-8 character
- * return bytes count of this character, or 0 if the character is invalid */
-static int validate_utf8_char(const uint8_t *untrusted_c) {
+ * return bytes count of this character, or minus bytes count if the character
+          is invalid or not safe to display*/
+static int validate_utf8_char_and_return_len(const uint8_t *untrusted_c) {
     int tails_count = 0;
     int total_size = 0;
     uint32_t code_point;
@@ -66,7 +67,8 @@ static int validate_utf8_char(const uint8_t *untrusted_c) {
             if (*untrusted_c >= 0xA0 && *untrusted_c <= 0xBF)
                 tails_count = 1;
             else
-                return 0;
+                // invalid UTF-8, skip this byte and try to parse the next one
+                return -1;
             code_point = *untrusted_c & 0x3F;
             break;
         case 0xE1 ... 0xEF:
@@ -80,7 +82,8 @@ static int validate_utf8_char(const uint8_t *untrusted_c) {
             if (*untrusted_c >= 0x90 && *untrusted_c <= 0xBF)
                 tails_count = 2;
             else
-                return 0;
+                // invalid UTF-8, skip this byte and try to parse the next one
+                return -1;
             code_point = *untrusted_c & 0x3F;
             break;
         case 0xF1 ... 0xF4:
@@ -89,17 +92,24 @@ static int validate_utf8_char(const uint8_t *untrusted_c) {
             code_point = *untrusted_c & 0x7;
             break;
         default:
-            return 0; // control ASCII or invalid UTF-8
+            return -1; // control ASCII or invalid UTF-8
     }
 
     while (tails_count-- > 0) {
         untrusted_c++;
         if (!(*untrusted_c >= 0x80 && *untrusted_c <= 0xBF))
-            return 0;
+            return -1;
         code_point = code_point << 6 | (*untrusted_c & 0x3F);
     }
 
-    return qubes_pure_code_point_safe_for_display(code_point) ? total_size : 0;
+    return qubes_pure_code_point_safe_for_display(code_point) ? total_size : -total_size;
+}
+
+/* validate single UTF-8 character
+ * return bytes count of this character, or 0 if the character is invalid */
+static int validate_utf8_char_safe_for_display(const uint8_t *untrusted_c) {
+      int result = validate_utf8_char_and_return_len(untrusted_c);
+      return result > 0 ? result : 0;
 }
 
 // Statically assert that a statement is not reachable.
@@ -209,7 +219,7 @@ static ssize_t validate_path(const uint8_t *const untrusted_name,
                    (flags & QUBES_PURE_ALLOW_UNSAFE_CHARACTERS) != 0) {
             /* loop will advance past this */
         } else {
-            int utf8_ret = validate_utf8_char((const unsigned char *)(untrusted_name + i));
+            int utf8_ret = validate_utf8_char_safe_for_display((const unsigned char *)(untrusted_name + i));
             if (utf8_ret > 0) {
                 i += (size_t)(utf8_ret - 1); /* loop will do one more increment */
             } else {
@@ -306,7 +316,7 @@ qubes_pure_string_safe_for_display(const char *untrusted_str, size_t line_length
         if (untrusted_str[i] >= 0x20 && untrusted_str[i] <= 0x7E) {
             i++;
         } else {
-            int utf8_ret = validate_utf8_char((const uint8_t *)(untrusted_str + i));
+            int utf8_ret = validate_utf8_char_safe_for_display((const uint8_t *)(untrusted_str + i));
             if (utf8_ret > 0) {
                 i += utf8_ret;
             } else {
@@ -315,4 +325,43 @@ qubes_pure_string_safe_for_display(const char *untrusted_str, size_t line_length
         }
     } while (untrusted_str[i]);
     return true;
+}
+
+QUBES_PURE_PUBLIC size_t
+qubes_pure_sanitize_string_safe_for_display(const char *untrusted_str,
+                                            char *result,
+                                            size_t max_line_length)
+{
+    if (max_line_length == 0) {
+        return 0;
+    }
+    size_t i = 0;
+    size_t j = 0;
+    while (untrusted_str[i] && j < max_line_length - 1) {
+        if (untrusted_str[i] >= 0x20 && untrusted_str[i] <= 0x7E) {
+            // keep the valid ASCII character
+            result[j++] = untrusted_str[i++];
+            continue;
+        }
+        int utf8_ret = validate_utf8_char_and_return_len((const uint8_t *)(untrusted_str + i));
+        if (utf8_ret < 0) {
+            // unsafe character with length of -utf8_ret
+            // replace unsafe utf8 (possibly multiple bytes) with '_'
+            result[j++] = '_';
+            i -= utf8_ret;
+            continue;
+        }
+        if (j + utf8_ret >= max_line_length - 1) {
+            // not enough space for the whole character, truncate here
+            break;
+        }
+        // keep the valid UTF-8 character to the result buffer
+        for (int k = 0; k < utf8_ret; k++) {
+            result[j++] = untrusted_str[i++];
+        }
+    };
+
+    // Enforce null termination of the result string
+    result[j] = '\0';
+    return j;
 }
