@@ -1,3 +1,24 @@
+qubes-utils (4.2.21) unstable; urgency=medium
+
+  [ Saswat Padhi ]
+  * Fix the order of mkinitcpio hooks
+
+  [ Marek Marczykowski-Górecki ]
+  * archlinux: include scrub_pages initrd hook
+  * archlinux/initcpio: add required modules directly
+
+  [ Ali Mirjamali ]
+  * Replace `numpy.fromstring` with `numpy.frombuffer`
+
+  [ 3np ]
+  * arch: fix SPDX license
+
+  [ Ali Mirjamali ]
+  * Prevent Selinux scriptlet  errors during upgrades
+  * Do not announce ZRAM devices as block device
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Sun, 01 Mar 2026 02:44:22 +0100
+
 qubes-utils (4.2.20) unstable; urgency=medium
 
   * Force C17 standard in qrexec-lib/validator-test.c
