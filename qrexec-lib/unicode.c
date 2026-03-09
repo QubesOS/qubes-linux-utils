@@ -348,7 +348,7 @@ qubes_pure_sanitize_string_safe_for_display(const char *const untrusted_str,
             // unsafe character with length of -utf8_ret
             // replace unsafe utf8 (possibly multiple bytes) with '_'
             result[j++] = '_';
-            i -= utf8_ret;
+            i += (size_t)-utf8_ret;
             continue;
         }
         if ((unsigned int)utf8_ret >= max_line_length - 1 - j) {

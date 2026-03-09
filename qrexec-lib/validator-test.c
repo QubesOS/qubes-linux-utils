@@ -147,6 +147,16 @@ static void test_string_sanitization(void)
     len = qubes_pure_sanitize_string_safe_for_display("a\x80""b", buf, 10);
     assert(len == 3);
     assert(strcmp(buf, "a_b") == 0);
+
+    // 11. Invalid multi-byte
+    len = qubes_pure_sanitize_string_safe_for_display("a\xC0\xAF""b", buf, 10);
+    assert(len == 4);
+    assert(strcmp(buf, "a__b") == 0);
+
+    // 12. Invalid multi-byte (surrogate)
+    len = qubes_pure_sanitize_string_safe_for_display("a\xED\xA0\x80""b", buf, 10);
+    assert(len == 3);
+    assert(strcmp(buf, "a_b") == 0);
 }
 
 int main(int argc, char **argv)
