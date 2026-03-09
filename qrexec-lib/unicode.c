@@ -328,7 +328,7 @@ qubes_pure_string_safe_for_display(const char *untrusted_str, size_t line_length
 }
 
 QUBES_PURE_PUBLIC size_t
-qubes_pure_sanitize_string_safe_for_display(const char *untrusted_str,
+qubes_pure_sanitize_string_safe_for_display(const char *const untrusted_str,
                                             char *result,
                                             size_t max_line_length)
 {
@@ -351,7 +351,7 @@ qubes_pure_sanitize_string_safe_for_display(const char *untrusted_str,
             i -= utf8_ret;
             continue;
         }
-        if (j + utf8_ret >= max_line_length - 1) {
+        if ((unsigned int)utf8_ret >= max_line_length - 1 - j) {
             // not enough space for the whole character, truncate here
             break;
         }
