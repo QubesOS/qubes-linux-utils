@@ -330,12 +330,12 @@ qubes_pure_string_safe_for_display(const char *untrusted_str, size_t line_length
 QUBES_PURE_PUBLIC size_t
 qubes_pure_sanitize_string_safe_for_display(const char *const untrusted_str,
                                             char *result,
-                                            size_t max_line_length)
+                                            const size_t max_line_length)
 {
     if (max_line_length == 0) {
         return 0;
     }
-    size_t max_text_line_length = max_line_length - 1; // reserve space for null terminator
+    const size_t max_text_line_length = max_line_length - 1; // reserve space for null terminator
     size_t i = 0;
     size_t j = 0;
     while (untrusted_str[i] && j < max_text_line_length) {
