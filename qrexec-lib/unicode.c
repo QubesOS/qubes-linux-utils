@@ -335,9 +335,10 @@ qubes_pure_sanitize_string_safe_for_display(const char *const untrusted_str,
     if (max_line_length == 0) {
         return 0;
     }
+    size_t max_text_line_length = max_line_length - 1; // reserve space for null terminator
     size_t i = 0;
     size_t j = 0;
-    while (untrusted_str[i] && j < max_line_length - 1) {
+    while (untrusted_str[i] && j < max_text_line_length) {
         if (untrusted_str[i] >= 0x20 && untrusted_str[i] <= 0x7E) {
             // keep the valid ASCII character
             result[j++] = untrusted_str[i++];
@@ -351,7 +352,7 @@ qubes_pure_sanitize_string_safe_for_display(const char *const untrusted_str,
             i += (size_t)-utf8_ret;
             continue;
         }
-        if ((unsigned int)utf8_ret >= max_line_length - 1 - j) {
+        if ((unsigned int)utf8_ret >= max_text_line_length - j) {
             // not enough space for the whole character, truncate here
             break;
         }
@@ -362,6 +363,6 @@ qubes_pure_sanitize_string_safe_for_display(const char *const untrusted_str,
     };
 
     // Enforce null termination of the result string
-    result[j] = '\0';
+    result[j++] = '\0';
     return j;
 }

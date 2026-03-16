@@ -205,7 +205,7 @@ qubes_pure_string_safe_for_display(const char *untrusted_str,
  * @param str Input string (read-only)
  * @param result Buffer to store the sanitized output (must be max_line_length)
  * @param max_line_length Maximum length of the input string to process
- * @return The length of the sanitized string written to result
+ * @return The length of the sanitized string written to result (including null terminator)
  */
 QUBES_PURE_PUBLIC size_t
 qubes_pure_sanitize_string_safe_for_display(const char *untrusted_str,
