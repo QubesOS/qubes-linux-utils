@@ -1,3 +1,14 @@
+qubes-utils (4.3.16) unstable; urgency=medium
+
+  [ Piotr Bartman-Szwarc ]
+  * add qubes_pure_sanitize_string_safe_for_display
+  * implement @DemiMarie comments
+  * implement @DemiMarie comments
+  * include null terminator to parsed length
+  * make `max_(text_)line_length` const to avoid ambiguity
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Wed, 18 Mar 2026 20:12:57 +0100
+
 qubes-utils (4.3.15) unstable; urgency=medium
 
   [ Marek Marczykowski-Górecki ]
