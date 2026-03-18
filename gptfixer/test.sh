@@ -29,7 +29,7 @@ case "$#,${1-}" in
 ('1,update') go 3>&2 > test.sh.stdout 2> test.sh.stderr;;
 (0,)
     tmpdir=$(mktemp -d)
-    go 3>&2 > "$tmpdir/stdout" 2> "$tmpdir/stderr"
+    go 3>&2 > "$tmpdir/stdout" 2> "$tmpdir/stderr" || { cat "$tmpdir/stderr"; exit 1; }
     diff -u -- "$tmpdir/stdout" test.sh.stdout
     diff -u -- "$tmpdir/stderr" test.sh.stderr
     rm -rf -- "$tmpdir"
