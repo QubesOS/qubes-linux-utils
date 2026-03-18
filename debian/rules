@@ -11,6 +11,7 @@ export DESTDIR=$(shell pwd)/debian/tmp
 
 override_dh_auto_build:
 	make all LIBDIR=/usr/lib DEBIANBUILD=1
+	make -C gptfixer all
 
 override_dh_auto_install:
 	make install LIBDIR=/usr/lib DEBIANBUILD=1 PYTHON_PREFIX_ARG=--install-layout=deb

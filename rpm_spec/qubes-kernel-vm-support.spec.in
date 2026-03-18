@@ -55,7 +55,7 @@ initrd is provided by dom0.
 
 %build
 make -C kernel-modules all
-make gptfixer/gpt
+make -C gptfixer all
 
 %install
 make install-fedora-kernel-support DESTDIR=%{buildroot} SBINDIR=%{_sbindir}

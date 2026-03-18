@@ -2,7 +2,7 @@
 set -euo pipefail
 
 case $0 in (/*) cd "${0%/*}/";; (*/*) cd "./${0%/*}";; (*) :;; esac
-make -C .. gptfixer/gpt
+make gpt
 chk () {
     loopdev=$(sudo losetup --nooverlap --find --sector-size "$1" --show -- dummy.img)
     if [[ "$loopdev" != '/dev/loop0' ]]; then

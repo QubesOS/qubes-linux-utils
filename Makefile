@@ -38,13 +38,8 @@ install-debian-kernel-support:
 	$(MAKE) -C dracut install
 	$(MAKE) -C grub install-debian
 
-install-gptfix: gptfixer/gpt
-	install -D gptfixer/gpt $(DESTDIR)$(SBINDIR)/gptfix
-gptfixer/gpt_LDLIBS := -lz
-gptfixer/gpt_CFLAGS := -D_GNU_SOURCE -fno-strict-aliasing -fno-delete-null-pointer-checks -fno-strict-overflow
-%: %.c Makefile
-	$(CC) $($(@)_CFLAGS) -o $@ $< $(CFLAGS) -MD -MP -MF $@.dep $($(@)_LDLIBS)
--include gptfixer/*.dep
+install-gptfix:
+	$(MAKE) -C gptfixer install
 
 clean:
 	$(MAKE) -C qrexec-lib clean
