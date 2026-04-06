@@ -1,3 +1,9 @@
+qubes-utils (4.2.22) unstable; urgency=medium
+
+  * Enable xen_privcmd.unrestricted for inter-vm communication to work
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Mon, 06 Apr 2026 14:56:12 +0200
+
 qubes-utils (4.2.21) unstable; urgency=medium
 
   [ Saswat Padhi ]
