@@ -1,3 +1,11 @@
+qubes-utils (4.3.17) unstable; urgency=medium
+
+  * Print stderr on gptfixer test failure
+  * Move gptfixer building into dedicated makefile
+  * Enable xen_privcmd.unrestricted for inter-vm communication to work
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Mon, 06 Apr 2026 13:32:35 +0200
+
 qubes-utils (4.3.16) unstable; urgency=medium
 
   [ Piotr Bartman-Szwarc ]
