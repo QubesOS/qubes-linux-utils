@@ -12,14 +12,22 @@
 #include <signal.h>
 
 long prev_used_mem;
+long prev_used_swap;
 int used_mem_change_threshold;
+int used_swap_change_threshold;
 int delay;
 int usr1_received;
 
-const char *parse(const char *meminfo_buf, const char* dom_current_buf)
+typedef struct {
+    char *mem;
+    char *swap;
+} UsedMem;
+
+UsedMem *parse(const char *meminfo_buf, const char* dom_current_buf)
 {
 	const char *ptr = meminfo_buf;
-	static char outbuf[4096];
+	static char used_mem_buf[4096];
+	static char used_swap_buf[4096];
 	long long val;
 	int len;
 	int ret;
@@ -27,7 +35,10 @@ const char *parse(const char *meminfo_buf, const char* dom_current_buf)
 	    0, SwapFree = 0;
 	unsigned long long key;
 	long long used_mem, used_mem_diff;
+	long long used_swap, used_swap_diff;
+	char *ret_mem = NULL, *ret_swap = NULL;
 	int nitems = 0;
+	UsedMem *data = malloc(sizeof(*data));
 
 	while (nitems != (1<<6)-1 || !*ptr) {
 		ret = sscanf(ptr, "%*s %lld kB\n%n", &val, &len);
@@ -65,23 +76,36 @@ const char *parse(const char *meminfo_buf, const char* dom_current_buf)
 			MemTotal = DomTotal;
 	}
 
-	used_mem =
-	    MemTotal - Buffers - Cached - MemFree + SwapTotal - SwapFree;
-	if (used_mem < 0)
-		return NULL;
+	used_mem = MemTotal - Buffers - Cached - MemFree + SwapTotal - SwapFree;
+	used_swap = SwapTotal - SwapFree;
 
-	used_mem_diff = used_mem - prev_used_mem;
-	if (used_mem_diff < 0)
-		used_mem_diff = -used_mem_diff;
-	if (used_mem_diff > used_mem_change_threshold
-		|| prev_used_mem == 0
-	    || (used_mem > prev_used_mem && used_mem / 10 > (MemTotal+12) / 13
-		&& used_mem_diff > used_mem_change_threshold/2)) {
-		prev_used_mem = used_mem;
-		sprintf(outbuf, "%lld", used_mem);
-		return outbuf;
+	if (used_mem >= 0) {
+		used_mem_diff = used_mem - prev_used_mem;
+		if (used_mem_diff < 0)
+			used_mem_diff = -used_mem_diff;
+		if (used_mem_diff > used_mem_change_threshold
+			|| prev_used_mem == 0
+		|| (used_mem > prev_used_mem && used_mem / 10 > (MemTotal+12) / 13
+			&& used_mem_diff > used_mem_change_threshold/2)) {
+			prev_used_mem = used_mem;
+			snprintf(used_mem_buf, sizeof(used_mem_buf), "%lld", used_mem);
+			ret_mem = used_mem_buf;
+		}
 	}
-	return NULL;
+
+	if (used_swap >= 0) {
+		used_swap_diff = used_swap - prev_used_swap;
+		if (used_swap_diff < 0)
+			used_swap_diff = -used_swap_diff;
+		if (used_swap_diff > used_swap_change_threshold || prev_used_swap == 0) {
+			snprintf(used_swap_buf, sizeof(used_swap_buf), "%lld", used_swap);
+			ret_swap = used_swap_buf;
+		}
+	}
+
+	data->mem = ret_mem;
+	data->swap = ret_swap;
+	return data;
 }
 
 void usage(void)
@@ -94,10 +118,14 @@ void usage(void)
 	exit(1);
 }
 
-void send_to_qmemman(struct xs_handle *xs, const char *data)
+void send_to_qmemman(struct xs_handle *xs, UsedMem *used)
 {
-	if (!xs_write(xs, XBT_NULL, "memory/meminfo", data, strlen(data))) {
-		syslog(LOG_DAEMON | LOG_ERR, "error writing xenstore ?");
+	if (used->mem != NULL && !xs_write(xs, XBT_NULL, "memory/meminfo", used->mem, strlen(used->mem))) {
+		syslog(LOG_DAEMON | LOG_ERR, "error writing meminfo to xenstore ?");
+		exit(1);
+	}
+	if (used->swap != NULL && !xs_write(xs, XBT_NULL, "memory/swapinfo", used->swap, strlen(used->swap))) {
+		syslog(LOG_DAEMON | LOG_ERR, "error writing swapinfo to xenstore ?");
 		exit(1);
 	}
 }
@@ -121,7 +149,6 @@ static void update(struct xs_handle *xs, int meminfo_fd, int dom_current_fd)
 	char dom_current_buf[32];
 	char dom_current_buf2[32];
 	char meminfo_buf[4096];
-	const char *meminfo_data;
 
 	pread0_string(dom_current_fd, dom_current_buf, sizeof(dom_current_buf));
 
@@ -140,9 +167,9 @@ static void update(struct xs_handle *xs, int meminfo_fd, int dom_current_fd)
 			break;
 	}
 
-	meminfo_data = parse(meminfo_buf, dom_current_buf);
-	if (meminfo_data)
-		send_to_qmemman(xs, meminfo_data);
+	UsedMem *meminfo_data = parse(meminfo_buf, dom_current_buf);
+	send_to_qmemman(xs, meminfo_data);
+	free(meminfo_data);
 }
 
 int main(int argc, char **argv)
@@ -154,6 +181,7 @@ int main(int argc, char **argv)
 	if (argc != 3 && argc != 4)
 		usage();
 	used_mem_change_threshold = atoi(argv[1]);
+	used_swap_change_threshold = used_mem_change_threshold;
 	delay = atoi(argv[2]);
 	if (used_mem_change_threshold <= 0 || delay <= 0)
 		usage();
@@ -186,7 +214,7 @@ int main(int argc, char **argv)
 					kill(pid,9);
 					exit(1);
 				}
-				n = sprintf(buf, "%d\n", pid);
+				n = snprintf(buf, sizeof(buf), "%d\n", pid);
 				if (write(fd, buf, n) != n) {
 					perror("write pid");
 					kill(pid,9);
