@@ -10,6 +10,19 @@ SIZE=$[ $(cat /sys/$DEVPATH/size) * 512 ]
 MODE=w
 QDB_KEY="/qubes-block-devices/$NAME"
 
+# USB ancestor port name (e.g. "1-1") if this block device is exposed via USB;
+# empty otherwise. Computed early so xs_mark_busy can use it.
+USB_PARENT=""
+USB_PARENT_SYSPATH=""
+if echo "$DEVPATH" | grep -q '/host'; then
+    # DEVPATH for a USB-connected block device ends with:
+    #   .../<usb-dev>/<usb-iface>/host.../...
+    # Strip from /host onward to get the USB interface path, then go up one
+    # level to get the USB device directory name (e.g. "1-1", not "1-1:1.0").
+    USB_PARENT_SYSPATH=$(dirname "$(sed 's|/host.*$||' <<< "/sys$DEVPATH")")
+    USB_PARENT=$(basename "$USB_PARENT_SYSPATH")
+fi
+
 xs_remove() {
     if is_attached /sys$DEVPATH; then
         return 0
@@ -18,6 +31,25 @@ xs_remove() {
     if qubesdb-read -q "$QDB_KEY/desc" >/dev/null; then
         qubesdb-rm "$QDB_KEY/"
         qubesdb-write /qubes-block-devices ''
+    fi
+}
+
+# Mark this device as present-but-unavailable (busy) in QubesDB because one of
+# its child devices is currently attached. Keeps all existing device properties
+# intact so the device remains visible.
+# We only care about this block device and its USB ancestor (if it exists).
+# A parent block device can handle itself by checking the status of its children
+# (see below).
+xs_mark_busy() {
+    if qubesdb-read -q "$QDB_KEY/desc" >/dev/null; then
+        qubesdb-write "$QDB_KEY/busy" "True"
+        qubesdb-write /qubes-block-devices ''
+    fi
+    # Also marks the USB ancestor (if any) unavailable for USB passthrough.
+    if [ -n "$USB_PARENT" ]; then
+        local usb_safe="${USB_PARENT//./_}"
+        qubesdb-write "/qubes-usb-devices/${usb_safe}/busy" "True"
+        qubesdb-write /qubes-usb-devices ''
     fi
 }
 
@@ -47,6 +79,25 @@ refresh_another() {
     local launch_env=$(udevadm info -q all -x -p "$devpath" \
             | grep ^E: | cut -d ' ' -f 2- | tr ' ' ':')
     env -i PATH=$PATH $launch_env $0
+}
+
+# If any block device exposed by the USB ancestor (including sibling block
+# devices and all their partitions) is currently attached.
+# Used to decide if the USB ancestor can be set free.
+usb_parent_still_in_use() {
+    [ -n "$USB_PARENT_SYSPATH" ] || return 1
+    local blockdev part
+    for blockdev in "$USB_PARENT_SYSPATH"/*/host*/target*/*/block/*; do
+        if is_attached "$blockdev"; then
+            return 0
+        fi
+        for part in "$blockdev/$(basename "$blockdev")"*; do
+            if [ -d "$part" ] && is_attached "$part"; then
+                return 0
+            fi
+        done
+    done
+    return 1
 }
 
 is_attached() {
@@ -106,8 +157,15 @@ fi
 # the same time)
 for part in /sys$DEVPATH/$NAME*; do
     if [ -d $part ]; then
-        if is_used $part || is_attached $part; then
+        if is_used $part; then
+            # partition used locally (not manageable by dom0):
+            # remove parent from QDB
             xs_remove
+            exit 0
+        fi
+        if is_attached $part; then
+            # partition attached to a VM: keep parent in QDB but mark it busy
+            xs_mark_busy
             exit 0
         fi
     fi
@@ -166,8 +224,8 @@ fi
 
 if [ -f /sys$DEVPATH/partition ]; then
     parent=$(basename "$(dirname "$DEVPATH")")
-elif echo "$DEVPATH" | grep -q '/host'; then
-    parent=$(basename "$(sed 's|/host.*$||' <<< "$DEVPATH")")
+elif [ -n "$USB_PARENT" ]; then
+    parent="$USB_PARENT"
 fi
 
 # The last one is meant to trigger watches
@@ -177,6 +235,28 @@ qubesdb-write \
     "$QDB_KEY/mode" "$MODE" \
     "$QDB_KEY/parent" "$parent" \
     /qubes-block-devices ''
+
+# If this device is currently attached keep the parent busy.
+if is_attached /sys$DEVPATH; then
+    xs_mark_busy
+    exit 0
+fi
+
+# Device is now free -> clear busy marker for this device
+# and optionally for its USB ancestor (if any).
+qubesdb-rm "$QDB_KEY/busy" 2>/dev/null || true
+if [ -n "$USB_PARENT" ]; then
+    usb_safe="${USB_PARENT//./_}"
+    # This device is detached, but a sibling device may still be attached
+    # in that case keep the USB parent's busy marker set.
+    if usb_parent_still_in_use; then
+        qubesdb-write "/qubes-usb-devices/${usb_safe}/busy" "True"
+    else
+        qubesdb-rm "/qubes-usb-devices/${usb_safe}/busy" 2>/dev/null || true
+    fi
+    # trigger watches for USB ancestor as well
+    qubesdb-write /qubes-usb-devices ''
+fi
 
 # Make sure that block backend is loaded
 /sbin/modprobe xen-blkback 2> /dev/null || /sbin/modprobe blkbk
