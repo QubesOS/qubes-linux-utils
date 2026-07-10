@@ -1,0 +1,19 @@
+#!/bin/sh
+
+# Refresh `busy` attribute for a block device subtree by re-triggering udev
+# change events. Called after detaching a block device.
+#
+# stdin: device node path relative to /dev (e.g. "sda" or "mapper/dmroot").
+
+read -r untrusted_name
+
+case "$untrusted_name" in
+    ""|-*|*[!a-zA-Z0-9/_-]*) exit 1 ;;
+esac
+name="$untrusted_name"
+
+for dev in "/dev/$name" "/dev/$name"?*; do
+    [ -b "$dev" ] && udevadm trigger --action=change "$dev"
+done
+
+exec udevadm settle --timeout=5

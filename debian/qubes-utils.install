@@ -4,3 +4,4 @@ usr/lib/qubes/*
 usr/lib/udev/*
 usr/lib/tmpfiles.d/xen-devices-qubes.conf
 etc/xen/scripts/qubes-block
+etc/qubes-rpc/qubes.RefreshBlockDevices
