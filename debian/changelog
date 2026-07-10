@@ -1,3 +1,13 @@
+qubes-utils (4.3.18) unstable; urgency=medium
+
+  [ Frédéric Pierret (fepitre) ]
+  * gptfixer/test.sh: make test loop-device agnostic
+
+  [ Marek Marczykowski-Górecki ]
+  * Calculate modules.img size dynamically
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Fri, 10 Jul 2026 13:43:10 +0200
+
 qubes-utils (4.3.17) unstable; urgency=medium
 
   * Print stderr on gptfixer test failure
