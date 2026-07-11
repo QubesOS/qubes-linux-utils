@@ -145,6 +145,7 @@ static void update(struct xs_handle *xs, int meminfo_fd, int dom_current_fd)
 		send_to_qmemman(xs, meminfo_data);
 }
 
+#ifndef TESTING
 int main(int argc, char **argv)
 {
 	int meminfo_fd, dom_current_fd;
@@ -231,4 +232,5 @@ int main(int argc, char **argv)
 		usleep(delay);
 	}
 }
+#endif /* TESTING */
 

@@ -19,5 +19,11 @@ else
 	install -d $(DESTDIR)/usr/lib/systemd/system/
 	install -m 0644 qubes-meminfo-writer*service $(DESTDIR)/usr/lib/systemd/system/
 endif
+test: test_parse
+	./test_parse
+
+test_parse: test_parse.c meminfo-writer.c
+	$(CC) $(CFLAGS) -DTESTING -o test_parse test_parse.c meminfo-writer.c
+
 clean:
-	rm -f meminfo-writer xenstore-watch *.o
+	rm -f meminfo-writer xenstore-watch test_parse *.o
