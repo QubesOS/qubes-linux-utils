@@ -2,11 +2,15 @@
  * Unit tests for the parse() function in meminfo-writer.c.
  *
  * These tests verify correctness of the memory-usage calculation and the
- * threshold / hysteresis logic.  They do NOT claim to test a buffer overflow:
- * the output buffer is 4096 bytes and used_mem is a long long (max 20 chars),
- * so no overflow is possible with valid input regardless of whether sprintf()
- * or snprintf() is used.  The snprintf() change is kept as defensive
- * best-practice (CWE-676), consistent with the change already made in #140.
+ * threshold / hysteresis logic.
+ *
+ * NOTE: None of these tests will fail if snprintf() is reverted to sprintf()
+ * in meminfo-writer.c.  The output buffer (outbuf) is 4096 bytes and
+ * used_mem is a long long (max 20 decimal characters), so no overflow is
+ * possible with valid input regardless of which variant is used.  The
+ * snprintf() change is kept as defensive best-practice (CWE-676), consistent
+ * with the change already made in #140.  test_output_length_within_bounds()
+ * below documents the size contract that snprintf() makes explicit.
  */
 
 #include <stdio.h>
@@ -133,6 +137,32 @@ static void test_dom_current_overrides_memtotal(void)
     }
 }
 
+/*
+ * Verify the formatted output fits within the size constraint documented by
+ * the snprintf() call: a long long decimal is at most 20 characters
+ * (LLONG_MAX = 9223372036854775807, 19 digits, plus sign = 20), which is
+ * well within the 4096-byte outbuf.  This test would catch regressions if
+ * the format string were changed to something that could produce longer output.
+ *
+ * Note: this test does NOT fail with sprintf() — the buffer is always large
+ * enough for the current format.  The snprintf() change is defensive and this
+ * test documents the size contract it makes explicit.
+ */
+static void test_output_length_within_bounds(void)
+{
+    reset_globals(1);
+    make_meminfo(8000000, 2000000, 100000, 500000, 0, 0);
+    const char *result = parse(meminfo_buf, NULL);
+    CHECK(result != NULL, "output is non-NULL for bounds check");
+    if (result) {
+        size_t len = strlen(result);
+        /* A long long decimal is at most 20 characters. */
+        CHECK(len <= 20, "output length fits within long long decimal maximum (20 chars)");
+        /* The static outbuf in parse() is 4096 bytes; snprintf ensures no overrun. */
+        CHECK(len < 4096, "output length is within outbuf size (4096 bytes)");
+    }
+}
+
 /* ---- main --------------------------------------------------------------- */
 
 int main(void)
@@ -142,6 +172,7 @@ int main(void)
     test_above_threshold_returns_value();
     test_output_is_decimal_string();
     test_dom_current_overrides_memtotal();
+    test_output_length_within_bounds();
 
     printf("\n%d/%d tests passed.\n", tests_run - tests_failed, tests_run);
     return tests_failed ? 1 : 0;
