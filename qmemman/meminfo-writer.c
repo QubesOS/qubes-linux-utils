@@ -78,7 +78,7 @@ const char *parse(const char *meminfo_buf, const char* dom_current_buf)
 	    || (used_mem > prev_used_mem && used_mem / 10 > (MemTotal+12) / 13
 		&& used_mem_diff > used_mem_change_threshold/2)) {
 		prev_used_mem = used_mem;
-		sprintf(outbuf, "%lld", used_mem);
+		snprintf(outbuf, sizeof(outbuf), "%lld", used_mem);
 		return outbuf;
 	}
 	return NULL;
@@ -145,6 +145,7 @@ static void update(struct xs_handle *xs, int meminfo_fd, int dom_current_fd)
 		send_to_qmemman(xs, meminfo_data);
 }
 
+#ifndef TESTING
 int main(int argc, char **argv)
 {
 	int meminfo_fd, dom_current_fd;
@@ -186,7 +187,7 @@ int main(int argc, char **argv)
 					kill(pid,9);
 					exit(1);
 				}
-				n = sprintf(buf, "%d\n", pid);
+				n = snprintf(buf, sizeof(buf), "%d\n", pid);
 				if (write(fd, buf, n) != n) {
 					perror("write pid");
 					kill(pid,9);
@@ -231,4 +232,5 @@ int main(int argc, char **argv)
 		usleep(delay);
 	}
 }
+#endif /* TESTING */
 
