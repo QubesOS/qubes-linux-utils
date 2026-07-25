@@ -44,9 +44,9 @@ function build_modules_img() {
         cp -a "/usr/src/kernels/$kver" "$tmpdir/modules/$kver/build"
     fi
 
-    size="$(du -sk "$tmpdir/modules")"
+    size="$(du -sk --apparent-size "$tmpdir/modules")"
     size="${size%%	*}"
-    size=$[ "$size" * 110 / 100 ]
+    size=$[ "$size" * 120 / 100 ]
     flags="-Enum_backup_sb=0,root_owner=0:0,no_copy_xattrs"
     flags="$flags,hash_seed=dcee2318-92bd-47a5-a15d-e79d1412cdce"
     PATH=/usr/sbin:/sbin:$PATH mkfs.ext3 -q -F "$flags" \
