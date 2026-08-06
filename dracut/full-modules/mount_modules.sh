@@ -11,7 +11,7 @@ if ! [ -d "$NEWROOT/lib/modules/$kver/kernel" ]; then
 
     # Mount only `uname -r` subdirectory, to leave the rest of /lib/modules writable
     mkdir -p /tmp/modules
-    mount -n -t ext3 /dev/xvdd /tmp/modules
+    mount -r -n -t ext3 /dev/xvdd /tmp/modules
     if ! [ -d "$NEWROOT/lib/modules/$kver" ]; then
         mount "$NEWROOT" -o remount,rw
         mkdir -p "$NEWROOT/lib/modules/$kver"

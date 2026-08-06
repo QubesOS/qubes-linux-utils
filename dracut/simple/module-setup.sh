@@ -23,6 +23,7 @@ install() {
         modprobe \
         ln \
         switch_root \
+        blkid \
         mount \
         umount \
         mkdir \
