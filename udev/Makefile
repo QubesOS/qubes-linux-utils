@@ -14,3 +14,6 @@ install:
 	cp udev-block-remove $(DESTDIR)$(SCRIPTSDIR)
 	cp udev-usb-add-change $(DESTDIR)$(SCRIPTSDIR)
 	cp udev-usb-remove $(DESTDIR)$(SCRIPTSDIR)
+
+	mkdir -p $(DESTDIR)/etc/qubes-rpc
+	cp qubes.RefreshBlockDevices $(DESTDIR)/etc/qubes-rpc

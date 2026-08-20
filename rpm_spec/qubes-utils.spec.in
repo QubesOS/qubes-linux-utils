@@ -141,6 +141,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_unitdir}/qubes-meminfo-writer-dom0.service
 %dir %_includedir/qubes
 /etc/xen/scripts/qubes-block
+/etc/qubes-rpc/qubes.RefreshBlockDevices
 
 %files -n python%{python3_pkgversion}-qubesimgconverter
 %dir %{python3_sitelib}/qubesimgconverter
