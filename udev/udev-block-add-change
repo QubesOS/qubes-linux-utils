@@ -68,7 +68,7 @@ is_attached() {
 # update info about parent devices, if any:
 if [ -f /sys$DEVPATH/partition ]; then
     parent=$(dirname $(readlink -f /sys$DEVPATH))
-    refresh_another /$(realpath --relative-to=/sys $parent)
+    udevadm trigger "$parent"
     # if parent device is already attached, skip its partitions
     if is_attached $parent; then
         xs_remove
@@ -164,10 +164,10 @@ if [ -n "$DM_NAME" ]; then
     DESC="$DM_NAME"
 fi
 
-if [ -f /sys$DEVPATH/partition ]; then
-    parent=$(basename "$(dirname "$DEVPATH")")
-elif echo "$DEVPATH" | grep -q '/host'; then
+if echo "$DEVPATH" | grep -q '/host'; then
     parent=$(basename "$(sed 's|/host.*$||' <<< "$DEVPATH")")
+elif [ -f /sys$DEVPATH/partition ]; then
+    parent=$(basename "$(dirname "$DEVPATH")")
 fi
 
 # The last one is meant to trigger watches
