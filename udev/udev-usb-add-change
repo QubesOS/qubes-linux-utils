@@ -28,12 +28,23 @@ fi
 
 QDB_KEY="/qubes-usb-devices/$XSNAME"
 
+# keep "used" as the block scripts set it; see publish_usb_used there
+mkdir -p /run/qubes
+exec 9>"/run/qubes/usb-used-$XSNAME.lock"
+flock 9
+
+USED=`qubesdb-read -q "$QDB_KEY/used" 2>/dev/null`
+[ -n "$USED" ] || USED=False
+
 # The last one is meant to trigger watches
 qubesdb-write \
     "$QDB_KEY/desc" "$DESC" \
     "$QDB_KEY/usb-ver" "$VERSION" \
     "$QDB_KEY/interfaces" "$ID_USB_INTERFACES" \
+    "$QDB_KEY/used" "$USED" \
     /qubes-usb-devices ''
+
+exec 9>&-
 
 # Make sure PVUSB backend driver is loaded.
 /sbin/modprobe xen-usbback 2> /dev/null || true
