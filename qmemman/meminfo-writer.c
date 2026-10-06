@@ -98,6 +98,7 @@ UsedMem *parse(const char *meminfo_buf, const char* dom_current_buf)
 		if (used_swap_diff < 0)
 			used_swap_diff = -used_swap_diff;
 		if (used_swap_diff > used_swap_change_threshold || prev_used_swap == 0) {
+			prev_used_swap = used_swap;
 			snprintf(used_swap_buf, sizeof(used_swap_buf), "%lld", used_swap);
 			ret_swap = used_swap_buf;
 		}
