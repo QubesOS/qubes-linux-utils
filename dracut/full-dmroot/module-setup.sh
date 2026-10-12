@@ -16,6 +16,9 @@ depends() {
 install() {
     inst_hook pre-trigger 90 $moddir/qubes_cow_setup.sh
     inst_multiple \
+        grep \
+        sort \
+        tail \
         sfdisk \
         swapon \
         mkswap \

@@ -31,14 +31,11 @@ while ! [ -e /dev/xvda ]; do sleep 0.1; done
 # Fix up partition tables
 if /usr/sbin/gptfix fix /dev/xvda; then
     while ! [ -e /dev/xvda1 ]; do sleep 0.01; done
-    if [ -d /dev/disk/by-partlabel ]; then
-        ROOT_DEV=$(readlink "/dev/disk/by-partlabel/Root\\x20filesystem")
+    ROOT_DEV=$(grep -l "PARTNAME=Root filesystem" /sys/block/xvda/xvda*/uevent 2>/dev/null | sort -V | tail -n 1)
+    if [ -n "$ROOT_DEV" ]; then
+        ROOT_DEV=${ROOT_DEV%/uevent}
         ROOT_DEV=${ROOT_DEV##*/}
     else
-        ROOT_DEV=$(grep -l "PARTNAME=Root filesystem" /sys/block/xvda/xvda*/uevent |
-            grep -o "xvda[0-9]")
-    fi
-    if [ -z "$ROOT_DEV" ]; then
         # fallback to third partition
         ROOT_DEV=xvda3
     fi
@@ -96,7 +93,14 @@ EOF
     fi
     while ! [ -e /dev/xvdc1 ]; do sleep 0.1; done
     /sbin/mkswap /dev/xvdc1
-    ln -s ../$ROOT_DEV /dev/mapper/dmroot
+    ln -sf "../$ROOT_DEV" /dev/mapper/dmroot
+    # Keep the mapping for the udev instance of the booted system: /run (unlike
+    # the rest of the initramfs) is moved over by switch_root.
+    mkdir -p /run
+    grep -q ' /run ' /proc/mounts || mount -t tmpfs -o mode=0755 tmpfs /run
+    mkdir -p /run/udev/rules.d
+    printf 'KERNEL=="%s", SYMLINK+="mapper/dmroot"\n' "$ROOT_DEV" > \
+        /run/udev/rules.d/99-qubes-root.rules
     echo Qubes: done.
 fi
 
