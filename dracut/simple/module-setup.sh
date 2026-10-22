@@ -19,6 +19,8 @@ install() {
         readlink \
         uname \
         grep \
+        sort \
+        tail \
         kmod \
         modprobe \
         ln \

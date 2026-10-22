@@ -58,8 +58,9 @@ udevadm settle --exit-if-exists=/dev/xvda
 # prefer partition if exists
 if gptfix fix /dev/xvda; then
     udevadm settle --exit-if-exists=/dev/xvda1
-    if [ -e "/dev/disk/by-partlabel/Root\\x20filesystem" ]; then
-        ROOT_DEV=$(readlink "/dev/disk/by-partlabel/Root\\x20filesystem")
+    ROOT_DEV=$(grep -l "PARTNAME=Root filesystem" /sys/block/xvda/xvda*/uevent 2>/dev/null | sort -V | tail -n 1)
+    if [ -n "$ROOT_DEV" ]; then
+        ROOT_DEV=${ROOT_DEV%/uevent}
         ROOT_DEV=${ROOT_DEV##*/}
     else
         ROOT_DEV=xvda3
@@ -125,9 +126,10 @@ EOF
     # enable swap right now, because systemd may want to run fsck in initramfs
     # already and it require some more memory
     swapon /dev/xvdc1
-    mkdir -p /etc/udev/rules.d
-    printf 'KERNEL=="%s", SYMLINK+="mapper/dmroot"\n' "$ROOT_DEV" >> \
-        /etc/udev/rules.d/99-root.rules
+    mkdir -p /run/udev/rules.d /dev/mapper
+    printf 'KERNEL=="%s", SYMLINK+="mapper/dmroot"\n' "$ROOT_DEV" > \
+        /run/udev/rules.d/99-qubes-root.rules
+    ln -sf "../$ROOT_DEV" /dev/mapper/dmroot
     udevadm control -R
     udevadm trigger
     log_end
