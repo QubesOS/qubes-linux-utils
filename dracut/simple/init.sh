@@ -94,8 +94,8 @@ EOF
     while ! [ -e /dev/xvdc1 ]; do sleep 0.1; done
     /sbin/mkswap /dev/xvdc1
     ln -sf "../$ROOT_DEV" /dev/mapper/dmroot
-    # Keep the mapping for the udev instance of the booted system: /run (unlike
-    # the rest of the initramfs) is moved over by switch_root.
+    # Keep the mapping for the udev instance of the booted system: /run is
+    # moved to the new root below, right before switch_root.
     mkdir -p /run
     grep -q ' /run ' /proc/mounts || mount -t tmpfs -o mode=0755 tmpfs /run
     mkdir -p /run/udev/rules.d
@@ -133,6 +133,12 @@ if ! [ -d "$NEWROOT/lib/modules/$kver/kernel" ]; then
     fi
     umount /tmp/modules
     rmdir /tmp/modules
+fi
+
+# busybox switch_root does not move /run, so move it ourselves to keep
+# the dmroot udev rule written above.
+if grep -q ' /run ' /proc/mounts && [ -d "$NEWROOT/run" ]; then
+    mount -o move /run "$NEWROOT/run"
 fi
 
 umount /dev /sys /proc
