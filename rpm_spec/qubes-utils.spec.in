@@ -115,14 +115,29 @@ make install install-selinux DESTDIR=%{buildroot} PYTHON=%{__python3} NO_REBUILD
 %systemd_post qubes-meminfo-writer-dom0.service
 # VM
 %systemd_post qubes-meminfo-writer.service
+%systemd_post qubes-block-mount-watcher.service
+
+# Apply the preset on upgrade
+if [ $1 -gt 1 ] && \
+   [ ! -e %{_localstatedir}/lib/rpm-state/qubes-utils-mount-watcher ]; then
+    mkdir -p %{_localstatedir}/lib/rpm-state
+    touch %{_localstatedir}/lib/rpm-state/qubes-utils-mount-watcher
+    systemctl preset qubes-block-mount-watcher.service >/dev/null 2>&1 || :
+fi
+if systemctl is-enabled --quiet qubes-block-mount-watcher.service \
+        >/dev/null 2>&1; then
+    systemctl start qubes-block-mount-watcher.service >/dev/null 2>&1 || :
+fi
 
 %preun
 %systemd_preun qubes-meminfo-writer-dom0.service
 %systemd_preun qubes-meminfo-writer.service
+%systemd_preun qubes-block-mount-watcher.service
 
 %postun
 %systemd_postun_with_restart qubes-meminfo-writer-dom0.service
 %systemd_postun_with_restart qubes-meminfo-writer.service
+%systemd_postun_with_restart qubes-block-mount-watcher.service
 
 %post libs -p /sbin/ldconfig
 %postun libs -p /sbin/ldconfig
@@ -136,11 +151,15 @@ rm -rf $RPM_BUILD_ROOT
 %_tmpfilesdir/xen-devices-qubes.conf
 %dir %{_prefix}/lib/qubes
 %{_prefix}/lib/qubes/udev-*
+%{_prefix}/lib/qubes/qubes-block-mount-watcher
 %{_bindir}/meminfo-writer
 %{_unitdir}/qubes-meminfo-writer.service
 %{_unitdir}/qubes-meminfo-writer-dom0.service
+%{_unitdir}/qubes-block-mount-watcher.service
+%{_prefix}/lib/systemd/system-preset/75-qubes-block-mount-watcher.preset
 %dir %_includedir/qubes
 /etc/xen/scripts/qubes-block
+/etc/qubes-rpc/qubes.RefreshBlockDevices
 
 %files -n python%{python3_pkgversion}-qubesimgconverter
 %dir %{python3_sitelib}/qubesimgconverter

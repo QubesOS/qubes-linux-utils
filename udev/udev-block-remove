@@ -10,8 +10,11 @@ qubesdb-write /qubes-block-devices ''
 
 if [ -r /run/qubes/block-slave-cache-$NAME ]; then
     # update info about underlying devices of device-mapper (if any);
+    # (including partitions)
     for dev in $(cat /run/qubes/block-slave-cache-$NAME); do
-        udevadm trigger /sys/class/block/$dev
+        for syspath in "/sys/class/block/$dev" "/sys/class/block/$dev"?*; do
+            [ -d "$syspath" ] && udevadm trigger "$syspath"
+        done
     done
     rm -f /run/qubes/block-slave-cache-$NAME
 fi

@@ -10,6 +10,7 @@ export LIBDIR SCRIPTSDIR SYSLIBDIR INCLUDEDIR
 .PHONY: all selinux install install-selinux install-fedora-kernel-support install-debian-kernel-support clean
 
 all:
+	$(MAKE) -C udev all
 	$(MAKE) -C qrexec-lib all
 	$(MAKE) -C qmemman all
 	$(MAKE) -C imgconverter all
@@ -42,6 +43,7 @@ install-gptfix:
 	$(MAKE) -C gptfixer install
 
 clean:
+	$(MAKE) -C udev clean
 	$(MAKE) -C qrexec-lib clean
 	$(MAKE) -C qmemman clean
 	$(MAKE) -C imgconverter clean

@@ -1,0 +1,16 @@
+[Unit]
+Description=Block device mount watcher
+After=qubes-db.service qubes-db-dom0.service systemd-udevd.service
+Wants=qubes-db.service
+
+[Service]
+Type=simple
+# Shows to dom0 that this backend supports the `used` markers for block devices.
+ExecStartPre=/usr/bin/qubesdb-write /qubes-device-usage-tracking/block True
+ExecStopPost=-/usr/bin/qubesdb-rm /qubes-device-usage-tracking/block
+ExecStart=/usr/lib/qubes/qubes-block-mount-watcher
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

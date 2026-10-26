@@ -1,6 +1,6 @@
 #!/bin/bash
 
-shopt -s nullglob
+shopt -s nullglob globstar
 
 
 export LC_CTYPE=en_US.UTF-8
@@ -10,6 +10,27 @@ SIZE=$[ $(cat /sys/$DEVPATH/size) * 512 ]
 MODE=w
 QDB_KEY="/qubes-block-devices/$NAME"
 
+# USB ancestor port name (e.g. "1-1") if this block device is exposed via USB;
+# empty otherwise. Computed early so xs_set_usb_used can use it.
+USB_PARENT=""
+USB_PARENT_SYSPATH=""
+if echo "$DEVPATH" | grep -q '/host'; then
+    # DEVPATH for a USB-connected block device ends with:
+    #   .../<usb-dev>/<usb-iface>/host.../...
+    # Walk up /sys to find the USB device directory name matching bus-port
+    # format (e.g. "1-1", not "1-1:1.0").
+    walk="/sys$DEVPATH"
+    while [ -n "$walk" ] && [ "$walk" != "/" ] && [ "$walk" != "/sys" ]; do
+        walk=${walk%/*}
+        candidate=${walk##*/}
+        if [[ "$candidate" =~ ^[0-9]+-[0-9]+(\.[0-9]+)*$ ]]; then
+            USB_PARENT_SYSPATH=$walk
+            USB_PARENT=$candidate
+            break
+        fi
+    done
+fi
+
 xs_remove() {
     if is_attached /sys$DEVPATH; then
         return 0
@@ -18,6 +39,21 @@ xs_remove() {
     if qubesdb-read -q "$QDB_KEY/desc" >/dev/null; then
         qubesdb-rm "$QDB_KEY/"
         qubesdb-write /qubes-block-devices ''
+    fi
+}
+
+# Mark only the USB ancestor (if any) as used. Needed on its own when the
+# device itself is removed from QDB (used locally, so not manageable from
+# dom0) but the whole USB device still must not be attachable elsewhere.
+xs_set_usb_used() {
+    if [ -n "$USB_PARENT" ]; then
+        local usb_safe="${USB_PARENT//./_}"
+        # check if USB device is exposed
+        if qubesdb-read -q "/qubes-usb-devices/${usb_safe}/desc" >/dev/null
+        then
+            qubesdb-write "/qubes-usb-devices/${usb_safe}/used" "$1"
+            qubesdb-write /qubes-usb-devices ''
+        fi
     fi
 }
 
@@ -49,6 +85,54 @@ refresh_another() {
     env -i PATH=$PATH $launch_env $0
 }
 
+# Same, plus the device's partitions. Whether a partition may be exported
+# depends on its parent's state.
+refresh_with_partitions() {
+    local devpath=$1 name part
+    refresh_another "$devpath"
+    name=${devpath##*/}
+    for part in "/sys$devpath/$name"?*; do
+        [ -d "$part" ] || continue
+        refresh_another "/$(realpath --relative-to=/sys "$part")"
+    done
+}
+
+# If any block device exposed by the USB ancestor (including sibling block
+# devices and all their partitions) is currently used locally.
+# Used to decide if the USB ancestor can be set free.
+usb_parent_still_in_use() {
+    [ -n "$USB_PARENT_SYSPATH" ] || return 1
+    local blockdev part
+    # The interface-to-host depth varies by driver
+    for blockdev in "$USB_PARENT_SYSPATH"/**/block/*; do
+        if is_used "$blockdev"; then
+            return 0
+        fi
+        for part in "$blockdev/${blockdev##*/}"*; do
+            if [ -d "$part" ] && is_used "$part"; then
+                return 0
+            fi
+        done
+    done
+    return 1
+}
+
+# Publish the USB ancestor's "used" marker under a lock shared with
+# udev-usb-add-change. Runs for sibling devices are not ordered, and a
+# stale False written last would mark as free a mounted device.
+publish_usb_used() {
+    [ -n "$USB_PARENT" ] || return 0
+    mkdir -p /run/qubes
+    (
+        flock 9
+        if usb_parent_still_in_use; then
+            xs_set_usb_used True
+        else
+            xs_set_usb_used False
+        fi
+    ) 9>"/run/qubes/usb-used-${USB_PARENT//./_}.lock"
+}
+
 is_attached() {
     dev_hex=$(stat -c %t:%T /dev/$(basename $1))
     if [ -z "$dev_hex" -o "$dev_hex" = "0:0" ]; then
@@ -69,8 +153,8 @@ is_attached() {
 if [ -f /sys$DEVPATH/partition ]; then
     parent=$(dirname $(readlink -f /sys$DEVPATH))
     refresh_another /$(realpath --relative-to=/sys $parent)
-    # if parent device is already attached, skip its partitions
-    if is_attached $parent; then
+    # if parent device is busy, skip its partitions
+    if is_attached $parent || is_used $parent; then
         xs_remove
         exit 0
     fi
@@ -78,7 +162,7 @@ fi
 
 # and underlying devices of device-mapper (if any)
 for dev in /sys$DEVPATH/slaves/*; do
-    refresh_another /$(realpath --relative-to=/sys $dev)
+    refresh_with_partitions /$(realpath --relative-to=/sys $dev)
 done
 
 # cache slave devices for remove event
@@ -95,21 +179,23 @@ if [ -z "$QUBES_EXPORT_BLOCK_DEVICE" ] && [ "$DM_UDEV_DISABLE_DISK_RULES_FLAG" =
     exit 0
 fi
 
+# Note: mounting or unmounting a filesystem does not generate a block uevent,
+# so this script is not run by itself when local use starts or ends.
+# See `qubes-block-mount-watcher`.
+
 # device itself is already used
 if is_used /sys$DEVPATH; then
     xs_remove
+    publish_usb_used
     exit 0
 fi
 
 # or one of its partitions is used
-# or already attached (prevent attaching both device and its partition(s) at
-# the same time)
+USED=""
 for part in /sys$DEVPATH/$NAME*; do
-    if [ -d $part ]; then
-        if is_used $part || is_attached $part; then
-            xs_remove
-            exit 0
-        fi
+    if [ -d $part ] && is_used $part; then
+        USED=1
+        break
     fi
 done
 
@@ -166,8 +252,14 @@ fi
 
 if [ -f /sys$DEVPATH/partition ]; then
     parent=$(basename "$(dirname "$DEVPATH")")
-elif echo "$DEVPATH" | grep -q '/host'; then
-    parent=$(basename "$(sed 's|/host.*$||' <<< "$DEVPATH")")
+elif [ -n "$USB_PARENT" ]; then
+    parent="$USB_PARENT"
+fi
+
+if [ -n "$USED" ]; then
+    USED_VALUE=True
+else
+    USED_VALUE=False
 fi
 
 # The last one is meant to trigger watches
@@ -176,7 +268,12 @@ qubesdb-write \
     "$QDB_KEY/size" "$SIZE" \
     "$QDB_KEY/mode" "$MODE" \
     "$QDB_KEY/parent" "$parent" \
+    "$QDB_KEY/used" "$USED_VALUE" \
     /qubes-block-devices ''
+
+# This device, one of its children or a sibling device may be in use.
+publish_usb_used
+[ -n "$USED" ] && exit 0
 
 # Make sure that block backend is loaded
 /sbin/modprobe xen-blkback 2> /dev/null || /sbin/modprobe blkbk
