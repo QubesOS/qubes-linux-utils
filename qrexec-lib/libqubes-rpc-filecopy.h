@@ -82,6 +82,11 @@ void register_error_handler(error_handler_t *func);
 int copy_file(int outfd, int infd, long long size, unsigned long *crc32);
 const char *copy_file_status_to_str(int status);
 void set_size_limit(unsigned long long new_bytes_limit, unsigned long long new_files_limit);
+/*
+ * Limit the size of each single regular file, regardless of the total limits
+ * set with set_size_limit(). 0 means no limit.
+ */
+void set_per_file_size_limit(unsigned long long new_per_file_bytes_limit);
 void set_verbose(int value);
 /*
  * Delay extracting a file if there is no enough space for it - wait for space
