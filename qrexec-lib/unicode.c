@@ -249,7 +249,8 @@ static bool flag_check(const uint32_t flags)
 }
 
 /* Validates whether input string starts with a valid 3-bit SGR color code sequence.
- * 
+ * Code generated using the re2c software to validate the following regular expression (re2c format):
+ * "["";"*([0]*([0]|[3-4][0-7])(";"+[0]*([0]|[3-4][0-7]))*";"*)?"m"
  * @param color_code_sequence Input string (read-only)
  * @return 1 if input string starts with a valid sequence or 0 if it doesn't
  */
