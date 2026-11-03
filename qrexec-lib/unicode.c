@@ -248,6 +248,64 @@ static bool flag_check(const uint32_t flags)
     return (flags & ~(__typeof__(flags))allowed) == 0;
 }
 
+/* Validates whether input string starts with a valid 3-bit SGR color code sequence.
+ * 
+ * @param color_code_sequence Input string (read-only)
+ * @return 1 if input string starts with a valid sequence or 0 if it doesn't
+ */
+static int validate_3bit_sgr_color_code_sequence(const char *color_code_sequence){
+	const char* yymarker;
+	{
+		unsigned char yych;
+		yych = (unsigned char) *color_code_sequence;
+		switch (yych) {
+			case '[': goto yy3;
+			default: goto yy1;
+		}
+yy1:
+		++color_code_sequence;
+yy2:
+		{ return 0; }
+yy3:
+		yych = (unsigned char) *(yymarker = ++color_code_sequence);
+		switch (yych) {
+			case '0':
+			case ';': goto yy4;
+			case '3' ... '4': goto yy6;
+			case 'm': goto yy7;
+			default: goto yy2;
+		}
+yy4:
+		yych = (unsigned char) *++color_code_sequence;
+		switch (yych) {
+			case '0':
+			case ';': goto yy4;
+			case '3' ... '4': goto yy6;
+			case 'm': goto yy7;
+			default: goto yy5;
+		}
+yy5:
+		color_code_sequence = yymarker;
+		goto yy2;
+yy6:
+		yych = (unsigned char) *++color_code_sequence;
+		switch (yych) {
+			case '0' ... '7': goto yy8;
+			default: goto yy5;
+		}
+yy7:
+		++color_code_sequence;
+		{ return 1; }
+yy8:
+		yych = (unsigned char) *++color_code_sequence;
+		switch (yych) {
+			case ';': goto yy4;
+			case 'm': goto yy7;
+			default: goto yy5;
+		}
+	}
+}
+
 QUBES_PURE_PUBLIC int
 qubes_pure_validate_file_name_v2(const uint8_t *const untrusted_filename,
                                  const uint32_t flags)
@@ -308,14 +366,22 @@ qubes_pure_validate_symbolic_link(const uint8_t *untrusted_name,
 }
 
 QUBES_PURE_PUBLIC bool
-qubes_pure_string_safe_for_display(const char *untrusted_str, size_t line_length)
+qubes_pure_string_safe_for_display(const char *untrusted_str, 
+								   size_t line_length, 
+								   bool allow_color)
 {
     assert(line_length == 0 && "Not yet implemented: nonzero line length");
     size_t i = 0;
     do {
         if (untrusted_str[i] >= 0x20 && untrusted_str[i] <= 0x7E) {
             i++;
-        } else {
+        } else if (allow_color && untrusted_str[i] == 0x1B && untrusted_str[i+1]) { 
+			if (validate_3bit_sgr_color_code_sequence(&untrusted_str[i+1])) { 
+				i++;
+			} else {
+				return false;
+			}
+		} else {
             int utf8_ret = validate_utf8_char_safe_for_display((const uint8_t *)(untrusted_str + i));
             if (utf8_ret > 0) {
                 i += utf8_ret;
@@ -330,7 +396,9 @@ qubes_pure_string_safe_for_display(const char *untrusted_str, size_t line_length
 QUBES_PURE_PUBLIC size_t
 qubes_pure_sanitize_string_safe_for_display(const char *const untrusted_str,
                                             char *result,
-                                            const size_t max_line_length)
+                                            const size_t max_line_length,
+											bool allow_color)
+											
 {
     if (max_line_length == 0) {
         return 0;
@@ -344,6 +412,14 @@ qubes_pure_sanitize_string_safe_for_display(const char *const untrusted_str,
             result[j++] = untrusted_str[i++];
             continue;
         }
+		// check for valid color code sequence
+		if (allow_color && untrusted_str[i] == 0x1B && untrusted_str[i+1]) { 
+				if (validate_3bit_sgr_color_code_sequence(&untrusted_str[i+1])) { 
+					// keep the valid ANSI escape sequence
+					result[j++] = untrusted_str[i++]; 
+					continue;
+				}
+		}
         int utf8_ret = validate_utf8_char_and_return_len((const uint8_t *)(untrusted_str + i));
         if (utf8_ret < 0) {
             // unsafe character with length of -utf8_ret
@@ -360,8 +436,7 @@ qubes_pure_sanitize_string_safe_for_display(const char *const untrusted_str,
         for (int k = 0; k < utf8_ret; k++) {
             result[j++] = untrusted_str[i++];
         }
-    };
-
+	};
     // Enforce null termination of the result string
     result[j++] = '\0';
     return j;

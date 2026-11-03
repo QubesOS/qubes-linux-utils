@@ -197,7 +197,8 @@ qubes_pure_code_point_safe_for_display(uint32_t code_point);
  */
 QUBES_PURE_PUBLIC bool
 qubes_pure_string_safe_for_display(const char *untrusted_str,
-                                   size_t line_length);
+                                   size_t line_length,
+								   bool allow_color);
 
 /**
  * Implements filtering and replaces non-printable/non-safe characters with `_`.
@@ -205,12 +206,15 @@ qubes_pure_string_safe_for_display(const char *untrusted_str,
  * @param str Input string (read-only)
  * @param result Buffer to store the sanitized output (must be max_line_length)
  * @param max_line_length Maximum length of the input string to process
+ * @param allow_color If 'True' does not sanitize ANSI escape sequences in valid 
+ * color code sequences to allow for colored logging
  * @return The length of the sanitized string written to result (including null terminator)
  */
 QUBES_PURE_PUBLIC size_t
 qubes_pure_sanitize_string_safe_for_display(const char *untrusted_str,
                                             char *result,
-                                            size_t max_line_length);
+                                            size_t max_line_length,
+											bool allow_color);
 
 /** Initialize a QubesSlice from a nul-terminated string. */
 static inline struct QubesSlice
