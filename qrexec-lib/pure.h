@@ -266,6 +266,26 @@ enum QubeNameValidationError {
 QUBES_PURE_PUBLIC enum QubeNameValidationError
 qubes_pure_is_valid_qube_name(const struct QubesSlice untrusted_str);
 
+/**
+ * Parse `untrusted_str` as a non-negative decimal integer.
+ *
+ * The whole string must consist of one or more ASCII digits (0-9);
+ * anything else is rejected.
+ * Leading zeros are allowed.
+ * The input must be NUL-terminated.
+ *
+ * This function does not use or modify errno.
+ *
+ * \param[in] untrusted_str The string to parse.  Must not be NULL.
+ * \param[out] out Where to store the result on success.  Must not be NULL.
+ *                 Not modified on failure.
+ * \return 0 on success, -ERANGE if the value is larger than LLONG_MAX,
+ *         or -EINVAL if the string is not a valid non-negative decimal
+ *         integer.
+ */
+QUBES_PURE_PUBLIC int
+qubes_pure_parse_nonneg_ll(const char *untrusted_str, long long *out);
+
 /// Flags for pathname validation functions.
 enum QubesFilenameValidationFlags {
     /// Disable Unicode charset restrictions and UTF-8 validity checks.

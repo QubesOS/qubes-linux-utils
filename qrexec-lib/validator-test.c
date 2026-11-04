@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <string.h>
+#include <limits.h>
 
 #include "pure.h"
 #include <unicode/utf8.h>
@@ -159,12 +160,63 @@ static void test_string_sanitization(void)
     assert(strcmp(buf, "a_b") == 0);
 }
 
+static void test_parse_nonneg_ll(void)
+{
+    static const struct {
+        const char *input;
+        int ret;
+        long long value;
+    } cases[] = {
+        { "0", 0, 0 },
+        { "1", 0, 1 },
+        { "4096", 0, 4096 },
+        { "00", 0, 0 },
+        { "010", 0, 10 },
+        { "9223372036854775807", 0, LLONG_MAX },
+        { "09223372036854775807", 0, LLONG_MAX },
+        { "9223372036854775808", -ERANGE, 0 },
+        { "18446744073709551616", -ERANGE, 0 },
+        { "99999999999999999999999999999", -ERANGE, 0 },
+        { "", -EINVAL, 0 },
+        { "-1", -EINVAL, 0 },
+        { "-0", -EINVAL, 0 },
+        { "+1", -EINVAL, 0 },
+        { " 1", -EINVAL, 0 },
+        { "1 ", -EINVAL, 0 },
+        { "1\n", -EINVAL, 0 },
+        { "\t1", -EINVAL, 0 },
+        { "abc", -EINVAL, 0 },
+        { "12abc", -EINVAL, 0 },
+        { "1.5", -EINVAL, 0 },
+        { "1e3", -EINVAL, 0 },
+        { "0x10", -EINVAL, 0 },
+        { "1G", -EINVAL, 0 },
+        { "99999999999999999999999999999x", -EINVAL, 0 },
+        { "\xd9\xa1", -EINVAL, 0 }, // ARABIC-INDIC DIGIT ONE
+    };
+
+    for (size_t i = 0; i < sizeof(cases) / sizeof(cases[0]); ++i) {
+        long long value = -42;
+        errno = 1234;
+        int ret = qubes_pure_parse_nonneg_ll(cases[i].input, &value);
+        if (ret != cases[i].ret ||
+            value != (ret == 0 ? cases[i].value : -42) ||
+            errno != 1234) {
+            fprintf(stderr, "BUG: qubes_pure_parse_nonneg_ll(\"%s\") "
+                    "returned %d (expected %d), value %lld, errno %d\n",
+                    cases[i].input, ret, cases[i].ret, value, errno);
+            abort();
+        }
+    }
+}
+
 int main(int argc, char **argv)
 {
     (void)argc;
     (void)argv;
 
     test_string_sanitization();
+    test_parse_nonneg_ll();
 
     assert(qubes_pure_validate_file_name((const uint8_t *)u8"simple_safe_filename.txt"));
 
