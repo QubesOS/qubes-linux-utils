@@ -32,6 +32,11 @@ static int verbose = 0;
 static unsigned long opt_wait_for_space_margin;
 static int use_tmpfile = 0;
 static int procdir_fd = -1;
+static conflict_handler_t *conflict_handler = NULL;
+static unsigned long long skipped_files = 0;
+/* temporary file to remove if unpacking fails */
+static int pending_tmp_dirfd = -1;
+static char pending_tmp_name[NAME_MAX + 1];
 
 void send_status_and_crc(int code, const char *last_filename);
 
@@ -47,6 +52,8 @@ void send_status_and_crc(int code, const char *last_filename);
 
 static _Noreturn void do_exit(int code, const char *last_filename)
 {
+    if (pending_tmp_dirfd != -1)
+        unlinkat(pending_tmp_dirfd, pending_tmp_name, 0);
     close(0);
     send_status_and_crc(code, last_filename);
     exit(code);
@@ -66,6 +73,11 @@ void set_verbose(int value)
 void set_wait_for_space(unsigned long value)
 {
     opt_wait_for_space_margin = value;
+}
+
+void register_conflict_handler(conflict_handler_t *func)
+{
+    conflict_handler = func;
 }
 
 void set_procfs_fd(int value)
@@ -186,6 +198,173 @@ static int opendir_safe(int dirfd, char *path, const char **last_segment)
     }
 }
 
+/* creates an entry named "name" in dirfd; returns 0 or an errno value */
+typedef int (create_fn)(int dirfd, const char *name, void *ctx);
+
+static int create_regular(int dirfd, const char *name, void *ctx)
+{
+    int fd = openat(dirfd, name, O_WRONLY | O_CREAT | O_EXCL | O_NOFOLLOW | O_CLOEXEC | O_NOCTTY, 0000);
+    if (fd < 0)
+        return errno;
+    *(int *)ctx = fd;
+    return 0;
+}
+
+static int link_tmpfile(int dirfd, const char *name, void *ctx)
+{
+    if (linkat(procdir_fd, ctx, dirfd, name, AT_SYMLINK_FOLLOW) < 0)
+        return errno;
+    return 0;
+}
+
+static int create_symlink(int dirfd, const char *name, void *ctx)
+{
+    if (symlinkat(ctx, dirfd, name) < 0)
+        return errno;
+    return 0;
+}
+
+static int create_temporary(int dirfd, char *tmp_name, size_t size,
+                            create_fn *create, void *ctx)
+{
+    int ret = EEXIST;
+    for (unsigned int i = 0; ret == EEXIST && i < 1000; i++) {
+        if ((size_t)snprintf(tmp_name, size, ".qubes-filecopy-%ld-%u",
+                             (long)getpid(), i) >= size)
+            abort();
+        ret = create(dirfd, tmp_name, ctx);
+    }
+    return ret;
+}
+
+static void replace_entry(int dirfd, const char *tmp_name, const char *name,
+                          const char *untrusted_name)
+{
+    if (renameat(dirfd, tmp_name, dirfd, name) < 0) {
+        int saved_errno = errno;
+        unlinkat(dirfd, tmp_name, 0);
+        pending_tmp_dirfd = -1;
+        do_exit(saved_errno, untrusted_name);
+    }
+    pending_tmp_dirfd = -1;
+    fprintf(stderr, "%s: replaced the existing file\n", untrusted_name);
+}
+
+/* suggest a free name like "name_1.ext" in dirfd, or "" if none found */
+static void suggest_name(int dirfd, const char *name, char *out, size_t size)
+{
+    const char *dot = strrchr(name, '.');
+    int base_len = (dot && dot != name) ? (int)(dot - name) : (int)strlen(name);
+    const char *ext;
+    struct stat st;
+
+    if (base_len > 4 && strncmp(name + base_len - 4, ".tar", 4) == 0)
+        base_len -= 4;
+    ext = name + base_len;
+    for (unsigned int i = 1; i < 1000; i++) {
+        int len = snprintf(out, size, "%.*s_%u%s", base_len, name, i, ext);
+        if (len < 0)
+            break;
+        if ((size_t)len >= size) {
+            /* shorten the base, without cutting a UTF-8 character */
+            int cut = base_len - (len - (int)size + 1);
+            while (cut > 0 && (name[cut] & 0xC0) == 0x80)
+                cut--;
+            if (cut <= 0)
+                break;
+            snprintf(out, size, "%.*s_%u%s", cut, name, i, ext);
+        }
+        if (fstatat(dirfd, out, &st, AT_SYMLINK_NOFOLLOW) < 0 && errno == ENOENT)
+            return;
+    }
+    out[0] = '\0';
+}
+
+static int valid_new_name(const char *name)
+{
+    return name[0] && !strchr(name, '/') &&
+        strcmp(name, ".") != 0 && strcmp(name, "..") != 0;
+}
+
+/* returns 0 if skipped; with replace_later, the caller renames over the old file */
+static int create_entry(int dirfd, const char *name, const char *untrusted_name,
+                        create_fn *create, void *ctx,
+                        char *replace_later, size_t replace_later_size)
+{
+    char new_name[NAME_MAX + 1];
+    char tmp_name[NAME_MAX + 1];
+    const char *error = NULL;
+    struct stat st;
+    int can_overwrite, ret;
+
+    ret = create(dirfd, name, ctx);
+    if (ret == 0)
+        return 1;
+    if (ret != EEXIST || !conflict_handler)
+        do_exit(ret, untrusted_name);
+
+    suggest_name(dirfd, name, new_name, sizeof(new_name));
+    for (;;) {
+        can_overwrite = !(fstatat(dirfd, name, &st, AT_SYMLINK_NOFOLLOW) == 0 &&
+                          S_ISDIR(st.st_mode));
+        switch (conflict_handler(untrusted_name, can_overwrite, new_name,
+                                 sizeof(new_name), error)) {
+        case CONFLICT_OVERWRITE:
+            if (!can_overwrite) {
+                error = "A directory cannot be replaced by a file.";
+                continue;
+            }
+            ret = create_temporary(dirfd, tmp_name, sizeof(tmp_name), create, ctx);
+            if (ret)
+                do_exit(ret, untrusted_name);
+            pending_tmp_dirfd = dirfd;
+            memcpy(pending_tmp_name, tmp_name, sizeof(pending_tmp_name));
+            if (replace_later) {
+                if ((size_t)snprintf(replace_later, replace_later_size, "%s",
+                                     tmp_name) >= replace_later_size)
+                    abort();
+            } else {
+                replace_entry(dirfd, tmp_name, name, untrusted_name);
+            }
+            return 1;
+        case CONFLICT_SKIP:
+            skipped_files++;
+            fprintf(stderr, "%s: skipped, a file with this name already exists\n",
+                    untrusted_name);
+            return 0;
+        case CONFLICT_RENAME:
+            new_name[sizeof(new_name) - 1] = '\0';
+            if (!valid_new_name(new_name)) {
+                error = "Invalid name.";
+                continue;
+            }
+            ret = create(dirfd, new_name, ctx);
+            if (ret == EEXIST) {
+                error = "A file with this name already exists too.";
+                continue;
+            }
+            if (ret)
+                do_exit(ret, untrusted_name);
+            fprintf(stderr, "%s: saved as %s\n", untrusted_name, new_name);
+            return 1;
+        case CONFLICT_ABORT:
+        default:
+            do_exit(EEXIST, untrusted_name);
+        }
+    }
+}
+
+static void discard_data(unsigned long long len, const char *untrusted_name)
+{
+    char buf[4096];
+    while (len) {
+        int count = len > sizeof(buf) ? (int)sizeof(buf) : (int)len;
+        if (!read_all_with_crc(0, buf, count))
+            do_exit(LEGAL_EOF, untrusted_name);
+        len -= count;
+    }
+}
+
 static void process_one_file_reg(struct file_header *untrusted_hdr,
                                  const char *untrusted_name,
                                  uint32_t flags)
@@ -194,6 +373,8 @@ static void process_one_file_reg(struct file_header *untrusted_hdr,
     int fdout = -1, safe_dirfd;
     const char *last_segment;
     char *path_dup;
+    char replace_tmp[NAME_MAX + 1] = "";
+    int created = 1;
 
     ret = qubes_pure_validate_file_name_v2((const uint8_t *)untrusted_name, flags);
     if (ret != 0)
@@ -214,21 +395,25 @@ static void process_one_file_reg(struct file_header *untrusted_hdr,
         }
     }
 
-    if (fdout < 0)
-        fdout = openat(safe_dirfd, last_segment, O_WRONLY | O_CREAT | O_EXCL | O_NOFOLLOW | O_CLOEXEC | O_NOCTTY, 0000);
-    if (fdout < 0)
-        do_exit(errno, untrusted_name);
-
     /* sizes are signed elsewhere */
     if (untrusted_hdr->filelen > LLONG_MAX || (bytes_limit && untrusted_hdr->filelen > bytes_limit))
         do_exit(EDQUOT, untrusted_name);
     if (bytes_limit && total_bytes > bytes_limit - untrusted_hdr->filelen)
         do_exit(EDQUOT, untrusted_name);
-    if (opt_wait_for_space_margin) {
+
+    if (fdout < 0)
+        created = create_entry(safe_dirfd, last_segment, untrusted_name,
+                               create_regular, &fdout,
+                               replace_tmp, sizeof(replace_tmp));
+    if (opt_wait_for_space_margin && created) {
         wait_for_space(fdout,
             untrusted_hdr->filelen + opt_wait_for_space_margin);
     }
     total_bytes += untrusted_hdr->filelen;
+    if (!created) {
+        discard_data(untrusted_hdr->filelen, untrusted_name);
+        goto out;
+    }
     ret = copy_file(fdout, 0, untrusted_hdr->filelen, &crc32_sum);
     if (ret != COPY_FILE_OK) {
         if (ret == COPY_FILE_READ_EOF
@@ -241,13 +426,18 @@ static void process_one_file_reg(struct file_header *untrusted_hdr,
         char fd_str[11];
         if ((unsigned)snprintf(fd_str, sizeof(fd_str), "%d", fdout) >= sizeof(fd_str))
             abort();
-        if (linkat(procdir_fd, fd_str, safe_dirfd, last_segment, AT_SYMLINK_FOLLOW) < 0)
-            do_exit(errno, untrusted_name);
+        created = create_entry(safe_dirfd, last_segment, untrusted_name,
+                               link_tmpfile, fd_str, NULL, 0);
     }
-    fix_times_and_perms(fdout, untrusted_hdr, untrusted_name);
+    if (created)
+        fix_times_and_perms(fdout, untrusted_hdr, untrusted_name);
+    if (replace_tmp[0])
+        replace_entry(safe_dirfd, replace_tmp, last_segment, untrusted_name);
+out:
     if (safe_dirfd != AT_FDCWD)
         close(safe_dirfd);
-    close(fdout);
+    if (fdout >= 0)
+        close(fdout);
     free(path_dup);
 }
 
@@ -321,8 +511,8 @@ static void process_one_file_link(struct file_header *untrusted_hdr,
         do_exit(ENOMEM, untrusted_name);
     safe_dirfd = opendir_safe(AT_FDCWD, path_dup, &last_segment);
 
-    if (symlinkat(untrusted_content, safe_dirfd, last_segment))
-        do_exit(errno, untrusted_name);
+    create_entry(safe_dirfd, last_segment, untrusted_name,
+                 create_symlink, untrusted_content, NULL, 0);
 
     if (safe_dirfd != AT_FDCWD)
         close(safe_dirfd);
@@ -366,7 +556,7 @@ int do_unpack_ext(int flags)
     int cwd_fd;
     int saved_errno;
 
-    total_bytes = total_files = 0;
+    total_bytes = total_files = skipped_files = 0;
     /* initialize checksum */
     crc32_sum = 0;
     while (read_all_with_crc(0, &untrusted_hdr, sizeof untrusted_hdr)) {
@@ -382,6 +572,8 @@ int do_unpack_ext(int flags)
     }
     if (!end_of_transfer_marker_seen && !errno)
         errno = EREMOTEIO;
+    else if (end_of_transfer_marker_seen && skipped_files)
+        errno = FILECOPY_SKIPPED;
 
     saved_errno = errno;
     cwd_fd = open(".", O_RDONLY);

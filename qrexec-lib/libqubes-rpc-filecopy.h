@@ -28,7 +28,11 @@
 #define MAX_PATH_LENGTH 16384
 
 #define LEGAL_EOF 31415926
+/* result code: the receiver skipped some existing files */
+#define FILECOPY_SKIPPED ECANCELED
 
+#include <errno.h>
+#include <stddef.h>
 #include <stdint.h>
 #include <stdarg.h>
 #include <sys/stat.h>
@@ -72,6 +76,19 @@ enum copy_flags {
     COPY_ALLOW_UNSAFE_SYMLINKS = (1 << 4),
 };
 
+/* what to do when a file to unpack already exists */
+enum conflict_action {
+    CONFLICT_ABORT,
+    CONFLICT_OVERWRITE,
+    CONFLICT_SKIP,
+    CONFLICT_RENAME,
+};
+
+/* new_name comes with a free name to suggest; for CONFLICT_RENAME, write the chosen name there */
+typedef enum conflict_action (conflict_handler_t)(const char *untrusted_name,
+        int can_overwrite, char *new_name, size_t new_name_size,
+        const char *error);
+
 /* feedback handling */
 typedef void (notify_progress_t)(int, int);
 typedef void (error_handler_t)(const char *fmt, va_list args);
@@ -101,6 +118,8 @@ extern unsigned long Crc32_ComputeBuf( unsigned long inCrc32, const void *buf,
         size_t bufLen );
 extern int do_unpack(void);
 extern int do_unpack_ext(int flags);
+/* without a handler, an existing file stops unpacking with EEXIST */
+void register_conflict_handler(conflict_handler_t *func);
 
 /* packing */
 int single_file_processor(const char *filename, const struct stat *st);

@@ -104,6 +104,9 @@ void wait_for_result(void)
             case EEXIST:
                 call_error_handler("A file named \"%s\" already exists in QubesIncoming dir", last_filename);
                 break;
+            case FILECOPY_SKIPPED:
+                call_error_handler("Some files were not copied: they already exist in the target qube and were skipped there");
+                break;
             case EINVAL:
                 call_error_handler("File copy: Corrupted data from packer%s\"%s\"", last_filename_prefix, last_filename);
                 break;
