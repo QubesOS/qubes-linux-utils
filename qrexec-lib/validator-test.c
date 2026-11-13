@@ -22,7 +22,7 @@ static void character_must_be_allowed(UChar32 c)
     assert(!e && off <= 4);
     buf[off] = 0;
     if (!qubes_pure_code_point_safe_for_display(c) ||
-        !qubes_pure_string_safe_for_display(buf, 0))
+        !qubes_pure_string_safe_for_display(buf, 0, 0))
     {
         fprintf(stderr, "BUG: cannot handle file name %s (codepoint U+%" PRIx32 ")\n", buf, (int32_t)c);
         abort();
@@ -63,7 +63,7 @@ static void character_must_be_forbidden(UChar32 c)
     }
 
     buf[off++] = 0;
-    if (qubes_pure_string_safe_for_display((const char *)buf, 0))
+    if (qubes_pure_string_safe_for_display((const char *)buf, 0, 0))
     {
         fprintf(stderr, "BUG: allowed string with codepoint U+%" PRIx32 "\n", (int32_t)c);
         abort();
@@ -97,67 +97,92 @@ static void test_string_sanitization(void)
     size_t len;
 
     // 1. Empty string
-    len = qubes_pure_sanitize_string_safe_for_display("", buf, sizeof(buf));
+    len = qubes_pure_sanitize_string_safe_for_display("", buf, sizeof(buf), 0);
     assert(len == 1);
     assert(buf[0] == '\0');
 
     // 2. Normal ASCII
-    len = qubes_pure_sanitize_string_safe_for_display("Hello", buf, sizeof(buf));
+    len = qubes_pure_sanitize_string_safe_for_display("Hello", buf, sizeof(buf), 0);
     assert(len == 6);
     assert(strcmp(buf, "Hello") == 0);
 
     // 3. Safe UTF-8 (Greek Beta: \xCE\xB2)
-    len = qubes_pure_sanitize_string_safe_for_display("\xCE\xB2", buf, sizeof(buf));
+    len = qubes_pure_sanitize_string_safe_for_display("\xCE\xB2", buf, sizeof(buf), 0);
     assert(len == 3);
     assert(strcmp(buf, "\xCE\xB2") == 0);
 
     // 4. Unsafe UTF-8
     // \U0001f642 is \xF0\x9F\x99\x82 (4 bytes).
-    len = qubes_pure_sanitize_string_safe_for_display("\xF0\x9F\x99\x82", buf, sizeof(buf));
+    len = qubes_pure_sanitize_string_safe_for_display("\xF0\x9F\x99\x82", buf, sizeof(buf), 0);
     assert(len == 2);
     assert(strcmp(buf, "_") == 0);
 
     // 5. Invalid UTF-8 (partial)
-    len = qubes_pure_sanitize_string_safe_for_display("\xE0", buf, sizeof(buf));
+    len = qubes_pure_sanitize_string_safe_for_display("\xE0", buf, sizeof(buf), 0);
     assert(len == 2);
     assert(strcmp(buf, "_") == 0);
 
     // 6. Invalid UTF-8 (bad continuation)
-    len = qubes_pure_sanitize_string_safe_for_display("\xE0 ", buf, sizeof(buf));
+    len = qubes_pure_sanitize_string_safe_for_display("\xE0 ", buf, sizeof(buf), 0);
     assert(len == 3);
     assert(strcmp(buf, "_ ") == 0);
 
     // 7. Max line length
-    len = qubes_pure_sanitize_string_safe_for_display("ABCD", buf, 4);
+    len = qubes_pure_sanitize_string_safe_for_display("ABCD", buf, 4, 0);
     assert(len == 4);
     assert(strcmp(buf, "ABC") == 0);
 
     // 8. Truncation in middle of UTF-8
     // needs 3+1=4, but we have 3
-    len = qubes_pure_sanitize_string_safe_for_display("A\xCE\xB2", buf, 3);
+    len = qubes_pure_sanitize_string_safe_for_display("A\xCE\xB2", buf, 3, 0);
     assert(len == 2);
     assert(strcmp(buf, "A") == 0);
 
     // 9. Unsafe char replacement fits
     // A + Emoji, so 5 bytes but the emoji is replaced with '_' and fits
-    len = qubes_pure_sanitize_string_safe_for_display("A\xF0\x9F\x99\x82", buf, 3);
+    len = qubes_pure_sanitize_string_safe_for_display("A\xF0\x9F\x99\x82", buf, 3, 0);
     assert(len == 3);
     assert(strcmp(buf, "A_") == 0);
 
     // 10. mixed valid invalid
-    len = qubes_pure_sanitize_string_safe_for_display("a\x80""b", buf, 10);
+    len = qubes_pure_sanitize_string_safe_for_display("a\x80""b", buf, 10, 0);
     assert(len == 4);
     assert(strcmp(buf, "a_b") == 0);
 
     // 11. Invalid multi-byte
-    len = qubes_pure_sanitize_string_safe_for_display("a\xC0\xAF""b", buf, 10);
+    len = qubes_pure_sanitize_string_safe_for_display("a\xC0\xAF""b", buf, 10, 0);
     assert(len == 5);
     assert(strcmp(buf, "a__b") == 0);
 
     // 12. Invalid multi-byte (surrogate)
-    len = qubes_pure_sanitize_string_safe_for_display("a\xED\xA0\x80""b", buf, 10);
+    len = qubes_pure_sanitize_string_safe_for_display("a\xED\xA0\x80""b", buf, 10, 0);
     assert(len == 4);
     assert(strcmp(buf, "a_b") == 0);
+		
+	// 13. Colored ASCII (3-bit SGR)
+    len = qubes_pure_sanitize_string_safe_for_display("\x1B[31mred\x1B[0mreset", buf, sizeof(buf), 1);
+    assert(len == 18);
+    assert(strcmp(buf, "\x1B[31mred\x1B[0mreset") == 0);
+
+	// 14. Colored ASCII (3-bit SGR)
+    len = qubes_pure_sanitize_string_safe_for_display("\x1B[31;0000;;;000034;43mblueyellow\x1B[;;;;0000mreset", buf, sizeof(buf), 1);
+    assert(len == 49);
+    assert(strcmp(buf, "\x1B[31;0000;;;000034;43mblueyellow\x1B[;;;;0000mreset") == 0);
+	
+	// 15. Invalidly and validly colored ASCII (non 3-bit SGR, 3-bit SGR)
+    len = qubes_pure_sanitize_string_safe_for_display("\x1B[91;43mbrightredyellow\x1B[36;41mcyanred\x1B[0mreset", buf, sizeof(buf), 1);
+    assert(len == 48);
+    assert(strcmp(buf, "_[91;43mbrightredyellow\x1B[36;41mcyanred\x1B[0mreset") == 0);
+
+	// 16. Invalid use of ANSI escape sequence
+    len = qubes_pure_sanitize_string_safe_for_display("\x1BHello", buf, sizeof(buf), 1);
+    assert(len == 7);
+    assert(strcmp(buf, "_Hello") == 0);
+
+	// 17. Unallowed colored ASCII
+    len = qubes_pure_sanitize_string_safe_for_display("\x1B[31mred\x1B[0mreset", buf, sizeof(buf), 0);
+    assert(len == 18);
+    assert(strcmp(buf, "_[31mred_[0mreset") == 0);
 }
 
 static void test_parse_nonneg_ll(void)
@@ -408,15 +433,15 @@ int main(int argc, char **argv)
     }
 
     // Flags are too complex to display :(
-    assert(!qubes_pure_string_safe_for_display(u8"\U0001f3f3", 0));
-    assert(!qubes_pure_string_safe_for_display(u8"\ufe0f", 0));
-    assert(!qubes_pure_string_safe_for_display(u8"\u200d", 0));
-    assert(!qubes_pure_string_safe_for_display(u8"\u26a0", 0));
+    assert(!qubes_pure_string_safe_for_display(u8"\U0001f3f3", 0, 0));
+    assert(!qubes_pure_string_safe_for_display(u8"\ufe0f", 0, 0));
+    assert(!qubes_pure_string_safe_for_display(u8"\u200d", 0, 0));
+    assert(!qubes_pure_string_safe_for_display(u8"\u26a0", 0, 0));
 
     // Emojies are not allowed
-    assert(!qubes_pure_string_safe_for_display(u8"\U0001f642", 0));
+    assert(!qubes_pure_string_safe_for_display(u8"\U0001f642", 0, 0));
     // Cuneiform is way too obscure to be worth the risk
-    assert(!qubes_pure_string_safe_for_display(u8"\U00012000", 0));
+    assert(!qubes_pure_string_safe_for_display(u8"\U00012000", 0, 0));
     // Surrogates are forbidden
     for (uint32_t i = 0xD800; i <= 0xDFFF; ++i) {
         uint8_t buf[4] = {
@@ -427,7 +452,7 @@ int main(int argc, char **argv)
         };
         assert(buf[0] == 0xED);
         assert(buf[1] >= 0xA0 && buf[1] <= 0xBF);
-        assert(!qubes_pure_string_safe_for_display((char *)buf, 0));
+        assert(!qubes_pure_string_safe_for_display((char *)buf, 0, 0));
         assert(!qubes_pure_code_point_safe_for_display(i));
     }
 
@@ -436,10 +461,22 @@ int main(int argc, char **argv)
         for (uint32_t j = 0x80; j < 0xC0; ++j) {
             for (uint32_t k = 0x80; k < 0xC0; ++k) {
                 char buf[5] = { 0xF4, i, j, k, 0 };
-                assert(!qubes_pure_string_safe_for_display(buf, 0));
+                assert(!qubes_pure_string_safe_for_display(buf, 0, 0));
             }
         }
     }
+
+	/* ANSI escape sequence is allowed if colored logs are allowed and color 
+	   code sequence is valid 3-bit SGR */
+    // Colored logs not allowed
+	assert(!qubes_pure_string_safe_for_display(u8"\x1B[31mred\x1B[0mreset", 0, 0));
+	// Colored logs allowed
+	assert(qubes_pure_string_safe_for_display(u8"\x1B[31mred\x1B[0mreset", 0, 1));
+	assert(qubes_pure_string_safe_for_display(u8"\x1B[31;0000;;;000034;43mblueyellow\x1B[;;;;0000mreset", 0, 1));
+	// Colored logs allowed, but not 3-bit SGR
+	assert(!qubes_pure_string_safe_for_display(u8"\x1B[91;43mbrightredyellow\x1B[36;41mcyanred\x1B[0mreset", 0, 1)); 
+	// Colored logs allowed, invalid color code sequence
+    assert(!qubes_pure_string_safe_for_display(u8"\x1BHello", 0, 1)); 
 
     /* Check for code points that cannot be assigned characters */
     for (uint64_t i = 0; i <= UINT32_MAX >> 0; ++i) {
