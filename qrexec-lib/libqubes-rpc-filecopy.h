@@ -28,7 +28,11 @@
 #define MAX_PATH_LENGTH 16384
 
 #define LEGAL_EOF 31415926
+/* result code: the receiver skipped some existing files */
+#define FILECOPY_SKIPPED ECANCELED
 
+#include <errno.h>
+#include <stddef.h>
 #include <stdint.h>
 #include <stdarg.h>
 #include <sys/stat.h>
@@ -72,6 +76,37 @@ enum copy_flags {
     COPY_ALLOW_UNSAFE_SYMLINKS = (1 << 4),
 };
 
+/* what to do when a file to unpack already exists */
+enum conflict_action {
+    CONFLICT_ABORT,
+    CONFLICT_OVERWRITE,
+    CONFLICT_SKIP,
+    CONFLICT_RENAME,
+};
+
+/*
+ * Called when a received regular file or symlink cannot be created because
+ * something with that name already exists. Without O_TMPFILE support, it is
+ * called before the file data is received; otherwise after.
+ *
+ * untrusted_name: path of the file, as sent (already validated)
+ * can_overwrite: 0 if the existing entry is a directory; CONFLICT_OVERWRITE
+ *   then aborts unpacking
+ * new_name, new_name_size: on input, a free name (single path component) in
+ *   the same directory to suggest, or "" if none was found; for
+ *   CONFLICT_RENAME, the handler writes the chosen name there
+ * error: NULL on the first call for a file; if the name given with
+ *   CONFLICT_RENAME is invalid or also taken, the handler is called again for
+ *   the same file, with an error message to show
+ *
+ * CONFLICT_OVERWRITE removes the existing entry and creates the new one,
+ * CONFLICT_SKIP drops the file (unpacking then ends with FILECOPY_SKIPPED),
+ * CONFLICT_ABORT stops unpacking with EEXIST.
+ */
+typedef enum conflict_action (conflict_handler_t)(const char *untrusted_name,
+        int can_overwrite, char *new_name, size_t new_name_size,
+        const char *error);
+
 /* feedback handling */
 typedef void (notify_progress_t)(int, int);
 typedef void (error_handler_t)(const char *fmt, va_list args);
@@ -101,6 +136,12 @@ extern unsigned long Crc32_ComputeBuf( unsigned long inCrc32, const void *buf,
         size_t bufLen );
 extern int do_unpack(void);
 extern int do_unpack_ext(int flags);
+/*
+ * Set the function asking what to do with existing files (see
+ * conflict_handler_t). Without one, an existing file stops unpacking with
+ * EEXIST.
+ */
+void register_conflict_handler(conflict_handler_t *func);
 
 /* packing */
 int single_file_processor(const char *filename, const struct stat *st);
