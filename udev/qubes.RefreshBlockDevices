@@ -1,0 +1,38 @@
+#!/bin/sh
+
+# Refresh exported devices, by re-triggering udev change events.
+# Called after exporting a device: the partitions of an exported block device
+# are removed from QubesDB.
+#
+# stdin: device node path relative to /dev (e.g. "sda" or "mapper/dmroot").
+
+read -r untrusted_name
+
+case "$untrusted_name" in
+    ""|-*|*[!a-zA-Z0-9/_-]*) exit 1 ;;
+esac
+name="$untrusted_name"
+
+# Wait (3s max) for vbd to appear; attach is async and no uevent is sent
+# to fix an early recompute. On timeout recompute anyway: attach likely
+# failed; if not, partitions stay listed until the next block event.
+dev_hex=$(stat -c %t:%T "/dev/$name" 2>/dev/null)
+i=0
+while [ "$i" -lt 30 ] && [ -n "$dev_hex" ] && [ "$dev_hex" != 0:0 ]; do
+    grep -qxF "$dev_hex" \
+        /sys/bus/xen-backend/drivers/vbd/vbd-*/physical_device 2>/dev/null \
+        && break
+    sleep 0.1
+    i=$((i + 1))
+done
+
+if [ -b "/dev/$name" ]; then
+    udevadm trigger --action=change "/dev/$name"
+    # partitions from sysfs
+    kname=$(basename "$(readlink -f "/dev/$name")")
+    for part in /sys/class/block/"$kname"/*/partition; do
+        [ -e "$part" ] && udevadm trigger --action=change "${part%/partition}"
+    done
+fi
+
+exec udevadm settle --timeout=5

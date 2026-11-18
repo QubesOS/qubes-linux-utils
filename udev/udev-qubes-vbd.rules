@@ -1,0 +1,10 @@
+# Re-evaluate exported block devices when a xen vbd disappears.
+#
+# Not on the udev watch event: it fires when blkback closes the device,
+# still before the vbd is unregistered, so a refresh there would see it as
+# attached!
+# By now physical_device is gone too, so we cannot tell which device it was,
+# hence we check all; the block rules drop the irrelevant ones early.
+# This works for `detach`; `attach` is handled by `qubes.RefreshBlockDevices`.
+SUBSYSTEM=="xen-backend", KERNEL=="vbd-*", ACTION=="remove", \
+  RUN+="/usr/bin/udevadm trigger --action=change --subsystem-match=block"

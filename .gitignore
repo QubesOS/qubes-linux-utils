@@ -13,3 +13,4 @@ debian/changelog.*
 /qrexec-lib/validator-test
 /qrexec-lib/libqubes-*.so*
 /imgconverter/qubesimgconverter.egg-info/
+/udev/qubes-block-mount-watcher
