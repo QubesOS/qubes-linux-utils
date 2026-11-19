@@ -21,11 +21,25 @@ xs_remove() {
     fi
 }
 
+in_fstab() {
+    local src
+    for src in "${FSTAB_SOURCES[@]}"; do
+        if [ "$src" -ef "$1" ]; then
+            return 0
+        fi
+    done
+    return 1
+}
+
 is_used() {
     local sys_devpath=$1
     local devname=$(grep ^DEVNAME= $sys_devpath/uevent | cut -f 2 -d =)
     # mounted; or enabled swap
     if lsblk -dnr -o MOUNTPOINT "/dev/$devname" | grep -q .; then
+        return 0
+    fi
+    # listed in fstab, even if not in use right now (like swap after swapoff)
+    if in_fstab "/dev/$devname"; then
         return 0
     fi
     # part of other device-mapper
@@ -64,6 +78,8 @@ is_attached() {
     done
     return 1
 }
+
+mapfile -t FSTAB_SOURCES < <(findmnt --fstab --evaluate -n -o SOURCE 2>/dev/null)
 
 # update info about parent devices, if any:
 if [ -f /sys$DEVPATH/partition ]; then
