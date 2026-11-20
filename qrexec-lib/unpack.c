@@ -22,6 +22,7 @@
 static char untrusted_namebuf[MAX_PATH_LENGTH];
 static unsigned long long bytes_limit = 0;
 static unsigned long long files_limit = 0;
+static unsigned long long per_file_bytes_limit = 0;
 static unsigned long long total_bytes = 0;
 static unsigned long long total_files = 0;
 static int verbose = 0;
@@ -56,6 +57,11 @@ void set_size_limit(unsigned long long new_bytes_limit, unsigned long long new_f
 {
     bytes_limit = new_bytes_limit;
     files_limit = new_files_limit;
+}
+
+void set_per_file_size_limit(unsigned long long new_per_file_bytes_limit)
+{
+    per_file_bytes_limit = new_per_file_bytes_limit;
 }
 
 void set_verbose(int value)
@@ -221,6 +227,8 @@ static void process_one_file_reg(struct file_header *untrusted_hdr,
 
     /* sizes are signed elsewhere */
     if (untrusted_hdr->filelen > LLONG_MAX || (bytes_limit && untrusted_hdr->filelen > bytes_limit))
+        do_exit(EDQUOT, untrusted_name);
+    if (per_file_bytes_limit && untrusted_hdr->filelen > per_file_bytes_limit)
         do_exit(EDQUOT, untrusted_name);
     if (bytes_limit && total_bytes > bytes_limit - untrusted_hdr->filelen)
         do_exit(EDQUOT, untrusted_name);
